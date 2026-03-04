@@ -8,7 +8,7 @@
     body { font-family: Arial, sans-serif; margin:0; padding:0; background:#f4f4f4; }
     header { background:#333; color:#fff; padding:1rem; text-align:center; }
     nav { background:#444; padding:0.5rem; text-align:center; }
-    nav a { color:#fff; margin:0 1rem; text-decoration:none; }
+    nav a { color:#fff; margin:0 1rem; text-decoration:none; cursor:pointer; }
     .productos { display:flex; flex-wrap:wrap; justify-content:center; margin:2rem; }
     .producto { background:#fff; border:1px solid #ddd; border-radius:5px; margin:1rem; padding:1rem; width:250px; text-align:center; box-shadow:0 2px 5px rgba(0,0,0,0.1); }
     .producto img { max-width:100%; border-radius:5px; }
@@ -23,6 +23,7 @@
     button[type="submit"] { background:#007bff; color:#fff; border:none; padding:0.7rem 1.2rem; cursor:pointer; border-radius:5px; }
     button[type="submit"]:hover { background:#0056b3; }
     footer { background:#333; color:#fff; text-align:center; padding:1rem; margin-top:2rem; }
+    #admin { display:none; } /* Oculto por defecto */
   </style>
 </head>
 <body>
@@ -30,23 +31,24 @@
     <h1>Mi Tienda Online</h1>
   </header>
   <nav>
-    <a href="#">Inicio</a>
-    <a href="#">Productos</a>
-    <a href="#">Contacto</a>
+    <a onclick="mostrarSeccion('productos')">Productos</a>
+    <a onclick="mostrarSeccion('carrito')">Carrito</a>
+    <a onclick="mostrarSeccion('envio')">Envío</a>
+    <a onclick="mostrarSeccion('admin')">Admin</a>
   </nav>
 
   <!-- Productos cargados desde Firebase -->
   <section class="productos" id="productos"></section>
 
   <!-- Carrito -->
-  <section id="carrito">
+  <section id="carrito" style="display:none;">
     <h2>Carrito de Compras</h2>
     <ul id="lista-carrito"></ul>
     <p><strong>Total:</strong> $<span id="total">0</span></p>
   </section>
 
   <!-- Formulario de envío -->
-  <section id="envio">
+  <section id="envio" style="display:none;">
     <h2>Datos de Envío</h2>
     <form id="form-envio">
       <label>Nombre:</label>
@@ -84,7 +86,6 @@
     import { getFirestore, collection, getDocs, addDoc, updateDoc, doc, deleteDoc } 
       from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
-    // Configuración de tu proyecto Firebase (copiar desde Firebase Console)
     const firebaseConfig = {
       apiKey: "AIzaSyD_uELDR3InLRLsxXCyFuIM4OzYw6xYkE",
       authDomain: "tienda-c497e.firebaseapp.com",
@@ -95,14 +96,19 @@
       measurementId: "G-CCNPEMM8WG"
     };
 
-    // Inicializar Firebase
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+
+    // Mostrar secciones
+    window.mostrarSeccion = function(id) {
+      document.querySelectorAll("section").forEach(sec => sec.style.display = "none");
+      document.getElementById(id).style.display = "block";
+    }
 
     // Carrito
     let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
 
-    function agregarAlCarrito(nombre, precio) {
+    window.agregarAlCarrito = function(nombre, precio) {
       carrito.push({ nombre, precio });
       guardarCarrito();
       mostrarCarrito();
@@ -171,18 +177,4 @@
         const producto = docSnap.data();
         contenedor.innerHTML += `
           <div class="producto">
-            <img src="${producto.imagen}" alt="${producto.nombre}">
-            <h3>${producto.nombre}</h3>
-            <p>$${producto.precio}</p>
-            <button onclick="agregarAlCarrito('${producto.nombre}', ${producto.precio})">Agregar al carrito</button>
-          </div>
-        `;
-      });
-    }
-
-    // Panel Admin
-    document.getElementById("form-admin").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const nombre = document.getElementById("nombreProd").value;
-      const precio = parseFloat(document.getElementById("precioProd").value);
-      const
+            <img src="${producto.imagen}" alt="${producto.nombre
