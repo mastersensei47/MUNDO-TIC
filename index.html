@@ -29,14 +29,14 @@ margin:0;
 font-family:system-ui;
 background:var(--bg);
 color:var(--text);
-transition:.4s;
+transition:.3s;
 }
 
 header{
 display:flex;
 justify-content:space-between;
 align-items:center;
-padding:15px 30px;
+padding:15px 25px;
 background:var(--card);
 box-shadow:var(--shadow);
 position:sticky;
@@ -46,7 +46,7 @@ z-index:1000;
 
 .logo{
 font-weight:700;
-font-size:22px;
+font-size:20px;
 background:linear-gradient(45deg,var(--accent),var(--accent2));
 -webkit-background-clip:text;
 color:transparent;
@@ -55,8 +55,8 @@ color:transparent;
 .icon{
 cursor:pointer;
 font-size:22px;
-position:relative;
 margin-left:15px;
+position:relative;
 }
 
 .cart-count{
@@ -73,15 +73,15 @@ border-radius:50%;
 .products{
 display:grid;
 grid-template-columns:repeat(auto-fill,minmax(230px,1fr));
-gap:25px;
-padding:30px;
+gap:20px;
+padding:25px;
 }
 
 .card{
 background:var(--card);
-border-radius:16px;
-box-shadow:var(--shadow);
 padding:15px;
+border-radius:15px;
+box-shadow:var(--shadow);
 transition:.3s;
 }
 
@@ -94,21 +94,21 @@ object-fit:cover;
 border-radius:12px;
 }
 
+.old{
+text-decoration:line-through;
+opacity:.6;
+margin-left:5px;
+font-size:14px;
+}
+
 button{
 background:linear-gradient(45deg,var(--accent),var(--accent2));
 border:none;
 color:#fff;
-padding:8px 12px;
-border-radius:8px;
+padding:6px 10px;
+border-radius:6px;
 cursor:pointer;
-}
-
-.overlay{
-position:fixed;
-inset:0;
-background:rgba(0,0,0,.5);
-display:none;
-z-index:1500;
+margin-top:5px;
 }
 
 .drawer{
@@ -121,42 +121,53 @@ background:var(--card);
 box-shadow:var(--shadow);
 padding:20px;
 transition:.4s;
-z-index:2000;
 overflow:auto;
+z-index:2000;
 }
 
-.drawer.open{ right:0; }
-.overlay.show{ display:block; }
+.drawer.open{right:0}
+
+.overlay{
+position:fixed;
+inset:0;
+background:rgba(0,0,0,.5);
+display:none;
+z-index:1500;
+}
+
+.overlay.show{display:block}
 
 .cart-item{
 display:flex;
 justify-content:space-between;
-margin-bottom:10px;
+align-items:center;
+margin-bottom:8px;
 }
 
-.admin-login,
 .admin-panel{
 position:fixed;
 inset:0;
+background:rgba(0,0,0,.6);
 display:none;
 justify-content:center;
 align-items:center;
-background:rgba(0,0,0,.6);
 z-index:3000;
 }
 
 .admin-box{
 background:var(--card);
-padding:30px;
-border-radius:20px;
-width:90%;
-max-width:600px;
+padding:25px;
+border-radius:15px;
+width:95%;
+max-width:900px;
+max-height:90%;
+overflow:auto;
 }
 
 input{
 width:100%;
-padding:8px;
-margin-bottom:10px;
+padding:6px;
+margin-bottom:6px;
 border-radius:6px;
 border:1px solid #ccc;
 }
@@ -169,7 +180,7 @@ border:1px solid #ccc;
 <div>
 <span class="icon" onclick="toggleDark()">🌗</span>
 <span class="icon" onclick="openCart()">🛒<span class="cart-count" id="cartCount">0</span></span>
-<span class="icon" onclick="showLogin()">●</span>
+<span class="icon" onclick="openAdmin()">⚙</span>
 </div>
 </header>
 
@@ -181,48 +192,61 @@ border:1px solid #ccc;
 <h2>Carrito</h2>
 <div id="cartItems"></div>
 <hr>
+<label><input type="checkbox" id="envioCheck"> Agregar envío</label>
 <p>Total: $<span id="total">0</span></p>
+<p id="ahorro" style="color:green"></p>
+<button onclick="hacerPedido()">Hacer Pedido</button>
 <button onclick="closeCart()">Cerrar</button>
 </div>
 
-<!-- LOGIN -->
-<div class="admin-login" id="loginBox">
-<div class="admin-box">
-<h3>Acceso Admin</h3>
-<input type="password" id="adminPassword" placeholder="Contraseña">
-<button onclick="login()">Entrar</button>
-<button onclick="closeLogin()">Volver</button>
-</div>
-</div>
-
-<!-- PANEL -->
 <div class="admin-panel" id="adminPanel">
 <div class="admin-box">
-<h3>Panel Admin</h3>
-<input id="name" placeholder="Nombre producto">
-<input id="price" placeholder="Precio">
-<input id="image" placeholder="URL imagen">
-<button onclick="addProduct()">Agregar</button>
+<h2>Panel Admin</h2>
+
+<h3>Agregar Producto</h3>
+<input id="n" placeholder="Nombre">
+<input id="p" placeholder="Precio normal">
+<input id="promo" placeholder="Precio por 2 (opcional)">
+<input id="stock" placeholder="Stock">
+<input id="img" placeholder="URL imagen">
+<label><input type="checkbox" id="promo2"> Activar promo 2 precio reducido</label><br>
+<label><input type="checkbox" id="tresx2"> Activar 3x2</label><br>
+<input id="descManual" placeholder="Descuento manual ($)">
+<button onclick="guardar()">Guardar</button>
+
 <hr>
-<div id="adminList"></div>
-<button onclick="logout()">Cerrar sesión</button>
+<h3>Productos</h3>
+<div id="listaAdmin"></div>
+
+<hr>
+<h3>Envío</h3>
+<input id="precioEnvio" placeholder="Precio envío">
+<button onclick="guardarEnvio()">Guardar Envío</button>
+
+<hr>
+<h3>Historial</h3>
+<div id="historial"></div>
+
+<button onclick="cerrarAdmin()">Cerrar</button>
 </div>
 </div>
 
 <script>
 let products=JSON.parse(localStorage.getItem("products"))||[]
 let cart=[]
+let shipping=localStorage.getItem("shipping")||0
+let history=JSON.parse(localStorage.getItem("history"))||[]
 
-/* PRODUCTOS */
 function render(){
-let container=document.getElementById("products")
-container.innerHTML=""
+let c=document.getElementById("products")
+c.innerHTML=""
 products.forEach((p,i)=>{
-container.innerHTML+=`
+c.innerHTML+=`
 <div class="card">
-<img src="${p.image||'https://via.placeholder.com/300'}">
+<img src="${p.img||'https://via.placeholder.com/300'}">
 <h3>${p.name}</h3>
-<p>$${p.price}</p>
+<p>$${p.price} ${p.promo2?`<span class="old">$${p.promo}</span>`:""}</p>
+<p>Stock: ${p.stock}</p>
 <button onclick="add(${i})">Agregar</button>
 </div>`
 })
@@ -239,102 +263,129 @@ function updateCart(){
 let items=document.getElementById("cartItems")
 items.innerHTML=""
 let total=0
+let ahorro=0
+
 cart.forEach(c=>{
 let p=products[c.i]
-total+=p.price*c.qty
+let subtotal=p.price*c.qty
+
+if(p.promo2 && c.qty>=2){
+subtotal=p.promo*(Math.floor(c.qty/2))+(c.qty%2)*p.price
+ahorro+= (p.price*2 - p.promo)*Math.floor(c.qty/2)
+}
+
+if(p.tresx2 && c.qty>=3){
+let sets=Math.floor(c.qty/3)
+subtotal=p.price*(c.qty-sets)
+ahorro+=p.price*sets
+}
+
+if(p.descManual){
+subtotal-=p.descManual*c.qty
+ahorro+=p.descManual*c.qty
+}
+
+total+=subtotal
+
 items.innerHTML+=`
 <div class="cart-item">
 ${p.name} x${c.qty}
-<button onclick="change(${c.i},-1)">-</button>
-<button onclick="change(${c.i},1)">+</button>
+<div>
+<button onclick="cambiar(${c.i},-1)">-</button>
+<button onclick="cambiar(${c.i},1)">+</button>
+</div>
 </div>`
 })
+
+if(document.getElementById("envioCheck").checked)
+total+=parseInt(shipping)
+
 document.getElementById("total").innerText=total
 document.getElementById("cartCount").innerText=cart.reduce((a,b)=>a+b.qty,0)
+document.getElementById("ahorro").innerText=ahorro>0?`Ahorrás $${ahorro}`:""
 }
 
-function change(i,v){
+function cambiar(i,v){
 let item=cart.find(x=>x.i==i)
 item.qty+=v
 if(item.qty<=0) cart=cart.filter(x=>x.i!=i)
 updateCart()
 }
 
-/* CARRITO */
+function hacerPedido(){
+let msg="Pedido:%0A"
+cart.forEach(c=>{
+let p=products[c.i]
+msg+=`${p.name} x${c.qty}%0A`
+p.stock-=c.qty
+})
+msg+=`Total: $${document.getElementById("total").innerText}`
+window.open(`https://wa.me/549XXXXXXXXXX?text=${msg}`)
+history.push({fecha:new Date().toLocaleString(),detalle:msg})
+localStorage.setItem("history",JSON.stringify(history))
+localStorage.setItem("products",JSON.stringify(products))
+cart=[]
+updateCart()
+render()
+}
+
 function openCart(){
-document.getElementById("drawer").classList.add("open")
-document.getElementById("overlay").classList.add("show")
+drawer.classList.add("open")
+overlay.classList.add("show")
 }
 function closeCart(){
-document.getElementById("drawer").classList.remove("open")
-document.getElementById("overlay").classList.remove("show")
+drawer.classList.remove("open")
+overlay.classList.remove("show")
 }
 
-/* DARK MODE */
 function toggleDark(){
 document.body.classList.toggle("dark")
-localStorage.setItem("dark",document.body.classList.contains("dark"))
-}
-if(localStorage.getItem("dark")==="true"){
-document.body.classList.add("dark")
 }
 
-/* ADMIN */
-function showLogin(){
-document.getElementById("loginBox").style.display="flex"
+function openAdmin(){
+adminPanel.style.display="flex"
+cargarAdmin()
 }
-function closeLogin(){
-document.getElementById("loginBox").style.display="none"
-}
-function login(){
-let pass=document.getElementById("adminPassword").value
-if(pass==="admin123"){
-localStorage.setItem("admin","true")
-document.getElementById("loginBox").style.display="none"
-document.getElementById("adminPanel").style.display="flex"
-loadAdmin()
-}else{
-alert("Contraseña incorrecta")
-}
-}
-function logout(){
-localStorage.removeItem("admin")
-document.getElementById("adminPanel").style.display="none"
+function cerrarAdmin(){
+adminPanel.style.display="none"
 }
 
-function addProduct(){
-let name=document.getElementById("name").value
-let price=parseInt(document.getElementById("price").value)
-let image=document.getElementById("image").value
-products.push({name,price,image})
+function guardar(){
+products.push({
+name:n.value,
+price:parseInt(p.value),
+promo:parseInt(promo.value)||0,
+promo2:promo2.checked,
+tresx2:tresx2.checked,
+descManual:parseInt(descManual.value)||0,
+stock:parseInt(stock.value),
+img:img.value
+})
 localStorage.setItem("products",JSON.stringify(products))
 render()
-loadAdmin()
+cargarAdmin()
 }
 
-function loadAdmin(){
-let list=document.getElementById("adminList")
-list.innerHTML=""
+function cargarAdmin(){
+let l=document.getElementById("listaAdmin")
+l.innerHTML=""
 products.forEach((p,i)=>{
-list.innerHTML+=`
-<div>
-${p.name} - $${p.price}
-<button onclick="deleteProduct(${i})">Eliminar</button>
-</div>`
+l.innerHTML+=`${p.name} - $${p.price} <button onclick="eliminar(${i})">Eliminar</button><br>`
 })
+let h=document.getElementById("historial")
+h.innerHTML=history.map(x=>`<p>${x.fecha}</p>`).join("")
 }
 
-function deleteProduct(i){
+function eliminar(i){
 products.splice(i,1)
 localStorage.setItem("products",JSON.stringify(products))
 render()
-loadAdmin()
+cargarAdmin()
 }
 
-/* AUTO LOGIN SI YA ESTABA */
-if(localStorage.getItem("admin")==="true"){
-document.getElementById("adminPanel").style.display="flex"
-loadAdmin()
+function guardarEnvio(){
+shipping=precioEnvio.value
+localStorage.setItem("shipping",shipping)
 }
 
 render()
