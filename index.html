@@ -87,13 +87,12 @@
       from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
     const firebaseConfig = {
-      apiKey: "AIzaSyD_uELDR3InLRLsxXCyFuIM4OzYw6xYkE",
-      authDomain: "tienda-c497e.firebaseapp.com",
-      projectId: "tienda-c497e",
-      storageBucket: "tienda-c497e.appspot.com",
-      messagingSenderId: "709484748527",
-      appId: "1:709484748527:web:64dbea8f89b2b830a851a",
-      measurementId: "G-CCNPEMM8WG"
+      apiKey: "TU_API_KEY",
+      authDomain: "tu-proyecto.firebaseapp.com",
+      projectId: "tu-project-id",
+      storageBucket: "tu-proyecto.appspot.com",
+      messagingSenderId: "TU_SENDER_ID",
+      appId: "TU_APP_ID"
     };
 
     const app = initializeApp(firebaseConfig);
@@ -181,4 +180,10 @@
             <h3>${producto.nombre}</h3>
             <p>$${producto.precio}</p>
             <button onclick="agregarAlCarrito('${producto.nombre}', ${producto.precio})">Agregar al carrito</button>
-          </div
+          </div>
+        `;
+      });
+    }
+
+    // --- Panel Admin ---
+    document.getElementById("
