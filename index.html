@@ -37,17 +37,14 @@
     <a onclick="mostrarSeccion('admin')">Admin</a>
   </nav>
 
-  <!-- Productos -->
   <section class="productos" id="productos"></section>
 
-  <!-- Carrito -->
   <section id="carrito">
-    <h2>Carrito de Compras</h2>
+    <h2>Carrito</h2>
     <ul id="lista-carrito"></ul>
-    <p><strong>Total:</strong> $<span id="total">0</span></p>
+    <p>Total: $<span id="total">0</span></p>
   </section>
 
-  <!-- Envío -->
   <section id="envio">
     <h2>Datos de Envío</h2>
     <form id="form-envio">
@@ -58,23 +55,19 @@
     </form>
   </section>
 
-  <!-- Admin -->
   <section id="admin">
     <h2>Panel Admin</h2>
     <form id="form-admin">
       <input type="text" id="nombreProd" placeholder="Nombre" required>
       <input type="number" id="precioProd" placeholder="Precio" required>
-      <input type="text" id="imagenProd" placeholder="URL de imagen" required>
+      <input type="text" id="imagenProd" placeholder="URL Imagen" required>
       <button type="submit">Agregar Producto</button>
     </form>
     <div id="lista-admin"></div>
   </section>
 
-  <footer>
-    <p>&copy; 2026 Mi Tienda Online</p>
-  </footer>
+  <footer><p>&copy; 2026 Mi Tienda Online</p></footer>
 
-  <!-- Firebase -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
     import { getFirestore, collection, getDocs, addDoc, updateDoc, doc, deleteDoc } 
@@ -88,7 +81,6 @@
       messagingSenderId: "TU_SENDER_ID",
       appId: "TU_APP_ID"
     };
-
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
@@ -164,11 +156,4 @@
       const precio = parseFloat(document.getElementById("precioProd").value);
       const imagen = document.getElementById("imagenProd").value;
       await addDoc(collection(db, "productos"), { nombre, precio, imagen });
-      alert("Producto agregado");
-      cargarProductos();
-      mostrarAdmin();
-    });
-
-    async function mostrarAdmin() {
-      const querySnapshot = await getDocs(collection(db, "productos"));
-      const adminPanel
+      alert
