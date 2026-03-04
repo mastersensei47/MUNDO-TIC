@@ -23,7 +23,7 @@
     button[type="submit"] { background:#007bff; color:#fff; border:none; padding:0.7rem 1.2rem; cursor:pointer; border-radius:5px; }
     button[type="submit"]:hover { background:#0056b3; }
     footer { background:#333; color:#fff; text-align:center; padding:1rem; margin-top:2rem; }
-    #admin { display:none; } /* Oculto por defecto */
+    #carrito, #envio, #admin { display:none; } /* Ocultos por defecto */
   </style>
 </head>
 <body>
@@ -41,14 +41,14 @@
   <section class="productos" id="productos"></section>
 
   <!-- Carrito -->
-  <section id="carrito" style="display:none;">
+  <section id="carrito">
     <h2>Carrito de Compras</h2>
     <ul id="lista-carrito"></ul>
     <p><strong>Total:</strong> $<span id="total">0</span></p>
   </section>
 
   <!-- Formulario de envío -->
-  <section id="envio" style="display:none;">
+  <section id="envio">
     <h2>Datos de Envío</h2>
     <form id="form-envio">
       <label>Nombre:</label>
@@ -99,13 +99,13 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // Mostrar secciones
+    // --- Navegación ---
     window.mostrarSeccion = function(id) {
       document.querySelectorAll("section").forEach(sec => sec.style.display = "none");
       document.getElementById(id).style.display = "block";
     }
 
-    // Carrito
+    // --- Carrito ---
     let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
 
     window.agregarAlCarrito = function(nombre, precio) {
@@ -142,7 +142,7 @@
       localStorage.setItem("carrito", JSON.stringify(carrito));
     }
 
-    // Formulario de envío -> WhatsApp
+    // --- Formulario de envío -> WhatsApp ---
     document.getElementById("form-envio").addEventListener("submit", function(e) {
       e.preventDefault();
       if (carrito.length === 0) {
@@ -168,7 +168,7 @@
       window.open(url, "_blank");
     });
 
-    // Cargar productos desde Firebase
+    // --- Productos desde Firebase ---
     async function cargarProductos() {
       const querySnapshot = await getDocs(collection(db, "productos"));
       const contenedor = document.getElementById("productos");
@@ -176,5 +176,4 @@
       querySnapshot.forEach((docSnap) => {
         const producto = docSnap.data();
         contenedor.innerHTML += `
-          <div class="producto">
-            <img src="${producto.imagen}" alt="${producto.nombre
+          <div class="
