@@ -176,4 +176,8 @@
       querySnapshot.forEach((docSnap) => {
         const producto = docSnap.data();
         contenedor.innerHTML += `
-          <div class="
+          <div class="producto">
+            <img src="${producto.imagen}" alt="${producto.nombre}">
+            <h3>${producto.nombre}</h3>
+            <p>$${producto.precio}</p>
+            <button onclick="agregarAlCarrito('${producto.nombre}', ${producto.precio})">Agregar al carrito</
