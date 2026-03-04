@@ -86,12 +86,13 @@
 
     // Configuración de tu proyecto Firebase (copiar desde Firebase Console)
     const firebaseConfig = {
-      apiKey: "TU_API_KEY",
-      authDomain: "tu-proyecto.firebaseapp.com",
-      projectId: "tu-project-id",
-      storageBucket: "tu-proyecto.appspot.com",
-      messagingSenderId: "TU_SENDER_ID",
-      appId: "TU_APP_ID"
+      apiKey: "AIzaSyD_uELDR3InLRLsxXCyFuIM4OzYw6xYkE",
+      authDomain: "tienda-c497e.firebaseapp.com",
+      projectId: "tienda-c497e",
+      storageBucket: "tienda-c497e.appspot.com",
+      messagingSenderId: "709484748527",
+      appId: "1:709484748527:web:64dbea8f89b2b830a851a",
+      measurementId: "G-CCNPEMM8WG"
     };
 
     // Inicializar Firebase
@@ -184,16 +185,4 @@
       e.preventDefault();
       const nombre = document.getElementById("nombreProd").value;
       const precio = parseFloat(document.getElementById("precioProd").value);
-      const imagen = document.getElementById("imagenProd").value;
-
-      await addDoc(collection(db, "productos"), { nombre, precio, imagen });
-      alert("Producto agregado correctamente");
-      cargarProductos();
-      mostrarAdmin();
-    });
-
-    async function mostrarAdmin() {
-      const querySnapshot = await getDocs(collection(db, "productos"));
-      const adminPanel = document.getElementById("lista-admin");
-      adminPanel.innerHTML = "";
-      querySnapshot
+      const imagen = document.get
