@@ -265,27 +265,84 @@ window.enviarPedido=function(){
   window.open(`https://wa.me/549XXXXXXXXXX?text=${mensaje}`,"_blank");
 }
 
-/* ADMIN */
-window.abrirAdmin=function(){
-  const pass=prompt("Contraseña admin:");
-  if(pass==="1234"){   // ← CAMBIA ESTA CONTRASEÑA
-    const nombre=prompt("Nombre producto:");
-    const precio=parseFloat(prompt("Precio:"));
-    const imagen=prompt("URL imagen:");
+/* ===== ADMIN MEJORADO ===== */
 
-    addDoc(collection(db,"productos"),{
-      nombre,precio,imagen
-    }).then(()=>{
-      alert("Producto agregado");
-      cargarProductos();
-    });
-  }else{
-    alert("Contraseña incorrecta");
+window.abrirAdmin = function(){
+  const pass = prompt("Contraseña admin:");
+  if(pass === "1234"){ // CAMBIALA
+    document.getElementById("adminPanel").style.display="block";
+    cargarProductosAdmin();
+  } else {
+    alert("Incorrecta");
   }
 }
 
-cargarProductos();
+window.cerrarAdmin = function(){
+  document.getElementById("adminPanel").style.display="none";
+}
+
+window.agregarProductoAdmin = async function(){
+  const nombre = document.getElementById("adminNombre").value;
+  const precio = parseFloat(document.getElementById("adminPrecio").value);
+  const imagen = document.getElementById("adminImagen").value;
+
+  if(!nombre || !precio || !imagen){
+    alert("Completar todo");
+    return;
+  }
+
+  await addDoc(collection(db,"productos"),{
+    nombre,precio,imagen
+  });
+
+  alert("Producto agregado");
+  cargarProductos();
+  cargarProductosAdmin();
+}
+
+async function cargarProductosAdmin(){
+  const lista = document.getElementById("listaAdminProductos");
+  lista.innerHTML="";
+
+  const snapshot = await getDocs(collection(db,"productos"));
+
+  snapshot.forEach(docSnap=>{
+    const data = docSnap.data();
+    lista.innerHTML += `
+      <div style="margin-bottom:8px;">
+        ${data.nombre} - $${data.precio}
+        <button onclick="eliminarProducto('${docSnap.id}')" class="btn rojo">Eliminar</button>
+      </div>
+    `;
+  });
+}
+
+window.eliminarProducto = async function(id){
+  await deleteDoc(doc(db,"productos",id));
+  cargarProductos();
+  cargarProductosAdmin();
+}
 
 </script>
+  <!-- PANEL ADMIN -->
+<div id="adminPanel" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:2000;">
+  <div style="background:white; width:400px; margin:50px auto; padding:20px; border-radius:8px; max-height:80vh; overflow:auto;">
+    
+    <h3>Panel Admin</h3>
+    <button onclick="cerrarAdmin()" style="float:right;">X</button>
+
+    <h4>Agregar Producto</h4>
+    <input type="text" id="adminNombre" placeholder="Nombre"><br>
+    <input type="number" id="adminPrecio" placeholder="Precio"><br>
+    <input type="text" id="adminImagen" placeholder="URL Imagen"><br>
+    <button onclick="agregarProductoAdmin()" class="btn verde">Agregar</button>
+
+    <hr>
+
+    <h4>Productos Existentes</h4>
+    <div id="listaAdminProductos"></div>
+
+  </div>
+</div>
 </body>
 </html>
