@@ -2,347 +2,295 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Mi Tienda Online</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tienda Online</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
-*{box-sizing:border-box;}
-body{
-  font-family:Arial;
-  margin:0;
-  background:#f4f4f4;
+:root{
+  --bg:#ffffff;
+  --text:#111;
+  --card:#f5f5f5;
 }
-
-/* HEADER */
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#111;
+    --text:#fff;
+    --card:#1e1e1e;
+  }
+}
+body{
+  margin:0;
+  font-family:Arial;
+  background:var(--bg);
+  color:var(--text);
+}
 header{
-  background:#111;
-  color:white;
-  padding:15px 20px;
   display:flex;
   justify-content:space-between;
-  align-items:center;
-  position:sticky;
-  top:0;
-  z-index:1000;
-}
-
-.logo{
-  font-weight:bold;
-  font-size:22px;
-}
-
-/* BOTON ADMIN OCULTO */
-.admin-secret{
-  width:28px;
-  height:28px;
-  background:url('https://cdn-icons-png.flaticon.com/512/1828/1828919.png') no-repeat center;
-  background-size:cover;
-  cursor:pointer;
-  opacity:0.3;
-  margin-left:15px;
-}
-
-.admin-secret:hover{
-  opacity:1;
-}
-
-/* CARRITO */
-.carrito-icon{
-  cursor:pointer;
-  font-size:22px;
-  position:relative;
-}
-
-.carrito-icon span{
-  background:red;
+  padding:15px;
+  background:#0a84ff;
   color:white;
-  border-radius:50%;
-  padding:2px 6px;
+  align-items:center;
+}
+.cart-icon{
+  cursor:pointer;
+  position:relative;
+  font-size:22px;
+}
+.cart-count{
   position:absolute;
   top:-8px;
   right:-10px;
-  font-size:13px;
+  background:red;
+  color:white;
+  font-size:12px;
+  padding:3px 6px;
+  border-radius:50%;
 }
-
-/* PRODUCTOS */
-section{padding:20px;}
 .grid{
   display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
-  gap:20px;
+  grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
+  gap:15px;
+  padding:20px;
 }
-
 .card{
-  background:white;
-  padding:10px;
-  border-radius:8px;
-  box-shadow:0 0 5px rgba(0,0,0,0.2);
+  background:var(--card);
+  padding:15px;
+  border-radius:10px;
   text-align:center;
+  transition:.3s;
 }
-
+.card:hover{
+  transform:scale(1.05);
+}
 .card img{
   width:100%;
   height:150px;
   object-fit:cover;
-  border-radius:5px;
+  border-radius:8px;
 }
-
-.btn{
+button{
   padding:8px 12px;
+  margin-top:8px;
   border:none;
-  border-radius:5px;
+  border-radius:6px;
   cursor:pointer;
-  margin-top:5px;
+  background:#0a84ff;
+  color:white;
 }
-
-.verde{background:green;color:white;}
-.rojo{background:red;color:white;}
-
-/* PANEL CARRITO */
-#carritoPanel{
+.promo{
+  color:#00c853;
+  font-weight:bold;
+}
+#cartModal{
   position:fixed;
   top:0;
   right:-100%;
   width:350px;
   height:100%;
-  background:white;
-  box-shadow:-3px 0 7px rgba(0,0,0,0.3);
-  transition:0.3s ease;
+  background:var(--bg);
+  box-shadow:-5px 0 15px rgba(0,0,0,.3);
   padding:20px;
-  z-index:999;
+  transition:.4s;
+  overflow:auto;
 }
-
-#carritoPanel.open{
+#cartModal.active{
   right:0;
 }
-
-#envioForm{display:none;margin-top:15px;}
-
-footer{
-  background:#111;
-  color:white;
-  text-align:center;
-  padding:10px;
-  margin-top:20px;
+.admin-btn{
+  position:fixed;
+  bottom:15px;
+  left:15px;
+  width:40px;
+  height:40px;
+  background:url('https://cdn-icons-png.flaticon.com/512/3524/3524659.png') no-repeat center/cover;
+  cursor:pointer;
+  opacity:.4;
+}
+.admin-panel{
+  display:none;
+  position:fixed;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  background:var(--bg);
+  padding:20px;
+  box-shadow:0 0 15px rgba(0,0,0,.5);
+  border-radius:10px;
+}
+input,select{
+  width:100%;
+  margin:5px 0;
+  padding:5px;
 }
 </style>
 </head>
 <body>
 
 <header>
-  <div style="display:flex;align-items:center;">
-    <div class="logo">Mi Tienda</div>
-    <div class="admin-secret" onclick="abrirAdmin()"></div>
-  </div>
-
-  <div class="carrito-icon" onclick="toggleCarrito()">
-    🛒 <span id="contadorCarrito">0</span>
+  <h2>Mi Tienda</h2>
+  <div class="cart-icon" onclick="toggleCart()">
+    🛒
+    <span class="cart-count" id="cartCount">0</span>
   </div>
 </header>
 
-<section>
-<h2>Productos</h2>
-<div class="grid" id="listaProductos"></div>
-</section>
+<div class="grid" id="productos"></div>
 
-<!-- PANEL CARRITO -->
-<div id="carritoPanel">
-  <h3>Tu Carrito</h3>
-  <div id="listaCarrito"></div>
-  <h3>Total: $<span id="totalCarrito">0</span></h3>
-  <button class="btn verde" onclick="mostrarEnvio()">Continuar</button>
+<div id="cartModal">
+  <h3>Carrito</h3>
+  <div id="cartItems"></div>
+  <h3 id="total"></h3>
+  <button onclick="generarPDF()">Generar Ticket PDF</button>
+</div>
 
-  <div id="envioForm">
-    <h4>Datos</h4>
-    <input type="text" id="nombreEnvio" placeholder="Nombre"><br>
-    <input type="text" id="direccionEnvio" placeholder="Dirección"><br>
-    <input type="text" id="telefonoEnvio" placeholder="Teléfono"><br>
-    <button class="btn verde" onclick="enviarPedido()">Enviar por WhatsApp</button>
+<div class="admin-btn" onclick="abrirAdmin()"></div>
+
+<div class="admin-panel" id="adminPanel">
+  <h3>Modo Admin</h3>
+  <input type="password" id="adminPass" placeholder="Contraseña">
+  <button onclick="verificarAdmin()">Entrar</button>
+
+  <div id="adminContent" style="display:none;">
+    <input id="nombre" placeholder="Nombre producto">
+    <input id="precio" type="number" placeholder="Precio">
+    <input id="imagen" placeholder="URL imagen">
+    <select id="tipoPromo">
+      <option value="">Sin promo</option>
+      <option value="3x2">3x2</option>
+      <option value="2precio">Llevás 2 pagás menos</option>
+    </select>
+    <input id="precioEspecial" type="number" placeholder="Precio especial (2precio)">
+    <button onclick="agregarProducto()">Agregar</button>
   </div>
 </div>
 
-<footer>© 2026 Mi Tienda</footer>
+<script>
+let productos = [];
+let carrito = [];
 
-<script type="module">
-
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } 
-from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-/* FIREBASE */
-const firebaseConfig = {
-  apiKey: "TU_APIKEY",
-  authDomain: "tienda-online-baaf6.firebaseapp.com",
-  projectId: "tienda-online-baaf6",
-  storageBucket: "tienda-online-baaf6.firebasestorage.app",
-  messagingSenderId: "121093097347",
-  appId: "1:121093097347:web:ca8ea54b592cb20f5098b6"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-/* VARIABLES */
-let carrito=[];
-
-/* CARGAR PRODUCTOS */
-async function cargarProductos(){
-  const lista=document.getElementById("listaProductos");
-  lista.innerHTML="";
-  const snapshot=await getDocs(collection(db,"productos"));
-
-  snapshot.forEach(docSnap=>{
-    const data=docSnap.data();
-    lista.innerHTML+=`
+function renderProductos(){
+  let cont = document.getElementById("productos");
+  cont.innerHTML="";
+  productos.forEach((p,i)=>{
+    cont.innerHTML+=`
       <div class="card">
-        <img src="${data.imagen}">
-        <h4>${data.nombre}</h4>
-        <p>$${data.precio}</p>
-        <button class="btn verde"
-          onclick="agregarCarrito('${data.nombre}',${data.precio})">
-          Agregar
-        </button>
+        <img src="${p.imagen}">
+        <h4>${p.nombre}</h4>
+        <p>$${p.precio}</p>
+        ${p.promo ? `<p class="promo">🔥 Promo activa</p>` : ""}
+        <button onclick="agregarCarrito(${i})">Agregar</button>
       </div>
     `;
   });
 }
 
-/* CARRITO */
-window.agregarCarrito=function(nombre,precio){
-  carrito.push({nombre,precio});
-  actualizarCarritoUI();
+function agregarProducto(){
+  let nombre=document.getElementById("nombre").value;
+  let precio=Number(document.getElementById("precio").value);
+  let imagen=document.getElementById("imagen").value;
+  let tipo=document.getElementById("tipoPromo").value;
+  let precioEspecial=Number(document.getElementById("precioEspecial").value);
+
+  let promo=null;
+  if(tipo==="3x2") promo={tipo:"3x2"};
+  if(tipo==="2precio") promo={tipo:"2precio",precioEspecial};
+
+  productos.push({nombre,precio,imagen,promo});
+  renderProductos();
 }
 
-window.toggleCarrito=function(){
-  document.getElementById("carritoPanel").classList.toggle("open");
+function agregarCarrito(i){
+  let item=carrito.find(x=>x.index===i);
+  if(item){item.cantidad++}
+  else carrito.push({index:i,cantidad:1});
+  actualizarCarrito();
 }
 
-window.mostrarEnvio=function(){
-  document.getElementById("envioForm").style.display="block";
-}
-
-function actualizarCarritoUI(){
-  const lista=document.getElementById("listaCarrito");
-  const contador=document.getElementById("contadorCarrito");
-  const totalSpan=document.getElementById("totalCarrito");
-
-  lista.innerHTML="";
+function calcularTotalProducto(producto,cantidad){
   let total=0;
+  let promoTexto="";
 
-  carrito.forEach((item,index)=>{
-    total+=item.precio;
-    lista.innerHTML+=`
-      <div>
-        ${item.nombre} - $${item.precio}
-        <button class="btn rojo"
-          onclick="eliminarCarrito(${index})">
-          X
-        </button>
-      </div>
-    `;
-  });
-
-  contador.textContent=carrito.length;
-  totalSpan.textContent=total;
-}
-
-window.eliminarCarrito=function(index){
-  carrito.splice(index,1);
-  actualizarCarritoUI();
-}
-
-/* WHATSAPP */
-window.enviarPedido=function(){
-  if(carrito.length===0){
-    alert("Carrito vacío");
-    return;
+  if(!producto.promo){
+    total=producto.precio*cantidad;
+    return {total,promoTexto};
   }
 
-  let mensaje="Pedido:%0A";
+  if(producto.promo.tipo==="3x2"){
+    let grupos=Math.floor(cantidad/3);
+    let resto=cantidad%3;
+    total=(grupos*2*producto.precio)+(resto*producto.precio);
+    if(grupos>0) promoTexto="🔥 Promo 3x2 aplicada";
+  }
+
+  if(producto.promo.tipo==="2precio"){
+    if(cantidad>=2){
+      let pares=Math.floor(cantidad/2);
+      let resto=cantidad%2;
+      total=(pares*producto.promo.precioEspecial)+(resto*producto.precio);
+      promoTexto="🔥 Promo llevando 2 aplicada";
+    } else total=producto.precio*cantidad;
+  }
+
+  return {total,promoTexto};
+}
+
+function actualizarCarrito(){
+  let cont=document.getElementById("cartItems");
+  cont.innerHTML="";
+  let totalGeneral=0;
+  let totalCantidad=0;
+
   carrito.forEach(item=>{
-    mensaje+=`${item.nombre} - $${item.precio}%0A`;
-  });
+    let p=productos[item.index];
+    let res=calcularTotalProducto(p,item.cantidad);
+    totalGeneral+=res.total;
+    totalCantidad+=item.cantidad;
 
-  window.open(`https://wa.me/549XXXXXXXXXX?text=${mensaje}`,"_blank");
-}
-
-/* ===== ADMIN MEJORADO ===== */
-
-window.abrirAdmin = function(){
-  const pass = prompt("Contraseña admin:");
-  if(pass === "1234"){ // CAMBIALA
-    document.getElementById("adminPanel").style.display="block";
-    cargarProductosAdmin();
-  } else {
-    alert("Incorrecta");
-  }
-}
-
-window.cerrarAdmin = function(){
-  document.getElementById("adminPanel").style.display="none";
-}
-
-window.agregarProductoAdmin = async function(){
-  const nombre = document.getElementById("adminNombre").value;
-  const precio = parseFloat(document.getElementById("adminPrecio").value);
-  const imagen = document.getElementById("adminImagen").value;
-
-  if(!nombre || !precio || !imagen){
-    alert("Completar todo");
-    return;
-  }
-
-  await addDoc(collection(db,"productos"),{
-    nombre,precio,imagen
-  });
-
-  alert("Producto agregado");
-  cargarProductos();
-  cargarProductosAdmin();
-}
-
-async function cargarProductosAdmin(){
-  const lista = document.getElementById("listaAdminProductos");
-  lista.innerHTML="";
-
-  const snapshot = await getDocs(collection(db,"productos"));
-
-  snapshot.forEach(docSnap=>{
-    const data = docSnap.data();
-    lista.innerHTML += `
-      <div style="margin-bottom:8px;">
-        ${data.nombre} - $${data.precio}
-        <button onclick="eliminarProducto('${docSnap.id}')" class="btn rojo">Eliminar</button>
-      </div>
+    cont.innerHTML+=`
+      <p>${p.nombre} x${item.cantidad} - $${res.total}</p>
+      ${res.promoTexto?`<p class="promo">${res.promoTexto}</p>`:""}
     `;
   });
+
+  document.getElementById("total").innerText="Total: $"+totalGeneral;
+  document.getElementById("cartCount").innerText=totalCantidad;
 }
 
-window.eliminarProducto = async function(id){
-  await deleteDoc(doc(db,"productos",id));
-  cargarProductos();
-  cargarProductosAdmin();
+function toggleCart(){
+  document.getElementById("cartModal").classList.toggle("active");
 }
 
+function abrirAdmin(){
+  document.getElementById("adminPanel").style.display="block";
+}
+
+function verificarAdmin(){
+  if(document.getElementById("adminPass").value==="1234"){
+    document.getElementById("adminContent").style.display="block";
+  } else alert("Contraseña incorrecta");
+}
+
+function generarPDF(){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  doc.text("Ticket de Compra",20,20);
+  let y=30;
+
+  carrito.forEach(item=>{
+    let p=productos[item.index];
+    let res=calcularTotalProducto(p,item.cantidad);
+    doc.text(`${p.nombre} x${item.cantidad} - $${res.total}`,20,y);
+    y+=10;
+  });
+
+  doc.save("ticket.pdf");
+}
+
+renderProductos();
 </script>
-  <!-- PANEL ADMIN -->
-<div id="adminPanel" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:2000;">
-  <div style="background:white; width:400px; margin:50px auto; padding:20px; border-radius:8px; max-height:80vh; overflow:auto;">
-    
-    <h3>Panel Admin</h3>
-    <button onclick="cerrarAdmin()" style="float:right;">X</button>
 
-    <h4>Agregar Producto</h4>
-    <input type="text" id="adminNombre" placeholder="Nombre"><br>
-    <input type="number" id="adminPrecio" placeholder="Precio"><br>
-    <input type="text" id="adminImagen" placeholder="URL Imagen"><br>
-    <button onclick="agregarProductoAdmin()" class="btn verde">Agregar</button>
-
-    <hr>
-
-    <h4>Productos Existentes</h4>
-    <div id="listaAdminProductos"></div>
-
-  </div>
-</div>
 </body>
 </html>
