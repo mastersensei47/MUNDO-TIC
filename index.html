@@ -22,90 +22,27 @@ body.dark{
 --accent2:#f43f5e;
 --shadow:0 20px 60px rgba(0,0,0,.6);
 }
-body{
-margin:0;
-font-family:system-ui;
-background:var(--bg);
-color:var(--text);
-transition:.3s;
-}
-header{
-display:flex;
-justify-content:space-between;
-align-items:center;
-padding:15px 25px;
-background:var(--card);
-box-shadow:var(--shadow);
-position:sticky;
-top:0;
-z-index:1000;
-}
-.logo{
-font-weight:700;
-font-size:20px;
-background:linear-gradient(45deg,var(--accent),var(--accent2));
--webkit-background-clip:text;
-color:transparent;
-}
+body{margin:0;font-family:system-ui;background:var(--bg);color:var(--text);transition:.3s;}
+header{display:flex;justify-content:space-between;align-items:center;padding:15px 25px;background:var(--card);box-shadow:var(--shadow);position:sticky;top:0;z-index:1000;}
+.logo{font-weight:700;font-size:20px;background:linear-gradient(45deg,var(--accent),var(--accent2));-webkit-background-clip:text;color:transparent;}
 .icon{cursor:pointer;font-size:22px;margin-left:15px;position:relative;}
-.cart-count{
-position:absolute;top:-6px;right:-10px;
-background:var(--accent2);color:#fff;font-size:11px;
-padding:3px 6px;border-radius:50%;
-}
-.products{
-display:grid;
-grid-template-columns:repeat(auto-fill,minmax(230px,1fr));
-gap:20px;
-padding:25px;
-}
-.card{
-background:var(--card);
-padding:15px;
-border-radius:15px;
-box-shadow:var(--shadow);
-transition:.3s;
-}
+.cart-count{position:absolute;top:-6px;right:-10px;background:var(--accent2);color:#fff;font-size:11px;padding:3px 6px;border-radius:50%;}
+.products{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:20px;padding:25px;}
+.card{background:var(--card);padding:15px;border-radius:15px;box-shadow:var(--shadow);transition:.3s;}
 .card:hover{transform:translateY(-5px)}
-.card img{
-width:100%;height:180px;object-fit:cover;border-radius:12px;
-}
-.promo-badge{
-background:linear-gradient(45deg,var(--accent),var(--accent2));
-color:#fff;font-size:11px;padding:3px 6px;border-radius:6px;margin:3px 3px 0 0;
-display:inline-block;
-}
-button{
-background:linear-gradient(45deg,var(--accent),var(--accent2));
-border:none;color:#fff;padding:6px 10px;border-radius:6px;
-cursor:pointer;margin-top:5px;
-}
-.drawer{
-position:fixed;right:-400px;top:0;width:350px;height:100%;
-background:var(--card);box-shadow:var(--shadow);
-padding:20px;transition:.4s;overflow:auto;z-index:2000;
-}
+.card img{width:100%;height:180px;object-fit:cover;border-radius:12px;}
+button{background:linear-gradient(45deg,var(--accent),var(--accent2));border:none;color:#fff;padding:6px 10px;border-radius:6px;cursor:pointer;margin-top:5px;}
+.drawer{position:fixed;right:-400px;top:0;width:350px;height:100%;background:var(--card);box-shadow:var(--shadow);padding:20px;transition:.4s;overflow:auto;z-index:2000;}
 .drawer.open{right:0}
-.overlay{
-position:fixed;inset:0;background:rgba(0,0,0,.5);
-display:none;z-index:1500;
-}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;z-index:1500;}
 .overlay.show{display:block}
-.cart-item{
-display:flex;justify-content:space-between;
-align-items:center;margin-bottom:8px;
-}
-input,select{
-width:100%;padding:6px;margin-bottom:6px;
-border-radius:6px;border:1px solid #ccc;
-}
-.login-box{
-position:fixed;inset:0;background:rgba(0,0,0,.6);
-display:none;justify-content:center;align-items:center;z-index:4000;
-}
-.login-content{
-background:var(--card);padding:25px;border-radius:15px;width:300px;
-}
+.cart-item{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+input{width:100%;padding:6px;margin-bottom:6px;border-radius:6px;border:1px solid #ccc;}
+.login-box{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;justify-content:center;align-items:center;z-index:4000;}
+.login-content{background:var(--card);padding:25px;border-radius:15px;width:300px;}
+/* Panel admin */
+#adminPanel{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;justify-content:center;align-items:center;z-index:5000;}
+.admin-content{background:var(--card);padding:25px;border-radius:15px;width:400px;max-height:90%;overflow:auto;}
 </style>
 </head>
 <body>
@@ -116,6 +53,7 @@ background:var(--card);padding:25px;border-radius:15px;width:300px;
 <span class="icon" onclick="toggleDark()">🌗</span>
 <span class="icon" onclick="abrirLogin()">👤</span>
 <span class="icon" onclick="openCart()">🛒<span class="cart-count" id="cartCount">0</span></span>
+<span class="icon" onclick="openAdmin()">🔑</span>
 </div>
 </header>
 
@@ -145,9 +83,24 @@ background:var(--card);padding:25px;border-radius:15px;width:300px;
 </div>
 </div>
 
+<!-- Panel de administración -->
+<div id="adminPanel">
+  <div class="admin-content">
+    <h2>Panel de administración</h2>
+    <input id="n" placeholder="Nombre">
+    <input id="p" type="number" placeholder="Precio">
+    <input id="stock" type="number" placeholder="Stock">
+    <input id="img" placeholder="URL imagen">
+    <input id="editIndex" type="hidden">
+    <button onclick="guardar()">Guardar producto</button>
+    <hr>
+    <div id="listaAdmin"></div>
+    <button onclick="cerrarAdmin()">Cerrar</button>
+  </div>
+</div>
+
 <script>
 const MONTO_MINIMO_MAYORISTA = 50000
-
 let products=JSON.parse(localStorage.getItem("products"))||[]
 let cart=[]
 let currentUser=JSON.parse(localStorage.getItem("currentUser"))||null
@@ -157,12 +110,8 @@ function render(){
 let c=document.getElementById("products")
 c.innerHTML=""
 products.forEach((p,i)=>{
-
 let precioBase=p.price
-if(currentUser && p.mayorista){
-precioBase=p.mayorista
-}
-
+if(currentUser && p.mayorista){precioBase=p.mayorista}
 c.innerHTML+=`
 <div class="card">
 <img src="${p.img||'https://via.placeholder.com/300'}">
@@ -188,16 +137,12 @@ function updateCart(){
 let items=document.getElementById("cartItems")
 items.innerHTML=""
 let total=0
-
 cart.forEach(c=>{
 let p=products[c.i]
 let precio=p.price
-if(currentUser && p.mayorista){
-precio=p.mayorista
-}
+if(currentUser && p.mayorista){precio=p.mayorista}
 let subtotal=precio*c.qty
 total+=subtotal
-
 items.innerHTML+=`
 <div class="cart-item">
 ${p.name} x${c.qty}
@@ -207,20 +152,13 @@ ${p.name} x${c.qty}
 </div>
 </div>`
 })
-
 document.getElementById("total").innerText=total
 document.getElementById("cartCount").innerText=cart.reduce((a,b)=>a+b.qty,0)
-
 if(currentUser){
 if(total<MONTO_MINIMO_MAYORISTA){
-document.getElementById("ahorro").innerText=
-"Te faltan $" + (MONTO_MINIMO_MAYORISTA-total) + " para el mínimo mayorista"
-}else{
-document.getElementById("ahorro").innerText=""
-}
-}else{
-document.getElementById("ahorro").innerText=""
-}
+document.getElementById("ahorro").innerText="Te faltan $" + (MONTO_MINIMO_MAYORISTA-total) + " para el mínimo mayorista"
+}else{document.getElementById("ahorro").innerText=""}
+}else{document.getElementById("ahorro").innerText=""}
 }
 
 function cambiar(i,v){
@@ -235,75 +173,20 @@ updateCart()
 function hacerPedido(){
 if(cart.length===0){alert("Carrito vacío");return}
 let total=parseInt(document.getElementById("total").innerText)
-
-if(currentUser){
-if(total<MONTO_MINIMO_MAYORISTA){
-alert("El pedido mínimo mayorista es de $"+MONTO_MINIMO_MAYORISTA)
-return
-}
-}
-
+if(currentUser && total<MONTO_MINIMO_MAYORISTA){alert("El pedido mínimo mayorista es de $"+MONTO_MINIMO_MAYORISTA);return}
 let detalle=""
 cart.forEach(c=>{
 let p=products[c.i]
 let precio=p.price
-if(currentUser && p.mayorista){
-precio=p.mayorista
-}
+if(currentUser && p.mayorista){precio=p.mayorista}
 let subtotal=precio*c.qty
 detalle+=`${p.name} x${c.qty} - $${subtotal}\n`
 p.stock-=c.qty
 })
-
 let mensaje=`Pedido:\n${detalle}\nTotal: $${total}`
 window.open(`https://wa.me/5493434508948?text=${encodeURIComponent(mensaje)}`)
-
 localStorage.setItem("products",JSON.stringify(products))
-cart=[]
-updateCart()
-render()
+cart=[];updateCart();render()
 }
 
-function abrirLogin(){document.getElementById("loginBox").style.display="flex"}
-function cerrarLogin(){document.getElementById("loginBox").style.display="none"}
-function toggleDark(){document.body.classList.toggle("dark")}
-function openCart(){document.getElementById("drawer").classList.add("open");document.getElementById("overlay").classList.add("show")}
-function closeCart(){document.getElementById("drawer").classList.remove("open");document.getElementById("overlay").classList.remove("show")}
-
-function registrar(){
-let u=user.value
-let p=pass.value
-if(!u||!p)return alert("Completar datos")
-users.push({user:u,pass:p})
-localStorage.setItem("users",JSON.stringify(users))
-alert("Cuenta creada")
-}
-
-function login(){
-let u=user.value
-let p=pass.value
-let found=users.find(x=>x.user===u && x.pass===p)
-if(found){
-currentUser=found
-localStorage.setItem("currentUser",JSON.stringify(found))
-alert("Sesión iniciada como mayorista")
-cerrarLogin()
-render()
-updateCart()
-}else alert("Datos incorrectos")
-}
-
-function logout(){
-currentUser=null
-localStorage.removeItem("currentUser")
-alert("Sesión cerrada")
-render()
-updateCart()
-}
-
-render()
-updateCart()
-</script>
-
-</body>
-</html>
+function abrirLogin(){document.get
