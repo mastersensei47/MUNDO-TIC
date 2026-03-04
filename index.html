@@ -3,15 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tienda Online</title>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<title>Tienda Pro</title>
 
 <style>
 :root{
   --bg:#ffffff;
   --text:#111;
   --card:#f5f5f5;
+  --accent:#0a84ff;
 }
 @media (prefers-color-scheme: dark){
   :root{
@@ -29,14 +28,14 @@ body{
 header{
   display:flex;
   justify-content:space-between;
-  padding:15px;
-  background:#0a84ff;
-  color:white;
   align-items:center;
+  padding:15px;
+  background:var(--accent);
+  color:white;
 }
 .cart-icon{
-  cursor:pointer;
   position:relative;
+  cursor:pointer;
   font-size:22px;
 }
 .cart-count{
@@ -62,9 +61,7 @@ header{
   text-align:center;
   transition:.3s;
 }
-.card:hover{
-  transform:scale(1.05);
-}
+.card:hover{ transform:scale(1.05); }
 .card img{
   width:100%;
   height:150px;
@@ -73,17 +70,14 @@ header{
 }
 button{
   padding:8px 12px;
-  margin-top:8px;
+  margin-top:5px;
   border:none;
   border-radius:6px;
   cursor:pointer;
-  background:#0a84ff;
+  background:var(--accent);
   color:white;
 }
-.promo{
-  color:#00c853;
-  font-weight:bold;
-}
+.promo{ color:#00c853; font-weight:bold; }
 #cartModal{
   position:fixed;
   top:0;
@@ -96,18 +90,17 @@ button{
   transition:.4s;
   overflow:auto;
 }
-#cartModal.active{
-  right:0;
-}
+#cartModal.active{ right:0; }
+
 .admin-btn{
   position:fixed;
   bottom:15px;
   left:15px;
   width:40px;
   height:40px;
-  background:url('https://cdn-icons-png.flaticon.com/512/3524/3524659.png') no-repeat center/cover;
-  cursor:pointer;
+  background:url('https://cdn-icons-png.flaticon.com/512/3524/3524659.png') center/cover;
   opacity:.4;
+  cursor:pointer;
 }
 .admin-panel{
   display:none;
@@ -117,13 +110,27 @@ button{
   transform:translate(-50%,-50%);
   background:var(--bg);
   padding:20px;
-  box-shadow:0 0 15px rgba(0,0,0,.5);
   border-radius:10px;
+  width:400px;
+  max-height:90vh;
+  overflow:auto;
+  box-shadow:0 0 20px rgba(0,0,0,.5);
 }
 input,select{
   width:100%;
-  margin:5px 0;
-  padding:5px;
+  padding:6px;
+  margin:4px 0;
+}
+.admin-list{
+  margin-top:10px;
+  border-top:1px solid #ccc;
+  padding-top:10px;
+}
+.admin-item{
+  display:flex;
+  justify-content:space-between;
+  margin-bottom:5px;
+  font-size:14px;
 }
 </style>
 </head>
@@ -132,8 +139,7 @@ input,select{
 <header>
   <h2>Mi Tienda</h2>
   <div class="cart-icon" onclick="toggleCart()">
-    🛒
-    <span class="cart-count" id="cartCount">0</span>
+    🛒 <span class="cart-count" id="cartCount">0</span>
   </div>
 </header>
 
@@ -143,7 +149,8 @@ input,select{
   <h3>Carrito</h3>
   <div id="cartItems"></div>
   <h3 id="total"></h3>
-  <button onclick="generarPDF()">Generar Ticket PDF</button>
+  <button onclick="confirmarCompra()">Confirmar Compra</button>
+  <button onclick="enviarWhatsApp()">Enviar por WhatsApp</button>
 </div>
 
 <div class="admin-btn" onclick="abrirAdmin()"></div>
@@ -154,142 +161,186 @@ input,select{
   <button onclick="verificarAdmin()">Entrar</button>
 
   <div id="adminContent" style="display:none;">
-    <input id="nombre" placeholder="Nombre producto">
-    <input id="precio" type="number" placeholder="Precio">
-    <input id="imagen" placeholder="URL imagen">
+    <hr>
+    <input id="nombreInput" placeholder="Nombre">
+    <input id="precioInput" type="number" placeholder="Precio">
+    <input id="imagenInput" placeholder="URL Imagen">
+    <input id="stockInput" type="number" placeholder="Stock">
     <select id="tipoPromo">
       <option value="">Sin promo</option>
       <option value="3x2">3x2</option>
-      <option value="2precio">Llevás 2 pagás menos</option>
+      <option value="2precio">2 pagás menos</option>
     </select>
-    <input id="precioEspecial" type="number" placeholder="Precio especial (2precio)">
-    <button onclick="agregarProducto()">Agregar</button>
+    <input id="precioEspecialInput" type="number" placeholder="Precio especial">
+    <button onclick="agregarProducto()">Guardar Producto</button>
+    <button onclick="cerrarAdmin()">Cerrar</button>
+
+    <div class="admin-list" id="adminLista"></div>
   </div>
 </div>
 
 <script>
-let productos = [];
-let carrito = [];
+let productos = JSON.parse(localStorage.getItem("productos")) || [];
+let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
+
+function guardar(){
+  localStorage.setItem("productos",JSON.stringify(productos));
+  localStorage.setItem("carrito",JSON.stringify(carrito));
+}
 
 function renderProductos(){
-  let cont = document.getElementById("productos");
-  cont.innerHTML="";
+  productosDiv.innerHTML="";
   productos.forEach((p,i)=>{
-    cont.innerHTML+=`
-      <div class="card">
-        <img src="${p.imagen}">
-        <h4>${p.nombre}</h4>
-        <p>$${p.precio}</p>
-        ${p.promo ? `<p class="promo">🔥 Promo activa</p>` : ""}
-        <button onclick="agregarCarrito(${i})">Agregar</button>
+    productosDiv.innerHTML+=`
+    <div class="card">
+      <img src="${p.imagen}">
+      <h4>${p.nombre}</h4>
+      <p>$${p.precio}</p>
+      <p>Stock: ${p.stock}</p>
+      ${p.promo?'<p class="promo">🔥 Promo activa</p>':''}
+      <button onclick="agregarCarrito(${i})">Agregar</button>
+    </div>`;
+  });
+}
+
+function renderAdminLista(){
+  adminLista.innerHTML="";
+  productos.forEach((p,i)=>{
+    adminLista.innerHTML+=`
+    <div class="admin-item">
+      ${p.nombre} (Stock:${p.stock})
+      <div>
+        <button onclick="editarProducto(${i})">✏</button>
+        <button onclick="eliminarProducto(${i})">🗑</button>
       </div>
-    `;
+    </div>`;
   });
 }
 
 function agregarProducto(){
-  let nombre=document.getElementById("nombre").value;
-  let precio=Number(document.getElementById("precio").value);
-  let imagen=document.getElementById("imagen").value;
-  let tipo=document.getElementById("tipoPromo").value;
-  let precioEspecial=Number(document.getElementById("precioEspecial").value);
-
   let promo=null;
-  if(tipo==="3x2") promo={tipo:"3x2"};
-  if(tipo==="2precio") promo={tipo:"2precio",precioEspecial};
+  if(tipoPromo.value==="3x2") promo={tipo:"3x2"};
+  if(tipoPromo.value==="2precio") promo={tipo:"2precio",precioEspecial:Number(precioEspecialInput.value)};
 
-  productos.push({nombre,precio,imagen,promo});
+  productos.push({
+    nombre:nombreInput.value,
+    precio:Number(precioInput.value),
+    imagen:imagenInput.value,
+    stock:Number(stockInput.value),
+    promo
+  });
+
+  guardar();
   renderProductos();
+  renderAdminLista();
+}
+
+function editarProducto(i){
+  let p=productos[i];
+  nombreInput.value=p.nombre;
+  precioInput.value=p.precio;
+  imagenInput.value=p.imagen;
+  stockInput.value=p.stock;
+  productos.splice(i,1);
+  guardar();
+  renderProductos();
+  renderAdminLista();
+}
+
+function eliminarProducto(i){
+  productos.splice(i,1);
+  guardar();
+  renderProductos();
+  renderAdminLista();
 }
 
 function agregarCarrito(i){
+  if(productos[i].stock<=0){ alert("Sin stock"); return; }
   let item=carrito.find(x=>x.index===i);
-  if(item){item.cantidad++}
-  else carrito.push({index:i,cantidad:1});
+  if(item && item.cantidad<productos[i].stock){ item.cantidad++; }
+  else if(!item){ carrito.push({index:i,cantidad:1}); }
+  guardar();
   actualizarCarrito();
 }
 
-function calcularTotalProducto(producto,cantidad){
-  let total=0;
-  let promoTexto="";
-
-  if(!producto.promo){
-    total=producto.precio*cantidad;
-    return {total,promoTexto};
+function calcularTotalProducto(p,c){
+  if(!p.promo) return p.precio*c;
+  if(p.promo.tipo==="3x2"){
+    let g=Math.floor(c/3);
+    let r=c%3;
+    return g*2*p.precio + r*p.precio;
   }
-
-  if(producto.promo.tipo==="3x2"){
-    let grupos=Math.floor(cantidad/3);
-    let resto=cantidad%3;
-    total=(grupos*2*producto.precio)+(resto*producto.precio);
-    if(grupos>0) promoTexto="🔥 Promo 3x2 aplicada";
+  if(p.promo.tipo==="2precio"){
+    let pares=Math.floor(c/2);
+    let resto=c%2;
+    return pares*p.promo.precioEspecial + resto*p.precio;
   }
-
-  if(producto.promo.tipo==="2precio"){
-    if(cantidad>=2){
-      let pares=Math.floor(cantidad/2);
-      let resto=cantidad%2;
-      total=(pares*producto.promo.precioEspecial)+(resto*producto.precio);
-      promoTexto="🔥 Promo llevando 2 aplicada";
-    } else total=producto.precio*cantidad;
-  }
-
-  return {total,promoTexto};
 }
 
 function actualizarCarrito(){
-  let cont=document.getElementById("cartItems");
-  cont.innerHTML="";
-  let totalGeneral=0;
-  let totalCantidad=0;
+  cartItems.innerHTML="";
+  let total=0;
+  let cantidadTotal=0;
 
-  carrito.forEach(item=>{
+  carrito.forEach((item,i)=>{
     let p=productos[item.index];
-    let res=calcularTotalProducto(p,item.cantidad);
-    totalGeneral+=res.total;
-    totalCantidad+=item.cantidad;
+    let subtotal=calcularTotalProducto(p,item.cantidad);
+    total+=subtotal;
+    cantidadTotal+=item.cantidad;
 
-    cont.innerHTML+=`
-      <p>${p.nombre} x${item.cantidad} - $${res.total}</p>
-      ${res.promoTexto?`<p class="promo">${res.promoTexto}</p>`:""}
-    `;
+    cartItems.innerHTML+=`
+      <p>${p.nombre} x${item.cantidad} - $${subtotal}
+      <button onclick="quitarDelCarrito(${i})">❌</button></p>`;
   });
 
-  document.getElementById("total").innerText="Total: $"+totalGeneral;
-  document.getElementById("cartCount").innerText=totalCantidad;
+  totalDiv.innerText="Total: $"+total;
+  cartCount.innerText=cantidadTotal;
 }
 
-function toggleCart(){
-  document.getElementById("cartModal").classList.toggle("active");
+function quitarDelCarrito(i){
+  carrito.splice(i,1);
+  guardar();
+  actualizarCarrito();
 }
 
-function abrirAdmin(){
-  document.getElementById("adminPanel").style.display="block";
+function confirmarCompra(){
+  carrito.forEach(item=>{
+    productos[item.index].stock -= item.cantidad;
+  });
+
+  carrito=[];
+  guardar();
+  renderProductos();
+  renderAdminLista();
+  actualizarCarrito();
+  alert("Compra confirmada y stock actualizado ✅");
 }
 
+function enviarWhatsApp(){
+  let msg="Hola quiero comprar:%0A";
+  let total=0;
+  carrito.forEach(item=>{
+    let p=productos[item.index];
+    let sub=calcularTotalProducto(p,item.cantidad);
+    total+=sub;
+    msg+=`${p.nombre} x${item.cantidad} - $${sub}%0A`;
+  });
+  msg+=`Total: $${total}`;
+  window.open("https://wa.me/549XXXXXXXXXX?text="+msg);
+}
+
+function toggleCart(){ cartModal.classList.toggle("active"); }
+function abrirAdmin(){ adminPanel.style.display="block"; }
+function cerrarAdmin(){ adminPanel.style.display="none"; }
 function verificarAdmin(){
-  if(document.getElementById("adminPass").value==="1234"){
-    document.getElementById("adminContent").style.display="block";
+  if(adminPass.value==="1234"){
+    adminContent.style.display="block";
+    renderAdminLista();
   } else alert("Contraseña incorrecta");
 }
 
-function generarPDF(){
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
-  doc.text("Ticket de Compra",20,20);
-  let y=30;
-
-  carrito.forEach(item=>{
-    let p=productos[item.index];
-    let res=calcularTotalProducto(p,item.cantidad);
-    doc.text(`${p.nombre} x${item.cantidad} - $${res.total}`,20,y);
-    y+=10;
-  });
-
-  doc.save("ticket.pdf");
-}
-
 renderProductos();
+actualizarCarrito();
 </script>
 
 </body>
