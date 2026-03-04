@@ -5,99 +5,177 @@
   <title>Mi Tienda Online</title>
 
   <style>
-    body { font-family: Arial; margin:0; background:#f4f4f4; }
-    header { background:#111; color:white; padding:15px; text-align:center; font-size:22px; }
-    nav { background:#222; padding:10px; text-align:center; }
-    nav a { color:white; margin:0 15px; cursor:pointer; text-decoration:none; }
-    nav a:hover { text-decoration:underline; }
+    * { box-sizing: border-box; }
 
-    section { display:none; padding:20px; }
-
-    .grid { 
-      display:grid; 
-      grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); 
-      gap:20px; 
+    body {
+      font-family: Arial, sans-serif;
+      margin:0;
+      background:#f4f4f4;
+      overflow-x: hidden;
     }
 
-    .card { 
-      background:white; 
-      padding:10px; 
-      border-radius:8px; 
-      box-shadow:0 0 5px rgba(0,0,0,0.2); 
-      text-align:center; 
+    header {
+      background:#111;
+      color:white;
+      padding:15px 20px;
+      display: flex;
+      align-items:center;
+      justify-content: space-between;
+      font-size:22px;
+      position: sticky;
+      top:0;
+      z-index: 1000;
     }
 
-    .card img { 
-      width:100%; 
-      height:150px; 
-      object-fit:cover; 
-      border-radius:5px; 
+    header .logo {
+      font-weight:bold;
     }
 
-    .btn { 
-      padding:8px 12px; 
-      border:none; 
-      border-radius:5px; 
-      cursor:pointer; 
-      margin-top:5px; 
+    header .carrito-icon {
+      cursor:pointer;
+      font-size:24px;
+      position: relative;
+    }
+
+    header .carrito-icon span {
+      background:red;
+      color:white;
+      border-radius:50%;
+      padding:2px 6px;
+      position:absolute;
+      top:-8px;
+      right:-10px;
+      font-size:14px;
+      font-weight:bold;
+    }
+
+    nav {
+      display:none; /* ya no usamos nav tipo menú */
+    }
+
+    section {
+      padding:20px;
+    }
+
+    .grid {
+      display:grid;
+      grid-template-columns: repeat(auto-fill,minmax(220px,1fr));
+      gap:20px;
+    }
+
+    .card {
+      background:white;
+      padding:10px;
+      border-radius:8px;
+      box-shadow:0 0 5px rgba(0,0,0,0.2);
+      text-align:center;
+    }
+
+    .card img {
+      width:100%;
+      height:150px;
+      object-fit:cover;
+      border-radius:5px;
+    }
+
+    .btn {
+      padding:8px 12px;
+      border:none;
+      border-radius:5px;
+      cursor:pointer;
+      margin-top:5px;
     }
 
     .verde { background:green; color:white; }
     .rojo { background:red; color:white; }
 
-    input { padding:6px; width:250px; }
-
-    footer { 
-      background:#111; 
-      color:white; 
-      text-align:center; 
-      padding:10px; 
-      margin-top:20px; 
+    input {
+      padding:8px;
+      width:90%;
+      margin-bottom:10px;
     }
+
+    footer {
+      background:#111;
+      color:white;
+      text-align:center;
+      padding:10px;
+      margin-top:20px;
+    }
+
+    /* Panel Carrito */
+    #carritoPanel {
+      position:fixed;
+      top:0;
+      right:-100%;
+      width:350px;
+      height:100%;
+      background:#fff;
+      box-shadow:-3px 0 7px rgba(0,0,0,0.3);
+      transition:0.3s ease;
+      z-index:999;
+      padding:20px;
+    }
+
+    #carritoPanel.open {
+      right:0;
+    }
+
+    #carritoPanel h3 {
+      margin-top:0;
+    }
+
+    #carritoPanel button.cerrar {
+      background:red;
+      color:white;
+      border:none;
+      padding:5px 10px;
+      border-radius:5px;
+      cursor:pointer;
+      float:right;
+      margin-top:-10px;
+      margin-right:-10px;
+      font-size:18px;
+    }
+
+    #envioForm {
+      display:none;
+      margin-top:20px;
+    }
+
   </style>
 </head>
-
 <body>
 
-<header>Mi Tienda Online</header>
-
-<nav>
-  <a onclick="mostrarSeccion('productos')">Productos</a>
-  <a onclick="mostrarSeccion('carrito')">Carrito</a>
-  <a onclick="mostrarSeccion('envio')">Envío</a>
-  <a onclick="mostrarSeccion('admin')">Admin</a>
-</nav>
+<header>
+  <div class="logo">Mi Tienda Online</div>
+  <div class="carrito-icon" onclick="toggleCarrito()">
+    🛒 <span id="contadorCarrito">0</span>
+  </div>
+</header>
 
 <section id="productos">
   <h2>Productos</h2>
   <div class="grid" id="listaProductos"></div>
 </section>
 
-<section id="carrito">
-  <h2>Carrito</h2>
+<!-- Carrito Panel -->
+<div id="carritoPanel">
+  <button class="cerrar" onclick="toggleCarrito()">×</button>
+  <h3>Tu Carrito</h3>
   <div id="listaCarrito"></div>
   <h3>Total: $<span id="totalCarrito">0</span></h3>
-</section>
+  <button class="btn verde" onclick="mostrarEnvio()">Continuar al Envío</button>
 
-<section id="envio">
-  <h2>Datos de Envío</h2>
-  <input type="text" id="nombre" placeholder="Nombre"><br><br>
-  <input type="text" id="direccion" placeholder="Dirección"><br><br>
-  <input type="text" id="telefono" placeholder="Teléfono"><br><br>
-  <button class="btn verde" onclick="enviarPedido()">Enviar por WhatsApp</button>
-</section>
-
-<section id="admin">
-  <h2>Panel Admin</h2>
-
-  <input type="text" id="adminNombre" placeholder="Nombre producto"><br><br>
-  <input type="number" id="adminPrecio" placeholder="Precio"><br><br>
-  <input type="text" id="adminImagen" placeholder="URL Imagen"><br><br>
-  <button class="btn verde" onclick="agregarProducto()">Agregar Producto</button>
-
-  <hr>
-  <div id="adminLista"></div>
-</section>
+  <!-- Formulario Envío -->
+  <div id="envioForm">
+    <h4>Datos de Envío</h4>
+    <input type="text" id="nombreEnvio" placeholder="Nombre">
+    <input type="text" id="direccionEnvio" placeholder="Dirección">
+    <input type="text" id="telefonoEnvio" placeholder="Teléfono">
+    <button class="btn verde" onclick="enviarPedido()">Enviar por WhatsApp</button>
+  </div>
+</div>
 
 <footer>© 2026 Mi Tienda Online</footer>
 
@@ -108,7 +186,7 @@ import {
   getFirestore, collection, addDoc, getDocs, deleteDoc, doc 
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-/* 🔥 CONFIG DEL PROYECTO tienda-online-baaf6 */
+/* 🔥 CONFIG FIREBASE (tienda-online-baaf6) */
 const firebaseConfig = {
   apiKey: "AIzaSyDAqlchDsLHIMMbv6YL2ipggaShXlFqiW8",
   authDomain: "tienda-online-baaf6.firebaseapp.com",
@@ -123,135 +201,94 @@ const db = getFirestore(app);
 
 let carrito = [];
 
-/* -------- Navegación -------- */
-window.mostrarSeccion = function(id){
-  document.querySelectorAll("section").forEach(sec => sec.style.display="none");
-  document.getElementById(id).style.display="block";
-}
-
 /* -------- Cargar Productos -------- */
 async function cargarProductos(){
-  try{
-    const querySnapshot = await getDocs(collection(db,"productos"));
-    const cont = document.getElementById("listaProductos");
-    const adminCont = document.getElementById("adminLista");
+  const lista = document.getElementById("listaProductos");
+  lista.innerHTML="";
+  const snapshot = await getDocs(collection(db,"productos"));
 
-    cont.innerHTML="";
-    adminCont.innerHTML="";
-
-    querySnapshot.forEach(docSnap=>{
-      const data = docSnap.data();
-
-      cont.innerHTML += `
-        <div class="card">
-          <img src="${data.imagen}">
-          <h4>${data.nombre}</h4>
-          <p>$${data.precio}</p>
-          <button class="btn verde" onclick="agregarCarrito('${data.nombre}',${data.precio})">
-            Agregar al carrito
-          </button>
-        </div>
-      `;
-
-      adminCont.innerHTML += `
-        <div>
-          ${data.nombre} - $${data.precio}
-          <button class="btn rojo" onclick="eliminarProducto('${docSnap.id}')">
-            Eliminar
-          </button>
-        </div>
-        <hr>
-      `;
-    });
-
-  }catch(error){
-    console.error("Error cargando productos:", error);
-  }
-}
-
-/* -------- Carrito -------- */
-window.agregarCarrito = function(nombre,precio){
-  carrito.push({nombre,precio});
-  mostrarCarrito();
-}
-
-window.eliminarCarrito = function(index){
-  carrito.splice(index,1);
-  mostrarCarrito();
-}
-
-function mostrarCarrito(){
-  const cont = document.getElementById("listaCarrito");
-  let total=0;
-  cont.innerHTML="";
-
-  carrito.forEach((item,index)=>{
-    total+=item.precio;
-    cont.innerHTML+=`
-      <div>
-        ${item.nombre} - $${item.precio}
-        <button class="btn rojo" onclick="eliminarCarrito(${index})">
-          Eliminar
+  snapshot.forEach(docSnap=>{
+    const data = docSnap.data();
+    lista.innerHTML += `
+      <div class="card">
+        <img src="${data.imagen}">
+        <h4>${data.nombre}</h4>
+        <p>$${data.precio}</p>
+        <button class="btn verde" onclick="agregarCarrito('${data.nombre}',${data.precio})">
+          Agregar al carrito
         </button>
       </div>
     `;
   });
-
-  document.getElementById("totalCarrito").innerText=total;
 }
 
-/* -------- WhatsApp -------- */
+window.agregarCarrito = function(nombre,precio){
+  carrito.push({nombre,precio});
+  actualizarCarritoUI();
+}
+
+window.eliminarCarrito = function(index){
+  carrito.splice(index,1);
+  actualizarCarritoUI();
+}
+
+function actualizarCarritoUI(){
+  const lista = document.getElementById("listaCarrito");
+  const contador = document.getElementById("contadorCarrito");
+  const totalSpan = document.getElementById("totalCarrito");
+
+  lista.innerHTML="";
+  let total=0;
+  carrito.forEach((item,index)=>{
+    total += item.precio;
+    lista.innerHTML += `
+      <div>
+        ${item.nombre} - $${item.precio}
+        <button class="btn rojo" onclick="eliminarCarrito(${index})">Eliminar</button>
+      </div>
+    `;
+  });
+
+  contador.textContent = carrito.length;
+  totalSpan.textContent = total;
+}
+
+function toggleCarrito(){
+  document.getElementById("carritoPanel").classList.toggle("open");
+}
+
+function mostrarEnvio(){
+  document.getElementById("envioForm").style.display="block";
+}
+
+/* -------- Enviar por WhatsApp -------- */
 window.enviarPedido = function(){
-  if(carrito.length===0){
+
+  if(carrito.length === 0){
     alert("El carrito está vacío");
     return;
   }
 
-  const nombre = document.getElementById("nombre").value;
-  const direccion = document.getElementById("direccion").value;
-  const telefono = document.getElementById("telefono").value;
+  const nombre = document.getElementById("nombreEnvio").value;
+  const direccion = document.getElementById("direccionEnvio").value;
+  const telefono = document.getElementById("telefonoEnvio").value;
 
   let mensaje = "Pedido:%0A";
 
   carrito.forEach(item=>{
-    mensaje+= `${item.nombre} - $${item.precio}%0A`;
+    mensaje += `${item.nombre} - $${item.precio}%0A`;
   });
 
-  mensaje+= `%0ANombre: ${nombre}%0ADirección: ${direccion}%0ATeléfono: ${telefono}`;
+  mensaje += `%0ANombre: ${nombre}%0ADirección: ${direccion}%0ATeléfono: ${telefono}`;
 
   window.open(`https://wa.me/5493434508948?text=${mensaje}`, "_blank");
-
-  carrito=[];
-  mostrarCarrito();
-}
-
-/* -------- Admin -------- */
-window.agregarProducto = async function(){
-  const nombre = document.getElementById("adminNombre").value;
-  const precio = parseFloat(document.getElementById("adminPrecio").value);
-  const imagen = document.getElementById("adminImagen").value;
-
-  if(!nombre || !precio || !imagen){
-    alert("Completa todos los campos");
-    return;
-  }
-
-  await addDoc(collection(db,"productos"),{nombre,precio,imagen});
-
-  document.getElementById("adminNombre").value="";
-  document.getElementById("adminPrecio").value="";
-  document.getElementById("adminImagen").value="";
-
-  cargarProductos();
-}
-
-window.eliminarProducto = async function(id){
-  await deleteDoc(doc(db,"productos",id));
-  cargarProductos();
+  
+  carrito = [];
+  actualizarCarritoUI();
+  toggleCarrito();
 }
 
 /* -------- Inicializar -------- */
-mostrarSeccion("productos");
 cargarProductos();
 
 </script>
