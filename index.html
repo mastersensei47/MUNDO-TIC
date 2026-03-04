@@ -37,7 +37,7 @@
     <a onclick="mostrarSeccion('admin')">Admin</a>
   </nav>
 
-  <!-- Productos cargados desde Firebase -->
+  <!-- Productos -->
   <section class="productos" id="productos"></section>
 
   <!-- Carrito -->
@@ -47,30 +47,24 @@
     <p><strong>Total:</strong> $<span id="total">0</span></p>
   </section>
 
-  <!-- Formulario de envío -->
+  <!-- Envío -->
   <section id="envio">
     <h2>Datos de Envío</h2>
     <form id="form-envio">
-      <label>Nombre:</label>
-      <input type="text" id="nombre" required>
-      <label>Dirección:</label>
-      <input type="text" id="direccion" required>
-      <label>Teléfono:</label>
-      <input type="text" id="telefono" required>
+      <input type="text" id="nombre" placeholder="Nombre" required>
+      <input type="text" id="direccion" placeholder="Dirección" required>
+      <input type="text" id="telefono" placeholder="Teléfono" required>
       <button type="submit">Enviar pedido por WhatsApp</button>
     </form>
   </section>
 
-  <!-- Panel Admin -->
+  <!-- Admin -->
   <section id="admin">
     <h2>Panel Admin</h2>
     <form id="form-admin">
-      <label>Nombre:</label>
-      <input type="text" id="nombreProd" required>
-      <label>Precio:</label>
-      <input type="number" id="precioProd" required>
-      <label>Imagen (URL):</label>
-      <input type="text" id="imagenProd" required>
+      <input type="text" id="nombreProd" placeholder="Nombre" required>
+      <input type="number" id="precioProd" placeholder="Precio" required>
+      <input type="text" id="imagenProd" placeholder="URL de imagen" required>
       <button type="submit">Agregar Producto</button>
     </form>
     <div id="lista-admin"></div>
@@ -80,7 +74,7 @@
     <p>&copy; 2026 Mi Tienda Online</p>
   </footer>
 
-  <!-- Firebase SDK -->
+  <!-- Firebase -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
     import { getFirestore, collection, getDocs, addDoc, updateDoc, doc, deleteDoc } 
@@ -98,27 +92,19 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // --- Navegación ---
+    // Navegación
     window.mostrarSeccion = function(id) {
       document.querySelectorAll("section").forEach(sec => sec.style.display = "none");
       document.getElementById(id).style.display = "block";
     }
 
-    // --- Carrito ---
+    // Carrito
     let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
-
     window.agregarAlCarrito = function(nombre, precio) {
       carrito.push({ nombre, precio });
-      guardarCarrito();
+      localStorage.setItem("carrito", JSON.stringify(carrito));
       mostrarCarrito();
     }
-
-    function eliminarDelCarrito(index) {
-      carrito.splice(index, 1);
-      guardarCarrito();
-      mostrarCarrito();
-    }
-
     function mostrarCarrito() {
       const lista = document.getElementById("lista-carrito");
       lista.innerHTML = "";
@@ -129,7 +115,7 @@
         const btnEliminar = document.createElement("button");
         btnEliminar.textContent = "Eliminar";
         btnEliminar.className = "eliminar";
-        btnEliminar.onclick = () => eliminarDelCarrito(index);
+        btnEliminar.onclick = () => { carrito.splice(index,1); localStorage.setItem("carrito", JSON.stringify(carrito)); mostrarCarrito(); };
         li.appendChild(btnEliminar);
         lista.appendChild(li);
         total += item.precio;
@@ -137,42 +123,29 @@
       document.getElementById("total").textContent = total;
     }
 
-    function guardarCarrito() {
-      localStorage.setItem("carrito", JSON.stringify(carrito));
-    }
-
-    // --- Formulario de envío -> WhatsApp ---
-    document.getElementById("form-envio").addEventListener("submit", function(e) {
+    // Envío
+    document.getElementById("form-envio").addEventListener("submit", e => {
       e.preventDefault();
-      if (carrito.length === 0) {
-        alert("El carrito está vacío.");
-        return;
-      }
+      if (carrito.length === 0) { alert("El carrito está vacío."); return; }
       const nombre = document.getElementById("nombre").value;
       const direccion = document.getElementById("direccion").value;
       const telefono = document.getElementById("telefono").value;
-
       let mensaje = "Hola, quiero hacer este pedido:%0A";
-      carrito.forEach(item => {
-        mensaje += `- ${item.nombre} ($${item.precio})%0A`;
-      });
+      carrito.forEach(item => mensaje += `- ${item.nombre} ($${item.precio})%0A`);
       let total = carrito.reduce((sum, item) => sum + item.precio, 0);
       mensaje += `Total: $${total}%0A`;
       mensaje += `Nombre: ${nombre}%0A`;
       mensaje += `Dirección: ${direccion}%0A`;
       mensaje += `Teléfono: ${telefono}`;
-
-      let telefonoNegocio = "5493425056940"; 
-      let url = `https://wa.me/${telefonoNegocio}?text=${mensaje}`;
-      window.open(url, "_blank");
+      window.open(`https://wa.me/5493425056940?text=${mensaje}`, "_blank");
     });
 
-    // --- Productos desde Firebase ---
+    // Productos
     async function cargarProductos() {
       const querySnapshot = await getDocs(collection(db, "productos"));
       const contenedor = document.getElementById("productos");
       contenedor.innerHTML = "";
-      querySnapshot.forEach((docSnap) => {
+      querySnapshot.forEach(docSnap => {
         const producto = docSnap.data();
         contenedor.innerHTML += `
           <div class="producto">
@@ -180,10 +153,22 @@
             <h3>${producto.nombre}</h3>
             <p>$${producto.precio}</p>
             <button onclick="agregarAlCarrito('${producto.nombre}', ${producto.precio})">Agregar al carrito</button>
-          </div>
-        `;
+          </div>`;
       });
     }
 
-    // --- Panel Admin ---
-    document.getElementById("
+    // Admin
+    document.getElementById("form-admin").addEventListener("submit", async e => {
+      e.preventDefault();
+      const nombre = document.getElementById("nombreProd").value;
+      const precio = parseFloat(document.getElementById("precioProd").value);
+      const imagen = document.getElementById("imagenProd").value;
+      await addDoc(collection(db, "productos"), { nombre, precio, imagen });
+      alert("Producto agregado");
+      cargarProductos();
+      mostrarAdmin();
+    });
+
+    async function mostrarAdmin() {
+      const querySnapshot = await getDocs(collection(db, "productos"));
+      const adminPanel
