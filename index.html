@@ -3,41 +3,75 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tienda Pro</title>
+<title>Tienda Premium</title>
 
 <style>
+
+/* ----------------- VARIABLES ----------------- */
+
 :root{
-  --bg:#ffffff;
+  --bg:#f5f5f7;
+  --card:#ffffff;
   --text:#111;
-  --card:#f5f5f5;
-  --accent:#0a84ff;
+  --accent:#000;
+  --shadow:0 8px 25px rgba(0,0,0,.08);
 }
-@media (prefers-color-scheme: dark){
-  :root{
-    --bg:#111;
-    --text:#fff;
-    --card:#1e1e1e;
-  }
+
+body.dark{
+  --bg:#0f0f12;
+  --card:#1a1a1f;
+  --text:#fff;
+  --accent:#fff;
+  --shadow:0 8px 25px rgba(0,0,0,.4);
 }
-body{
+
+/* ----------------- GLOBAL ----------------- */
+
+*{
   margin:0;
-  font-family:Arial;
+  padding:0;
+  box-sizing:border-box;
+  font-family:-apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+body{
   background:var(--bg);
   color:var(--text);
+  transition:.3s;
 }
+
+/* ----------------- HEADER ----------------- */
+
 header{
   display:flex;
   justify-content:space-between;
   align-items:center;
-  padding:15px;
-  background:var(--accent);
-  color:white;
+  padding:20px 40px;
+  background:var(--card);
+  box-shadow:var(--shadow);
+  position:sticky;
+  top:0;
+  z-index:100;
 }
+
+.logo{
+  font-weight:700;
+  font-size:20px;
+  letter-spacing:1px;
+}
+
+.actions{
+  display:flex;
+  align-items:center;
+  gap:20px;
+}
+
 .cart-icon{
   position:relative;
   cursor:pointer;
   font-size:22px;
 }
+
 .cart-count{
   position:absolute;
   top:-8px;
@@ -47,304 +81,258 @@ header{
   font-size:12px;
   padding:3px 6px;
   border-radius:50%;
+  transition:.2s;
 }
-.grid{
+
+.toggle-dark{
+  cursor:pointer;
+  font-size:18px;
+}
+
+/* ----------------- PRODUCTS ----------------- */
+
+.products{
   display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
-  gap:15px;
-  padding:20px;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:30px;
+  padding:40px;
 }
-.card{
+
+.product{
   background:var(--card);
-  padding:15px;
-  border-radius:10px;
+  padding:20px;
+  border-radius:16px;
+  box-shadow:var(--shadow);
+  transition:.3s;
   text-align:center;
 }
-.card img{
-  width:100%;
-  height:150px;
-  object-fit:cover;
-  border-radius:8px;
-}
-button{
-  padding:6px 10px;
-  margin-top:5px;
-  border:none;
-  border-radius:6px;
-  cursor:pointer;
-  background:var(--accent);
-  color:white;
-}
-.promo{color:#00c853;font-weight:bold;}
 
-#cartModal{
+.product:hover{
+  transform:translateY(-6px);
+}
+
+.product img{
+  width:100%;
+  height:160px;
+  object-fit:cover;
+  border-radius:12px;
+  margin-bottom:15px;
+}
+
+.product button{
+  margin-top:10px;
+  padding:10px;
+  width:100%;
+  border:none;
+  border-radius:8px;
+  background:var(--accent);
+  color:var(--bg);
+  cursor:pointer;
+  transition:.2s;
+}
+
+.product button:hover{
+  opacity:.8;
+}
+
+/* ----------------- CART DRAWER ----------------- */
+
+.overlay{
   position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.4);
+  backdrop-filter:blur(4px);
+  opacity:0;
+  visibility:hidden;
+  transition:.3s;
+}
+
+.overlay.active{
+  opacity:1;
+  visibility:visible;
+}
+
+.cart-drawer{
+  position:fixed;
+  right:-400px;
   top:0;
-  right:-100%;
   width:350px;
   height:100%;
-  background:var(--bg);
-  box-shadow:-5px 0 15px rgba(0,0,0,.3);
-  padding:20px;
-  transition:.3s;
-  overflow:auto;
-}
-#cartModal.active{ right:0; }
-
-.close-cart{
-  background:red;
-  float:right;
+  background:var(--card);
+  box-shadow:-10px 0 30px rgba(0,0,0,.2);
+  padding:25px;
+  transition:.4s cubic-bezier(.77,0,.18,1);
+  display:flex;
+  flex-direction:column;
 }
 
-.admin-btn{
-  position:fixed;
-  bottom:15px;
-  left:15px;
-  width:40px;
-  height:40px;
-  background:url('https://cdn-icons-png.flaticon.com/512/3524/3524659.png') center/cover;
-  opacity:.4;
-  cursor:pointer;
+.cart-drawer.active{
+  right:0;
 }
-.admin-panel{
-  display:none;
-  position:fixed;
-  top:50%;
-  left:50%;
-  transform:translate(-50%,-50%);
-  background:var(--bg);
-  padding:20px;
-  border-radius:10px;
-  width:400px;
-  max-height:90vh;
-  overflow:auto;
-  box-shadow:0 0 20px rgba(0,0,0,.5);
+
+.cart-items{
+  flex:1;
+  overflow-y:auto;
+  margin-bottom:15px;
 }
-input,select{
-  width:100%;
-  padding:6px;
-  margin:4px 0;
-}
-.admin-item{
+
+.cart-item{
   display:flex;
   justify-content:space-between;
+  margin-bottom:10px;
   font-size:14px;
-  margin-bottom:5px;
 }
+
+.total{
+  font-weight:bold;
+  margin-bottom:15px;
+}
+
+.checkout{
+  padding:12px;
+  border:none;
+  border-radius:10px;
+  background:#25D366;
+  color:white;
+  font-weight:bold;
+  cursor:pointer;
+  transition:.2s;
+}
+
+.checkout:hover{
+  transform:scale(1.05);
+}
+
 </style>
 </head>
 <body>
 
 <header>
-  <h2>Mi Tienda</h2>
-  <div class="cart-icon" onclick="toggleCart()">
-    🛒 <span class="cart-count" id="cartCount">0</span>
+  <div class="logo">MASTER STORE</div>
+
+  <div class="actions">
+    <div class="toggle-dark">🌙</div>
+    <div class="cart-icon">
+      🛍
+      <span class="cart-count">0</span>
+    </div>
   </div>
 </header>
 
-<div class="grid" id="productos"></div>
+<section class="products">
 
-<div id="cartModal">
-  <button class="close-cart" onclick="toggleCart()">X</button>
-  <h3>Carrito</h3>
-  <div id="cartItems"></div>
-  <h3 id="total"></h3>
-  <button onclick="confirmarCompra()">Confirmar Compra</button>
-</div>
-
-<div class="admin-btn" onclick="abrirAdmin()"></div>
-
-<div class="admin-panel" id="adminPanel">
-  <h3>Modo Admin</h3>
-  <input type="password" id="adminPass" placeholder="Contraseña">
-  <button onclick="verificarAdmin()">Entrar</button>
-
-  <div id="adminContent" style="display:none;">
-    <hr>
-    <input id="nombreInput" placeholder="Nombre">
-    <input id="precioInput" type="number" placeholder="Precio">
-    <input id="imagenInput" placeholder="URL Imagen">
-    <input id="stockInput" type="number" placeholder="Stock">
-
-    <select id="tipoPromo">
-      <option value="">Sin promo</option>
-      <option value="3x2">3x2</option>
-      <option value="2precio">2 pagás menos</option>
-    </select>
-
-    <input id="precioEspecialInput" type="number" placeholder="Precio especial">
-
-    <button onclick="guardarProducto()">Guardar</button>
-    <button onclick="cerrarAdmin()">Cerrar</button>
-
-    <hr>
-    <div id="adminLista"></div>
+  <div class="product">
+    <img src="https://picsum.photos/300/200?1">
+    <h3>Producto 1</h3>
+    <p>$100</p>
+    <button onclick="addToCart('Producto 1',100)">Agregar</button>
   </div>
+
+  <div class="product">
+    <img src="https://picsum.photos/300/200?2">
+    <h3>Producto 2</h3>
+    <p>$200</p>
+    <button onclick="addToCart('Producto 2',200)">Agregar</button>
+  </div>
+
+</section>
+
+<div class="overlay"></div>
+
+<div class="cart-drawer">
+  <h3>Tu carrito</h3>
+  <div class="cart-items"></div>
+  <div class="total">Total: $0</div>
+  <button class="checkout">📱 Pedir por WhatsApp</button>
 </div>
 
 <script>
-let productos = JSON.parse(localStorage.getItem("productos")) || [];
-let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
-let editIndex = null;
 
-const productosDiv = document.getElementById("productos");
-const cartItems = document.getElementById("cartItems");
-const totalDiv = document.getElementById("total");
-const cartCount = document.getElementById("cartCount");
-const adminLista = document.getElementById("adminLista");
+let cart = [];
 
-function guardarDatos(){
-  localStorage.setItem("productos", JSON.stringify(productos));
-  localStorage.setItem("carrito", JSON.stringify(carrito));
-}
+const cartIcon = document.querySelector(".cart-icon");
+const cartDrawer = document.querySelector(".cart-drawer");
+const overlay = document.querySelector(".overlay");
+const cartItems = document.querySelector(".cart-items");
+const totalDiv = document.querySelector(".total");
+const cartCount = document.querySelector(".cart-count");
 
-function renderProductos(){
-  productosDiv.innerHTML="";
-  productos.forEach((p,i)=>{
-    productosDiv.innerHTML+=`
-    <div class="card">
-      <img src="${p.imagen}">
-      <h4>${p.nombre}</h4>
-      <p>$${p.precio}</p>
-      <p>Stock: ${p.stock}</p>
-      <button onclick="agregarCarrito(${i})">Agregar</button>
-    </div>`;
-  });
-}
+cartIcon.onclick = () => {
+  cartDrawer.classList.add("active");
+  overlay.classList.add("active");
+};
 
-function renderAdmin(){
-  adminLista.innerHTML="";
-  productos.forEach((p,i)=>{
-    adminLista.innerHTML+=`
-      <div class="admin-item">
-        ${p.nombre} (Stock:${p.stock})
-        <div>
-          <button onclick="editarProducto(${i})">✏</button>
-          <button onclick="eliminarProducto(${i})">🗑</button>
-        </div>
-      </div>`;
-  });
-}
+overlay.onclick = () => {
+  cartDrawer.classList.remove("active");
+  overlay.classList.remove("active");
+};
 
-function guardarProducto(){
-  let promo=null;
-  if(tipoPromo.value==="3x2") promo={tipo:"3x2"};
-  if(tipoPromo.value==="2precio") promo={tipo:"2precio",precioEspecial:Number(precioEspecialInput.value)};
+function addToCart(name,price){
 
-  let nuevo = {
-    nombre:nombreInput.value,
-    precio:Number(precioInput.value),
-    imagen:imagenInput.value,
-    stock:Number(stockInput.value),
-    promo
-  };
+  const existing = cart.find(p=>p.name===name);
 
-  if(editIndex !== null){
-    productos[editIndex] = nuevo;
-    editIndex = null;
-  } else {
-    productos.push(nuevo);
+  if(existing){
+    existing.qty++;
+  }else{
+    cart.push({name,price,qty:1});
   }
 
-  guardarDatos();
-  renderProductos();
-  renderAdmin();
-  limpiarInputs();
+  updateCart();
 }
 
-function editarProducto(i){
-  let p = productos[i];
-  nombreInput.value=p.nombre;
-  precioInput.value=p.precio;
-  imagenInput.value=p.imagen;
-  stockInput.value=p.stock;
-  editIndex = i;
-}
+function updateCart(){
 
-function eliminarProducto(i){
-  productos.splice(i,1);
-  guardarDatos();
-  renderProductos();
-  renderAdmin();
-}
-
-function agregarCarrito(i){
-  let p = productos[i];
-  if(p.stock<=0){ alert("Sin stock"); return; }
-
-  let item = carrito.find(x=>x.index===i);
-  if(item && item.cantidad < p.stock){
-    item.cantidad++;
-  } else if(!item){
-    carrito.push({index:i,cantidad:1});
-  }
-
-  guardarDatos();
-  actualizarCarrito();
-}
-
-function actualizarCarrito(){
   cartItems.innerHTML="";
   let total=0;
-  let cantidadTotal=0;
+  let count=0;
 
-  carrito.forEach((item,i)=>{
-    let p=productos[item.index];
-    let subtotal=p.precio*item.cantidad;
+  cart.forEach(item=>{
+    const subtotal=item.price*item.qty;
     total+=subtotal;
-    cantidadTotal+=item.cantidad;
+    count+=item.qty;
 
     cartItems.innerHTML+=`
-      <p>${p.nombre} x${item.cantidad} - $${subtotal}
-      <button onclick="quitar(${i})">❌</button></p>`;
+      <div class="cart-item">
+        <span>${item.name} x${item.qty}</span>
+        <span>$${subtotal}</span>
+      </div>
+    `;
   });
 
   totalDiv.innerText="Total: $"+total;
-  cartCount.innerText=cantidadTotal;
+  cartCount.innerText=count;
 }
 
-function quitar(i){
-  carrito.splice(i,1);
-  guardarDatos();
-  actualizarCarrito();
-}
+document.querySelector(".checkout").onclick=()=>{
 
-function confirmarCompra(){
-  carrito.forEach(item=>{
-    productos[item.index].stock -= item.cantidad;
+  if(cart.length===0){
+    alert("Carrito vacío");
+    return;
+  }
+
+  let msg="🛒 Pedido:%0A%0A";
+
+  cart.forEach(item=>{
+    msg+=`${item.name} x${item.qty} - $${item.price*item.qty}%0A`;
   });
-  carrito=[];
-  guardarDatos();
-  renderProductos();
-  renderAdmin();
-  actualizarCarrito();
-  alert("Compra confirmada ✅ Stock actualizado");
+
+  msg+="%0AGracias 🙌";
+
+  window.open("https://wa.me/3434508948?text="+msg,"_blank");
+};
+
+/* --------- DARK MODE --------- */
+
+const toggle = document.querySelector(".toggle-dark");
+
+if(window.matchMedia('(prefers-color-scheme: dark)').matches){
+  document.body.classList.add("dark");
 }
 
-function toggleCart(){
-  document.getElementById("cartModal").classList.toggle("active");
-}
+toggle.onclick=()=>{
+  document.body.classList.toggle("dark");
+};
 
-function abrirAdmin(){ document.getElementById("adminPanel").style.display="block"; }
-function cerrarAdmin(){ document.getElementById("adminPanel").style.display="none"; }
-
-function verificarAdmin(){
-  if(adminPass.value==="1234"){
-    document.getElementById("adminContent").style.display="block";
-    renderAdmin();
-  } else alert("Contraseña incorrecta");
-}
-
-function limpiarInputs(){
-  nombreInput.value="";
-  precioInput.value="";
-  imagenInput.value="";
-  stockInput.value="";
-  precioEspecialInput.value="";
-}
-
-renderProductos();
-actualizarCarrito();
 </script>
 
 </body>
