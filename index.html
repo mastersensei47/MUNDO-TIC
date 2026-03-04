@@ -108,13 +108,14 @@ import {
   getFirestore, collection, addDoc, getDocs, deleteDoc, doc 
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
+/* 🔥 CONFIG DEL PROYECTO tienda-online-baaf6 */
 const firebaseConfig = {
-  apiKey: "AIzaSyD_uELDR3InLuRlsxXCyFuIM4OzYw6xYkE",
-  authDomain: "tienda-c497e.firebaseapp.com",
-  projectId: "tienda-c497e",
-  storageBucket: "tienda-c497e.firebasestorage.app",
-  messagingSenderId: "709484748527",
-  appId: "1:709484748527:web:64dbea8f89b02b830a851a"
+  apiKey: "AIzaSyDAqlchDsLHIMMbv6YL2ipggaShXlFqiW8",
+  authDomain: "tienda-online-baaf6.firebaseapp.com",
+  projectId: "tienda-online-baaf6",
+  storageBucket: "tienda-online-baaf6.firebasestorage.app",
+  messagingSenderId: "121093097347",
+  appId: "1:121093097347:web:ca8ea54b592cb20f5098b6"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -123,14 +124,12 @@ const db = getFirestore(app);
 let carrito = [];
 
 /* -------- Navegación -------- */
-
 window.mostrarSeccion = function(id){
   document.querySelectorAll("section").forEach(sec => sec.style.display="none");
   document.getElementById(id).style.display="block";
 }
 
 /* -------- Cargar Productos -------- */
-
 async function cargarProductos(){
   try{
     const querySnapshot = await getDocs(collection(db,"productos"));
@@ -171,7 +170,6 @@ async function cargarProductos(){
 }
 
 /* -------- Carrito -------- */
-
 window.agregarCarrito = function(nombre,precio){
   carrito.push({nombre,precio});
   mostrarCarrito();
@@ -203,7 +201,6 @@ function mostrarCarrito(){
 }
 
 /* -------- WhatsApp -------- */
-
 window.enviarPedido = function(){
   if(carrito.length===0){
     alert("El carrito está vacío");
@@ -229,7 +226,6 @@ window.enviarPedido = function(){
 }
 
 /* -------- Admin -------- */
-
 window.agregarProducto = async function(){
   const nombre = document.getElementById("adminNombre").value;
   const precio = parseFloat(document.getElementById("adminPrecio").value);
@@ -255,7 +251,6 @@ window.eliminarProducto = async function(id){
 }
 
 /* -------- Inicializar -------- */
-
 mostrarSeccion("productos");
 cargarProductos();
 
