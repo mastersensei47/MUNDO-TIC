@@ -3,160 +3,228 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mi Tienda</title>
+<title>Mi Tienda PRO</title>
 
 <style>
 :root{
---bg:#f4f6f9;
+--bg:#f3f4f6;
 --card:#ffffff;
+--text:#111827;
 --accent:#2563eb;
---text:#111;
---shadow:0 10px 25px rgba(0,0,0,.08);
+--accent2:#9333ea;
+--shadow:0 15px 35px rgba(0,0,0,.08);
 }
+
 body.dark{
 --bg:#0f172a;
 --card:#1e293b;
 --text:#f1f5f9;
---shadow:0 10px 25px rgba(0,0,0,.4);
+--accent:#22d3ee;
+--accent2:#f43f5e;
+--shadow:0 20px 45px rgba(0,0,0,.6);
 }
+
 *{box-sizing:border-box}
 body{
 margin:0;
 font-family:system-ui;
 background:var(--bg);
 color:var(--text);
-transition:.3s;
+transition:.4s;
 }
+
+/* HEADER */
 header{
 display:flex;
 justify-content:space-between;
 align-items:center;
-padding:15px 25px;
+padding:15px 30px;
 background:var(--card);
 box-shadow:var(--shadow);
 position:sticky;
 top:0;
 z-index:1000;
 }
+
 .logo{
 font-weight:700;
-font-size:20px;
+font-size:22px;
+background:linear-gradient(45deg,var(--accent),var(--accent2));
+-webkit-background-clip:text;
+color:transparent;
 }
-.cart-btn{
-position:relative;
+
+.header-icons{
+display:flex;
+gap:20px;
+align-items:center;
+}
+
+.icon{
 cursor:pointer;
 font-size:22px;
+position:relative;
 }
+
 .cart-count{
 position:absolute;
-top:-8px;
+top:-6px;
 right:-10px;
-background:var(--accent);
+background:var(--accent2);
 color:#fff;
-font-size:12px;
-padding:3px 7px;
+font-size:11px;
+padding:3px 6px;
 border-radius:50%;
 }
+
+/* PRODUCTOS */
 .products{
 display:grid;
-grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
-gap:20px;
-padding:25px;
+grid-template-columns:repeat(auto-fill,minmax(230px,1fr));
+gap:25px;
+padding:30px;
 }
+
 .card{
 background:var(--card);
-border-radius:15px;
+border-radius:16px;
 box-shadow:var(--shadow);
 padding:15px;
 transition:.3s;
 animation:fade .4s ease;
 }
-.card:hover{transform:translateY(-5px)}
+
+.card:hover{
+transform:translateY(-6px);
+}
+
 .card img{
 width:100%;
 height:180px;
 object-fit:cover;
-border-radius:10px;
+border-radius:12px;
 }
-.card h3{margin:10px 0 5px}
+
 .price{
 font-weight:700;
+font-size:18px;
 }
+
 .old{
 text-decoration:line-through;
 opacity:.6;
-margin-left:5px;
+margin-left:6px;
+font-size:14px;
 }
+
 button{
-background:var(--accent);
+background:linear-gradient(45deg,var(--accent),var(--accent2));
 border:none;
 color:#fff;
 padding:8px 12px;
 border-radius:8px;
 cursor:pointer;
+transition:.2s;
 }
+
+button:hover{
+transform:scale(1.05);
+}
+
+/* DRAWER */
+.overlay{
+position:fixed;
+inset:0;
+background:rgba(0,0,0,.4);
+display:none;
+z-index:1500;
+}
+
 .drawer{
 position:fixed;
-top:0;
 right:-400px;
+top:0;
 width:350px;
 height:100%;
 background:var(--card);
 box-shadow:var(--shadow);
-transition:.4s;
 padding:20px;
-overflow:auto;
+transition:.4s;
 z-index:2000;
+overflow:auto;
 }
-.drawer.open{right:0}
+
+.drawer.open{ right:0; }
+.overlay.show{ display:block; }
+
 .cart-item{
 display:flex;
 justify-content:space-between;
 align-items:center;
 margin-bottom:10px;
 }
+
 .qty{
 display:flex;
 align-items:center;
 gap:5px;
 }
+
+.close-btn{
+position:absolute;
+right:15px;
+top:15px;
+cursor:pointer;
+font-weight:bold;
+}
+
+/* ADMIN DASHBOARD */
+.admin-login,
 .admin-panel{
 position:fixed;
-top:50%;
-left:50%;
-transform:translate(-50%,-50%);
-background:var(--card);
-padding:20px;
-border-radius:15px;
-box-shadow:var(--shadow);
+inset:0;
 display:none;
+justify-content:center;
+align-items:center;
 z-index:3000;
-width:90%;
-max-width:500px;
-max-height:90%;
-overflow:auto;
+background:rgba(0,0,0,.5);
 }
-.admin-tabs{
+
+.admin-box{
+background:var(--card);
+padding:30px;
+border-radius:20px;
+width:90%;
+max-width:900px;
 display:flex;
-gap:10px;
+min-height:500px;
+}
+
+.sidebar{
+width:200px;
+border-right:1px solid #ccc;
+padding-right:10px;
+}
+
+.sidebar button{
+width:100%;
 margin-bottom:10px;
 }
-.admin-tabs button{
+
+.admin-content{
 flex:1;
-background:#ccc;
-color:#000;
+padding-left:20px;
+overflow:auto;
 }
-.admin-tabs button.active{
-background:var(--accent);
-color:#fff;
-}
+
 input{
-padding:7px;
 width:100%;
+padding:8px;
 margin-bottom:8px;
 border-radius:6px;
 border:1px solid #ccc;
 }
+
 @keyframes fade{
 from{opacity:0;transform:translateY(10px)}
 to{opacity:1;transform:translateY(0)}
@@ -168,70 +236,62 @@ to{opacity:1;transform:translateY(0)}
 
 <header>
 <div class="logo">Mi Tienda</div>
-<div style="display:flex;gap:15px;align-items:center;">
-<div onclick="toggleDark()">🌙</div>
-<div class="cart-btn" onclick="toggleCart()">
+<div class="header-icons">
+<div class="icon" onclick="toggleDark()">🌗</div>
+<div class="icon" onclick="openCart()">
 🛒
 <span class="cart-count" id="cartCount">0</span>
 </div>
-<div onclick="openAdminLogin()" style="cursor:pointer;">⚙</div>
+<div class="icon" onclick="openAdmin()">●</div>
 </div>
 </header>
 
 <div class="products" id="products"></div>
 
-<div class="drawer" id="cartDrawer">
+<div class="overlay" id="overlay" onclick="closeCart()"></div>
+
+<div class="drawer" id="drawer">
+<div class="close-btn" onclick="closeCart()">✖</div>
 <h2>Carrito</h2>
 <div id="cartItems"></div>
 <hr>
 <label><input type="checkbox" id="envioCheck"> Agregar envío</label>
-<p>Total: $<span id="cartTotal">0</span></p>
-<p id="ahorro" style="color:green;font-weight:600"></p>
-<button onclick="sendWhatsApp()">Enviar por WhatsApp</button>
-<button onclick="confirmPurchase()">Confirmar Compra</button>
+<p>Total: $<span id="total">0</span></p>
+<p id="ahorro" style="color:green"></p>
+<button onclick="sendWhatsApp()">WhatsApp</button>
 </div>
 
+<!-- ADMIN LOGIN -->
+<div class="admin-login" id="adminLogin">
+<div class="admin-box" style="max-width:400px;">
+<div style="width:100%">
+<h3>Acceso Admin</h3>
+<input id="adminPass" placeholder="Contraseña">
+<button onclick="login()">Entrar</button>
+</div>
+</div>
+</div>
+
+<!-- ADMIN PANEL -->
 <div class="admin-panel" id="adminPanel">
-<h2>Panel Admin</h2>
-<div class="admin-tabs">
-<button onclick="showTab(0)" class="active">Productos</button>
-<button onclick="showTab(1)">Envíos</button>
-<button onclick="showTab(2)">Historial</button>
+<div class="admin-box">
+<div class="sidebar">
+<button onclick="showSection('prod')">📦 Productos</button>
+<button onclick="showSection('env')">🚚 Envíos</button>
+<button onclick="showSection('hist')">📜 Historial</button>
+<button onclick="logout()">Cerrar</button>
 </div>
 
-<div class="tab">
-<h3>Agregar / Editar</h3>
-<input id="name" placeholder="Nombre">
-<input id="price" placeholder="Precio normal">
-<input id="promo" placeholder="Precio promo (opcional)">
-<input id="stock" placeholder="Stock">
-<input id="image" placeholder="URL Imagen">
-<input id="manualDiscount" placeholder="Descuento manual x unidad">
-<button onclick="saveProduct()">Guardar</button>
-<div id="adminList"></div>
+<div class="admin-content" id="adminContent"></div>
 </div>
-
-<div class="tab" style="display:none">
-<h3>Configurar Envío</h3>
-<input id="shippingPrice" placeholder="Precio envío">
-<button onclick="saveShipping()">Guardar</button>
-</div>
-
-<div class="tab" style="display:none">
-<h3>Historial Pedidos</h3>
-<div id="history"></div>
-</div>
-
-<button onclick="closeAdmin()">Cerrar</button>
 </div>
 
 <script>
 let products=JSON.parse(localStorage.getItem("products"))||[]
 let cart=[]
 let shipping=localStorage.getItem("shipping")||0
-let editing=null
 
-function renderProducts(){
+function render(){
 let container=document.getElementById("products")
 container.innerHTML=""
 products.forEach((p,i)=>{
@@ -239,64 +299,60 @@ container.innerHTML+=`
 <div class="card">
 <img src="${p.image||'https://via.placeholder.com/300'}">
 <h3>${p.name}</h3>
-<div class="price">
-$${p.promo||p.price}
-${p.promo?`<span class="old">$${p.price}</span>`:""}
-</div>
-<p>Stock: ${p.stock}</p>
-<button onclick="addToCart(${i})">Agregar</button>
+<div class="price">$${p.price}</div>
+<button onclick="add(${i})">Agregar</button>
 </div>`
 })
 }
 
-function addToCart(i){
+function add(i){
 let item=cart.find(x=>x.i==i)
-if(item){item.qty++}
-else{cart.push({i,qty:1})}
+if(item)item.qty++
+else cart.push({i,qty:1})
 updateCart()
 }
 
 function updateCart(){
-document.getElementById("cartCount").innerText=cart.reduce((a,b)=>a+b.qty,0)
 let items=document.getElementById("cartItems")
 items.innerHTML=""
 let total=0
-let ahorro=0
 cart.forEach(c=>{
 let p=products[c.i]
-let price=p.promo||p.price
-let subtotal=price*c.qty
-let normal=p.price*c.qty
-if(p.manualDiscount) subtotal-=p.manualDiscount*c.qty
-if(c.qty>=3) subtotal=price*2
-total+=subtotal
-ahorro+=normal-subtotal
+total+=p.price*c.qty
 items.innerHTML+=`
 <div class="cart-item">
 <span>${p.name}</span>
 <div class="qty">
-<button onclick="changeQty(${c.i},-1)">-</button>
+<button onclick="change(${c.i},-1)">-</button>
 ${c.qty}
-<button onclick="changeQty(${c.i},1)">+</button>
+<button onclick="change(${c.i},1)">+</button>
 </div>
 </div>`
 })
 if(document.getElementById("envioCheck").checked)
 total+=parseInt(shipping)
-document.getElementById("cartTotal").innerText=total
-document.getElementById("ahorro").innerText=ahorro>0?`Ahorras $${ahorro}`:""
+document.getElementById("total").innerText=total
+document.getElementById("cartCount").innerText=cart.reduce((a,b)=>a+b.qty,0)
 }
 
-function changeQty(i,val){
+function change(i,v){
 let item=cart.find(x=>x.i==i)
-if(!item)return
-item.qty+=val
+item.qty+=v
 if(item.qty<=0) cart=cart.filter(x=>x.i!=i)
 updateCart()
 }
 
-function toggleCart(){
-document.getElementById("cartDrawer").classList.toggle("open")
+function openCart(){
+drawer.classList.add("open")
+overlay.classList.add("show")
+}
+function closeCart(){
+drawer.classList.remove("open")
+overlay.classList.remove("show")
+}
+
+function toggleDark(){
+document.body.classList.toggle("dark")
 }
 
 function sendWhatsApp(){
@@ -305,106 +361,78 @@ cart.forEach(c=>{
 let p=products[c.i]
 msg+=`${p.name} x${c.qty}%0A`
 })
-msg+=`Total: $${document.getElementById("cartTotal").innerText}`
 window.open(`https://wa.me/549XXXXXXXXXX?text=${msg}`)
 }
 
-function confirmPurchase(){
-cart.forEach(c=>{
-products[c.i].stock-=c.qty
-})
-localStorage.setItem("products",JSON.stringify(products))
-let history=JSON.parse(localStorage.getItem("history"))||[]
-history.push({date:new Date().toLocaleString(),total:document.getElementById("cartTotal").innerText})
-localStorage.setItem("history",JSON.stringify(history))
-cart=[]
-updateCart()
-renderProducts()
-alert("Compra confirmada")
+/* ADMIN */
+function openAdmin(){ adminLogin.style.display="flex" }
+function login(){
+if(adminPass.value==="admin123"){
+adminLogin.style.display="none"
+adminPanel.style.display="flex"
+showSection("prod")
+}
+}
+function logout(){
+adminPanel.style.display="none"
 }
 
-function openAdminLogin(){
-let pass=prompt("Contraseña:")
-if(pass==="admin123"){
-document.getElementById("adminPanel").style.display="block"
-loadAdminList()
-}
-}
-
-function closeAdmin(){
-document.getElementById("adminPanel").style.display="none"
-}
-
-function saveProduct(){
-let p={
-name:name.value,
-price:parseInt(price.value),
-promo:promo.value?parseInt(promo.value):null,
-stock:parseInt(stock.value),
-image:image.value,
-manualDiscount:manualDiscount.value?parseInt(manualDiscount.value):0
-}
-if(editing!=null){products[editing]=p;editing=null}
-else{products.push(p)}
-localStorage.setItem("products",JSON.stringify(products))
-renderProducts()
-loadAdminList()
-}
-
-function loadAdminList(){
-let list=document.getElementById("adminList")
-list.innerHTML=""
-products.forEach((p,i)=>{
-list.innerHTML+=`
+function showSection(s){
+if(s==="prod"){
+adminContent.innerHTML=`
+<h3>Productos</h3>
+<input id="n" placeholder="Nombre">
+<input id="p" placeholder="Precio">
+<input id="img" placeholder="Imagen URL">
+<button onclick="save()">Guardar</button>
+<hr>
+${products.map((x,i)=>`
 <div>
-${p.name}
-<button onclick="editProduct(${i})">Editar</button>
-<button onclick="deleteProduct(${i})">Eliminar</button>
-</div>`
-})
+${x.name} - $${x.price}
+<button onclick="edit(${i})">Editar</button>
+<button onclick="del(${i})">Eliminar</button>
+</div>`).join("")}
+`
+}
+if(s==="env"){
+adminContent.innerHTML=`
+<h3>Envío</h3>
+<input id="ship" value="${shipping}">
+<button onclick="saveShip()">Guardar</button>`
+}
+if(s==="hist"){
+let h=JSON.parse(localStorage.getItem("hist"))||[]
+adminContent.innerHTML="<h3>Historial</h3>"+h.map(x=>`<p>${x}</p>`).join("")
+}
 }
 
-function editProduct(i){
-editing=i
-let p=products[i]
-name.value=p.name
-price.value=p.price
-promo.value=p.promo||""
-stock.value=p.stock
-image.value=p.image
-manualDiscount.value=p.manualDiscount||""
+function save(){
+products.push({name:n.value,price:parseInt(p.value),image:img.value})
+localStorage.setItem("products",JSON.stringify(products))
+render()
+showSection("prod")
 }
 
-function deleteProduct(i){
+function edit(i){
+let x=products[i]
+n.value=x.name
+p.value=x.price
+img.value=x.image
+}
+
+function del(i){
 products.splice(i,1)
 localStorage.setItem("products",JSON.stringify(products))
-renderProducts()
-loadAdminList()
+render()
+showSection("prod")
 }
 
-function saveShipping(){
-shipping=shippingPrice.value
+function saveShip(){
+shipping=ship.value
 localStorage.setItem("shipping",shipping)
 }
 
-function showTab(n){
-document.querySelectorAll(".tab").forEach((t,i)=>{
-t.style.display=i==n?"block":"none"
-})
-document.querySelectorAll(".admin-tabs button").forEach((b,i)=>{
-b.classList.toggle("active",i==n)
-})
-if(n==2){
-let h=JSON.parse(localStorage.getItem("history"))||[]
-history.innerHTML=h.map(x=>`<p>${x.date} - $${x.total}</p>`).join("")
-}
-}
-
-function toggleDark(){
-document.body.classList.toggle("dark")
-}
-
-renderProducts()
+render()
 updateCart()
 </script>
 
