@@ -9,8 +9,8 @@
     header { background:#333; color:#fff; padding:1rem; text-align:center; }
     nav { background:#444; padding:0.5rem; text-align:center; }
     nav a { color:#fff; margin:0 1rem; text-decoration:none; cursor:pointer; }
-    .productos { display:flex; flex-wrap:wrap; justify-content:center; margin:2rem; }
-    .producto { background:#fff; border:1px solid #ddd; border-radius:5px; margin:1rem; padding:1rem; width:250px; text-align:center; box-shadow:0 2px 5px rgba(0,0,0,0.1); }
+    .productos { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:1rem; margin:2rem; }
+    .producto { background:#fff; border:1px solid #ddd; border-radius:5px; padding:1rem; text-align:center; box-shadow:0 2px 5px rgba(0,0,0,0.1); }
     .producto img { max-width:100%; border-radius:5px; }
     .producto h3 { margin:0.5rem 0; }
     .producto button { background:#28a745; color:#fff; border:none; padding:0.5rem 1rem; cursor:pointer; border-radius:3px; }
@@ -156,4 +156,16 @@
       const precio = parseFloat(document.getElementById("precioProd").value);
       const imagen = document.getElementById("imagenProd").value;
       await addDoc(collection(db, "productos"), { nombre, precio, imagen });
-      alert
+      alert("Producto agregado");
+      cargarProductos();
+      mostrarAdmin();
+    });
+
+    async function mostrarAdmin() {
+      const querySnapshot = await getDocs(collection(db, "productos"));
+      const adminPanel = document.getElementById("lista-admin");
+      adminPanel.innerHTML = "";
+      querySnapshot.forEach(docSnap => {
+        const producto = docSnap.data();
+        const id = docSnap.id;
+        adminPanel.inner
