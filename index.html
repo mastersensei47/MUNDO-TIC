@@ -2,488 +2,212 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>NEO REPUESTOS - Oficial</title>
+<title>Tienda</title>
 
 <style>
-
-:root{
---bg:#0f172a;
---card:#1e293b;
---text:#f1f5f9;
---accent:#2563eb;
---sidebar-bg:#1e40af;
---danger:#ef4444;
-}
-
 body{
-margin:0;
-font-family:Segoe UI;
-background:var(--bg);
-color:var(--text);
+    margin:0;
+    font-family:Arial;
+    background:#0b1a2e;
+    color:white;
 }
-
-/* HEADER */
 
 header{
-display:flex;
-justify-content:space-between;
-align-items:center;
-padding:5px 20px;
-background:var(--card);
-position:sticky;
-top:0;
-z-index:1000;
-height:50px;
+    background:#1f2d3d;
+    padding:10px;
+    display:flex;
+    justify-content:center;
 }
 
-.search-bar input{
-padding:6px 15px;
-border-radius:20px;
-border:1px solid #444;
-background:rgba(0,0,0,0.2);
-color:white;
-width:200px;
+#buscar{
+    width:300px;
+    padding:8px;
+    border-radius:20px;
+    border:none;
 }
 
-/* SIDEBAR */
-
-.sidebar{
-position:fixed;
-left:-260px;
-top:0;
-width:260px;
-height:100%;
-background:var(--sidebar-bg);
-transition:.3s;
-z-index:2000;
-display:flex;
-flex-direction:column;
+.container{
+    display:flex;
 }
 
-.sidebar.active{
-left:0;
+.menu{
+    width:200px;
+    background:#2c49b0;
+    padding:20px;
 }
 
-.sidebar a{
-padding:15px 20px;
-color:white;
-text-decoration:none;
+.menu button{
+    width:100%;
+    margin-bottom:10px;
+    padding:10px;
+    border:none;
+    background:#3b63ff;
+    color:white;
+    cursor:pointer;
 }
 
-/* CARRITO */
-
-.cart-drawer{
-position:fixed;
-right:-350px;
-top:0;
-width:320px;
-height:100%;
-background:var(--card);
-transition:.3s;
-z-index:3000;
-padding:15px;
-display:flex;
-flex-direction:column;
+.productos{
+    flex:1;
+    padding:20px;
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
+    gap:20px;
 }
 
-.cart-drawer.active{
-right:0;
+.producto{
+    background:#15233a;
+    padding:10px;
+    border-radius:10px;
+    text-align:center;
 }
 
-.cart-items{
-flex-grow:1;
-overflow-y:auto;
-font-size:13px;
-margin:10px 0;
+.producto img{
+    width:100%;
+    height:150px;
+    object-fit:cover;
 }
 
-/* PRODUCTOS */
-
-.products{
-display:grid;
-grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
-gap:15px;
-padding:15px;
+.producto button{
+    margin-top:10px;
+    background:#3b63ff;
+    border:none;
+    padding:8px;
+    color:white;
+    cursor:pointer;
 }
 
-.card{
-background:var(--card);
-padding:10px;
-border-radius:12px;
-text-align:center;
+.carrito{
+    width:250px;
+    background:#243248;
+    padding:20px;
 }
 
-.card img{
-width:100%;
-height:100px;
-object-fit:contain;
+.total{
+    margin-top:20px;
+    font-size:18px;
 }
 
-button{
-background:var(--accent);
-color:white;
-border:none;
-padding:10px;
-border-radius:6px;
-cursor:pointer;
-font-weight:bold;
-width:100%;
+.whatsapp{
+    margin-top:10px;
+    background:#2ecc71;
+    border:none;
+    padding:10px;
+    width:100%;
+    color:white;
+    cursor:pointer;
 }
-
-/* ADMIN */
-
-.admin-modal{
-position:fixed;
-inset:0;
-background:rgba(0,0,0,.9);
-display:none;
-justify-content:center;
-align-items:center;
-z-index:4000;
-}
-
-.admin-content{
-background:var(--card);
-width:90%;
-max-width:500px;
-padding:20px;
-border-radius:10px;
-}
-
-input{
-width:100%;
-padding:10px;
-margin:5px 0;
-border-radius:5px;
-border:1px solid #444;
-background:#000;
-color:white;
-}
-
-.product-list-item{
-background:rgba(0,0,0,.3);
-padding:8px;
-border-radius:6px;
-margin-bottom:5px;
-display:flex;
-justify-content:space-between;
-}
-
 </style>
 </head>
 
 <body>
 
 <header>
-
-<span onclick="toggleSidebar()" style="cursor:pointer;font-size:22px;">☰</span>
-
-<div class="search-bar">
-<input id="searchInput" placeholder="Buscar..." onkeyup="filtrar()">
-</div>
-
-<div style="display:flex;gap:15px;align-items:center">
-
-<span onclick="abrirAdmin()" style="cursor:pointer">🔑</span>
-
-<span onclick="toggleCart()" style="cursor:pointer">
-🛒 <span id="cartCount">0</span>
-</span>
-
-</div>
-
+<input id="buscar" placeholder="Buscar...">
 </header>
 
-<nav class="sidebar" id="sidebar">
+<div class="container">
 
-<a onclick="closeAll()">🏠 Inicio</a>
-
-<a onclick="loginMayorista()">💼 Mayorista</a>
-
-<a onclick="alert('NEO REPUESTOS')">ℹ️ Información</a>
-
-</nav>
-
-<div class="cart-drawer" id="cartDrawer">
-
-<h3>Mi Carrito</h3>
-
-<div class="cart-items" id="cartList"></div>
-
-<div style="font-weight:bold;font-size:18px;display:flex;justify-content:space-between;">
-<span>Total:</span>
-<span id="cartTotal">$0</span>
+<div class="menu">
+<button onclick="mostrar('todos')">Inicio</button>
+<button onclick="mostrar('mayorista')">Mayorista</button>
 </div>
 
-<button onclick="enviarPedido()" style="background:#25d366;margin-top:10px;">
-Enviar WhatsApp
-</button>
+<div id="productos" class="productos"></div>
 
-</div>
-
-<div class="admin-modal" id="adminModal">
-
-<div class="admin-content">
-
-<h3>Admin Productos</h3>
-
-<input id="n" placeholder="Nombre">
-
-<input id="p1" placeholder="Precio">
-
-<input id="pm" placeholder="Precio mayorista">
-
-<input id="im" placeholder="URL Imagen">
-
-<button onclick="guardar()">Guardar</button>
-
-<div id="adminProdList"></div>
-
+<div class="carrito">
+<h2>Carrito</h2>
+<div id="listaCarrito"></div>
+<div class="total">Total: $<span id="total">0</span></div>
+<button class="whatsapp" onclick="enviarWhatsapp()">Enviar WhatsApp</button>
 </div>
 
 </div>
-
-<div class="products" id="products"></div>
 
 <script>
 
-let products = JSON.parse(localStorage.getItem("prods")) || [];
-let sales = JSON.parse(localStorage.getItem("sales")) || [];
-let cart = [];
-
-let userType = localStorage.getItem("userType") || "cliente";
-
-/* PRODUCTOS DEMO */
-
-if(products.length===0){
-
-products=[
-
-{name:"Azucar",p1:1500,pm:1200,img:"https://i.imgur.com/1z0HqkD.png"},
-
-{name:"Aceite",p1:2500,pm:2000,img:"https://i.imgur.com/eTmWoAN.png"}
-
+const productos = [
+{
+nombre:"Producto 1",
+precio:10,
+categoria:"todos",
+img:"https://via.placeholder.com/200"
+},
+{
+nombre:"Producto 2",
+precio:15,
+categoria:"mayorista",
+img:"https://via.placeholder.com/200"
+},
+{
+nombre:"Producto 3",
+precio:20,
+categoria:"todos",
+img:"https://via.placeholder.com/200"
+}
 ];
 
-localStorage.setItem("prods",JSON.stringify(products));
+let carrito=[];
 
-}
+function mostrar(categoria){
 
-/* RENDER */
+const contenedor=document.getElementById("productos");
+contenedor.innerHTML="";
 
-function render(lista=products){
+productos.forEach((p,i)=>{
 
-const container=document.getElementById("products");
+if(categoria==="todos" || p.categoria===categoria){
 
-container.innerHTML=lista.map((p,i)=>`
-
-<div class="card">
-
+contenedor.innerHTML+=`
+<div class="producto">
 <img src="${p.img}">
-
-<h4>${p.name}</h4>
-
-<div style="color:var(--accent);font-weight:bold">
-
-$${userType==="mayorista" && p.pm ? p.pm : p.p1}
-
-</div>
-
-<button onclick="add(${i})">Agregar</button>
-
-</div>
-
-`).join("");
-
-}
-
-/* BUSCADOR */
-
-function filtrar(){
-
-let txt=document.getElementById("searchInput").value.toLowerCase();
-
-const filtrados=products.filter(p=>p.name.toLowerCase().includes(txt));
-
-render(filtrados);
-
-}
-
-/* CARRITO */
-
-function add(i){
-
-const item=cart.find(c=>c.id===i);
-
-if(item) item.qty++;
-else cart.push({id:i,qty:1});
-
-updateCart();
-
-}
-
-function updateCart(){
-
-let total=0;
-let count=0;
-
-document.getElementById("cartList").innerHTML=cart.map((c,idx)=>{
-
-const p=products[c.id];
-
-let price=userType==="mayorista" && p.pm ? p.pm : p.p1;
-
-let sub=c.qty*price;
-
-total+=sub;
-count+=c.qty;
-
-return `
-<div>
-${p.name} x${c.qty} - $${sub}
-<span onclick="removeItem(${idx})" style="color:red;cursor:pointer">✕</span>
+<h3>${p.nombre}</h3>
+<p>$${p.precio}</p>
+<button onclick="agregar(${i})">Agregar</button>
 </div>
 `;
 
-}).join("");
+}
 
-document.getElementById("cartTotal").innerText="$"+total;
-document.getElementById("cartCount").innerText=count;
+});
 
 }
 
-function removeItem(i){
+function agregar(i){
 
-cart.splice(i,1);
-updateCart();
-
-}
-
-/* WHATSAPP */
-
-function enviarPedido(){
-
-if(cart.length===0)return;
-
-let det=cart.map(c=>{
-
-let p=products[c.id];
-
-return `${p.name} x${c.qty}`;
-
-}).join("\n");
-
-let total=document.getElementById("cartTotal").innerText;
-
-let msg=`PEDIDO\n\n${det}\n\nTotal ${total}`;
-
-window.open(`https://wa.me/5493434508948?text=${encodeURIComponent(msg)}`);
-
-cart=[];
-updateCart();
+carrito.push(productos[i]);
+actualizarCarrito();
 
 }
 
-/* MAYORISTA */
+function actualizarCarrito(){
 
-function loginMayorista(){
+const lista=document.getElementById("listaCarrito");
+lista.innerHTML="";
 
-let clave=prompt("Clave mayorista");
+let total=0;
 
-if(clave==="mayo123"){
+carrito.forEach(p=>{
+lista.innerHTML+=`<div>${p.nombre} - $${p.precio}</div>`;
+total+=p.precio;
+});
 
-userType="mayorista";
-
-localStorage.setItem("userType","mayorista");
-
-alert("Modo mayorista activado");
-
-render();
+document.getElementById("total").innerText=total;
 
 }
 
-}
+function enviarWhatsapp(){
 
-/* ADMIN */
+let texto="Pedido:%0A";
 
-function abrirAdmin(){
+carrito.forEach(p=>{
+texto+=p.nombre+" - $"+p.precio+"%0A";
+});
 
-if(prompt("Clave admin")!=="admin")return;
-
-document.getElementById("adminModal").style.display="flex";
-
-renderAdmin();
+window.open("https://wa.me/?text="+texto);
 
 }
 
-function guardar(){
-
-const p={
-name:document.getElementById("n").value,
-p1:parseInt(document.getElementById("p1").value),
-pm:parseInt(document.getElementById("pm").value),
-img:document.getElementById("im").value
-};
-
-products.push(p);
-
-localStorage.setItem("prods",JSON.stringify(products));
-
-renderAdmin();
-render();
-
-}
-
-function renderAdmin(){
-
-document.getElementById("adminProdList").innerHTML=products.map((p,i)=>`
-
-<div class="product-list-item">
-
-${p.name}
-
-<span onclick="del(${i})" style="color:red;cursor:pointer">Borrar</span>
-
-</div>
-
-`).join("");
-
-}
-
-function del(i){
-
-products.splice(i,1);
-
-localStorage.setItem("prods",JSON.stringify(products));
-
-renderAdmin();
-render();
-
-}
-
-/* UI */
-
-function toggleSidebar(){
-
-document.getElementById("sidebar").classList.toggle("active");
-
-}
-
-function toggleCart(){
-
-document.getElementById("cartDrawer").classList.toggle("active");
-
-}
-
-function closeAll(){
-
-document.getElementById("sidebar").classList.remove("active");
-
-}
-
-render();
+mostrar("todos");
 
 </script>
 
