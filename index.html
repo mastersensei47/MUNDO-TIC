@@ -307,39 +307,7 @@ function loginMayorista() {
     }
 }
 
-// REGISTRAR NUEVO MAYORISTA
-function registrarMayorista() {
-    const email = document.getElementById("loginEmail").value;
-    const pass = document.getElementById("loginPass").value;
-    if(!email || !pass) return alert("Completa todos los campos");
-    if(mayoristas.find(u => u.email === email)) return alert("El email ya existe");
-    mayoristas.push({email, pass});
-    localStorage.setItem("mayoristas", JSON.stringify(mayoristas));
-    alert("Cuenta creada, ya puedes iniciar sesión");
-}
-
-// AJUSTE EN render() PARA PRECIOS
-function render(filtro = "") {
-    const container = document.getElementById("products");
-    const filtrados = products.filter(p => p.name.toLowerCase().includes(filtro.toLowerCase()));
-    container.innerHTML = filtrados.map((p, i) => {
-        const realIdx = products.indexOf(p);
-        let precio = p.p_ind; // normal
-        if(currentUser && p.p_may > 0) precio = p.p_may; // mayorista
-        return `
-            <div class="card">
-                <img src="${p.img || 'https://via.placeholder.com/150'}">
-                <h4 style="font-size:14px; margin:5px 0;">${p.name}</h4>
-                <div class="price-main">$${precio}</div>
-                ${p.p_x2 > 0 && !(currentUser && p.p_may>0) ? `<div style="color:#10b981; font-size:11px;">Promo x2: $${p.p_x2}</div>` : ''}
-                <button onclick="addToCart(${realIdx})" style="margin-top:8px;">🛒 Agregar</button>
-            </div>`;
-    }).join("");
-}
-    render();
-    <!-- AGREGAR ANTES DEL CIERRE DE BODY -->
-<!-- MODAL LOGIN MAYORISTA -->
-<div class="admin-modal" id="loginModal">
+<div class="admin-modal" id="loginModal" style="display:none;">
     <div class="admin-content">
         <span style="float:right; cursor:pointer; font-size:20px;" onclick="document.getElementById('loginModal').style.display='none'">✕</span>
         <h3>Login Mayorista</h3>
@@ -350,6 +318,70 @@ function render(filtro = "") {
         <button onclick="registrarMayorista()" style="background:#2563eb; margin-top:5px;">Registrarse</button>
     </div>
 </div>
+
+<script>
+// 2. INICIALIZACIÓN DE VARIABLES
+let mayoristas = JSON.parse(localStorage.getItem("mayoristas")) || [];
+let currentUser = JSON.parse(sessionStorage.getItem("currentUser")) || null; // Persistencia de sesión
+
+// REGISTRAR NUEVO MAYORISTA
+function registrarMayorista() {
+    const email = document.getElementById("loginEmail").value;
+    const pass = document.getElementById("loginPass").value;
+    
+    if(!email || !pass) return alert("Completa todos los campos");
+    if(mayoristas.find(u => u.email === email)) return alert("El email ya existe");
+    
+    mayoristas.push({email, pass});
+    localStorage.setItem("mayoristas", JSON.stringify(mayoristas));
+    alert("Cuenta creada, ya puedes iniciar sesión");
+}
+
+// LOGIN MAYORISTA (Faltaba esta función)
+function loginMayorista() {
+    const email = document.getElementById("loginEmail").value;
+    const pass = document.getElementById("loginPass").value;
+    
+    const user = mayoristas.find(u => u.email === email && u.pass === pass);
+    
+    if(user) {
+        currentUser = user;
+        sessionStorage.setItem("currentUser", JSON.stringify(user));
+        alert("Bienvenido, precios mayoristas activados");
+        document.getElementById('loginModal').style.display = 'none';
+        render(); // Re-renderizar para mostrar nuevos precios
+    } else {
+        alert("Credenciales incorrectas");
+    }
+}
+
+// RENDERIZADO
+function render(filtro = "") {
+    const container = document.getElementById("products");
+    if(!container) return; // Evita error si el div no existe aún
+
+    const filtrados = products.filter(p => p.name.toLowerCase().includes(filtro.toLowerCase()));
+    
+    container.innerHTML = filtrados.map((p, i) => {
+        const realIdx = products.indexOf(p);
+        
+        // Lógica de precios
+        let precio = p.p_ind; 
+        const esMayorista = currentUser && p.p_may > 0;
+        
+        if(esMayorista) precio = p.p_may;
+
+        return `
+            <div class="card">
+                <img src="${p.img || 'https://via.placeholder.com/150'}">
+                <h4 style="font-size:14px; margin:5px 0;">${p.name}</h4>
+                <div class="price-main">$${precio} ${esMayorista ? '<small>(Mayorista)</small>' : ''}</div>
+                ${p.p_x2 > 0 && !esMayorista ? `<div style="color:#10b981; font-size:11px;">Promo x2: $${p.p_x2}</div>` : ''}
+                <button onclick="addToCart(${realIdx})" style="margin-top:8px;">🛒 Agregar</button>
+            </div>`;
+    }).join("");
+}
+
+// Ejecutar al cargar
+render();
 </script>
-</body>
-</html>
