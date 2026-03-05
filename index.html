@@ -10,12 +10,10 @@
         :root { --bg: #0f172a; --card: #1e293b; --text: #f1f5f9; --accent: #3b82f6; --promo: #f59e0b; --success: #10b981; }
         body { margin:0; font-family: 'Inter', sans-serif; background:var(--bg); color:var(--text); overflow-x: hidden; }
         
-        /* HEADER */
         header { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; background: var(--card); position: sticky; top: 0; z-index: 2000; box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
         .cart-icon { cursor: pointer; position: relative; font-size: 22px; }
         .badge { position: absolute; top: -8px; right: -10px; background: #ef4444; color: white; font-size: 11px; padding: 2px 6px; border-radius: 50%; font-weight: bold; }
 
-        /* GRID PRODUCTOS */
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; padding: 15px; }
         .card { background: var(--card); border-radius: 15px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; position: relative; }
         .promo-tag { background: var(--promo); color: #000; font-size: 11px; font-weight: 800; padding: 6px; text-align: center; }
@@ -24,12 +22,10 @@
         .info { padding: 12px; flex-grow: 1; }
         .price { font-size: 19px; font-weight: 900; color: var(--accent); margin-top: 5px; }
         
-        /* CARRITO LATERAL */
         #cartSide { position: fixed; right: -100%; top: 0; width: 100%; max-width: 360px; height: 100%; background: #111827; z-index: 4000; transition: 0.4s; padding: 25px; box-sizing: border-box; display: flex; flex-direction: column; box-shadow: -10px 0 30px rgba(0,0,0,0.5); }
         #cartSide.open { right: 0; }
         .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 3000; display: none; backdrop-filter: blur(4px); }
         
-        /* FORMULARIOS */
         .btn { width: 100%; padding: 14px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 14px; transition: 0.2s; }
         .btn-add { background: var(--accent); color: white; }
         .btn-wa { background: #25d366; color: white; margin-top: 20px; font-size: 16px; }
@@ -95,13 +91,11 @@
     let prods = [];
     let cart = [];
 
-    // 1. CARGAR DATOS
     db.collection("productos").onSnapshot(snap => {
         prods = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         renderProds();
     });
 
-    // 2. RENDER PRODUCTOS
     function renderProds() {
         const grid = document.getElementById("mainGrid");
         grid.innerHTML = prods.map(p => `
@@ -117,7 +111,6 @@
             </div>`).join("");
     }
 
-    // 3. LOGICA CARRITO
     function addCart(id) {
         const item = cart.find(c => c.id === id);
         if(item) item.q++; else cart.push({id, q:1});
@@ -130,57 +123,54 @@
         document.getElementById("overlay").style.display = show ? "block" : "none";
     }
 
-    // 4. ACTUALIZACIÓN REAL DEL CARRITO (CON PROMOS Y ENVIO)
     function updateCartUI() {
         const list = document.getElementById("cartList");
-        const badge = document.getElementById("cartBadge");
         const totalTxt = document.getElementById("cartTotal");
-        const shipArea = document.getElementById("envioFields");
+        const badge = document.getElementById("cartBadge");
         const method = document.getElementById("shipMethod").value;
-
-        // Mostrar u ocultar campos de envío
-        shipArea.style.display = method === "envio" ? "block" : "none";
+        
+        document.getElementById("envioFields").style.display = method === "envio" ? "block" : "none";
 
         let total = 0;
-        let count = 0;
         let html = "";
+        let count = 0;
 
-        cart.forEach(c => {
-            const p = prods.find(x => x.id === c.id);
+        cart.forEach(item => {
+            const p = prods.find(x => x.id === item.id);
             if(!p) return;
 
-            let pUnit = parseFloat(p.precio);
+            let pFinal = parseFloat(p.precio);
             
-            // Lógica de Promo: Extrae números del texto (Ej: "Llevando 2 4000")
             if(p.promo) {
-                const n = p.promo.match(/\d+/g);
-                if(n && n.length >= 2) {
-                    const cantOferta = parseInt(n[0]);
-                    const precioOferta = parseInt(n[1]);
-                    if(c.q >= cantOferta) pUnit = precioOferta;
+                const nums = p.promo.match(/\d+/g);
+                if(nums && nums.length >= 2) {
+                    const cantOferta = parseInt(nums[0]);
+                    const precioOfertaTotal = parseInt(nums[1]);
+                    if(item.q >= cantOferta) {
+                        pFinal = precioOfertaTotal / cantOferta;
+                    }
                 }
             }
 
-            const sub = pUnit * c.q;
+            const sub = pFinal * item.q;
             total += sub;
-            count += c.q;
+            count += item.q;
 
             html += `
-            <div style="display:flex; justify-content:space-between; margin-bottom:15px; background:rgba(255,255,255,0.03); padding:10px; border-radius:8px">
-                <div>
-                    <b>${p.nombre}</b><br>
-                    <small>${c.q} x $${pUnit}</small>
-                </div>
-                <b style="color:var(--accent)">$${sub}</b>
-            </div>`;
+                <div style="display:flex; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:10px">
+                    <div>
+                        <div style="font-weight:bold">${p.nombre}</div>
+                        <div style="font-size:12px; opacity:0.7">${item.q} x $${pFinal.toFixed(0)}</div>
+                    </div>
+                    <div style="font-weight:bold; color:var(--accent)">$${sub.toFixed(0)}</div>
+                </div>`;
         });
 
         list.innerHTML = html || "<p style='text-align:center; opacity:0.5'>El carrito está vacío</p>";
         badge.innerText = count;
-        totalTxt.innerText = "$" + total;
+        totalTxt.innerText = "$" + total.toFixed(0);
     }
 
-    // 5. ENVÍO POR WHATSAPP
     function sendWA() {
         if(cart.length === 0) return alert("El carrito está vacío");
 
@@ -197,20 +187,22 @@
         msg += "---------------------------------\n";
         
         let grandTotal = 0;
-        cart.forEach(c => {
-            const p = prods.find(x => x.id === c.id);
+        cart.forEach(item => {
+            const p = prods.find(x => x.id === item.id);
             let pFinal = parseFloat(p.precio);
             if(p.promo) {
                 const n = p.promo.match(/\d+/g);
-                if(n && n.length >= 2 && c.q >= parseInt(n[0])) pFinal = parseInt(n[1]);
+                if(n && n.length >= 2 && item.q >= parseInt(n[0])) {
+                    pFinal = parseInt(n[1]) / parseInt(n[0]);
+                }
             }
-            const sub = pFinal * c.q;
+            const sub = pFinal * item.q;
             grandTotal += sub;
-            msg += `• ${p.nombre} (x${c.q}) - $${sub}\n`;
+            msg += `• ${p.nombre} (x${item.q}) - $${sub.toFixed(0)}\n`;
         });
 
         msg += "---------------------------------\n";
-        msg += `*TOTAL A PAGAR: $${grandTotal}*\n\n`;
+        msg += `*TOTAL A PAGAR: $${grandTotal.toFixed(0)}*\n\n`;
         msg += `📍 *ENTREGA:* ${method === 'envio' ? 'Envío a domicilio' : 'Retiro en local'}\n`;
         
         if(method === "envio") {
