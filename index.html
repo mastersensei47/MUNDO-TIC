@@ -1,60 +1,43 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
+
 <meta charset="UTF-8">
-<title>Tienda Importados</title>
+
+<title>Tienda</title>
 
 <style>
 
 body{
-margin:0;
 font-family:Arial;
-background:#f4f4f4;
+margin:0;
+background:#f2f2f2;
 }
 
 header{
-background:#111;
-color:white;
+background:#fff;
 padding:15px;
 display:flex;
 justify-content:space-between;
 align-items:center;
+box-shadow:0 2px 5px rgba(0,0,0,0.1);
 }
 
 header input{
 padding:8px;
 width:250px;
-border-radius:5px;
-border:none;
 }
 
 .container{
 display:flex;
 }
 
-.sidebar{
-width:200px;
-background:#1f2d3d;
-color:white;
-padding:20px;
-}
-
-.sidebar button{
-display:block;
-width:100%;
-margin-bottom:10px;
-padding:10px;
-border:none;
-background:#34495e;
-color:white;
-cursor:pointer;
-}
-
 .products{
 flex:1;
 padding:20px;
 display:grid;
-grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
+grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
 gap:20px;
 }
 
@@ -62,39 +45,45 @@ gap:20px;
 background:white;
 border-radius:8px;
 padding:10px;
-box-shadow:0 2px 5px rgba(0,0,0,0.2);
-text-align:center;
+box-shadow:0 2px 5px rgba(0,0,0,0.1);
 }
 
 .card img{
 width:100%;
-height:150px;
+height:180px;
 object-fit:cover;
 }
 
-.card button{
-background:#27ae60;
-border:none;
-color:white;
+.price{
+color:#1976d2;
+font-weight:bold;
+}
+
+button{
 padding:8px;
-margin-top:10px;
+border:none;
+background:#7b1fa2;
+color:white;
 cursor:pointer;
+margin-top:5px;
 }
 
 .cart{
-width:250px;
-background:#ecf0f1;
+width:260px;
+background:white;
 padding:20px;
+box-shadow:-2px 0 5px rgba(0,0,0,0.1);
 }
 
 </style>
+
 </head>
 
 <body>
 
 <header>
 
-<h2>Tienda Importados</h2>
+<h2>Tienda</h2>
 
 <input id="buscar" placeholder="Buscar producto">
 
@@ -102,25 +91,17 @@ padding:20px;
 
 <div class="container">
 
-<div class="sidebar">
-
-<button onclick="filtrar('todos')">Todos</button>
-<button onclick="filtrar('ropa')">Ropa</button>
-<button onclick="filtrar('electronica')">Electrónica</button>
-
-</div>
-
-<div class="products" id="productos"></div>
+<div id="productos" class="products"></div>
 
 <div class="cart">
 
 <h3>Carrito</h3>
 
-<div id="lista"></div>
+<div id="carrito"></div>
 
 <p>Total: $<span id="total">0</span></p>
 
-<button onclick="whatsapp()">Enviar pedido</button>
+<button onclick="enviar()">Enviar WhatsApp</button>
 
 </div>
 
@@ -128,42 +109,39 @@ padding:20px;
 
 <script>
 
-const productos=[
+let productos = JSON.parse(localStorage.getItem("productos")) || [
+
 {
-nombre:"Cafetera",
-precio:40,
-categoria:"electronica",
+nombre:"Batería Samsung A51",
+precio:16950,
 img:"https://picsum.photos/200?1"
 },
+
 {
-nombre:"Olla eléctrica",
-precio:60,
-categoria:"electronica",
+nombre:"Batería iPhone 11",
+precio:18900,
 img:"https://picsum.photos/200?2"
-},
-{
-nombre:"Zapatos",
-precio:35,
-categoria:"ropa",
-img:"https://picsum.photos/200?3"
-},
-{
-nombre:"Camisa",
-precio:25,
-categoria:"ropa",
-img:"https://picsum.photos/200?4"
 }
+
 ]
 
 let carrito=[]
 
-function mostrar(lista){
+const admin = location.hash === "#admin"
+
+function guardar(){
+
+localStorage.setItem("productos",JSON.stringify(productos))
+
+}
+
+function render(){
 
 const cont=document.getElementById("productos")
 
 cont.innerHTML=""
 
-lista.forEach((p,i)=>{
+productos.forEach((p,i)=>{
 
 cont.innerHTML+=`
 
@@ -171,9 +149,21 @@ cont.innerHTML+=`
 
 <img src="${p.img}">
 
-<h4>${p.nombre}</h4>
+${admin ?
 
-<p>$${p.precio}</p>
+`<input value="${p.nombre}" onchange="editNombre(${i},this.value)">`
+
+:
+
+`<h3>${p.nombre}</h3>`}
+
+${admin ?
+
+`<input value="${p.precio}" onchange="editPrecio(${i},this.value)">`
+
+:
+
+`<p class="price">$${p.precio}</p>`}
 
 <button onclick="agregar(${i})">
 
@@ -189,17 +179,19 @@ Agregar
 
 }
 
-function filtrar(cat){
+function editNombre(i,val){
 
-if(cat=="todos"){
+productos[i].nombre=val
 
-mostrar(productos)
-
-return
+guardar()
 
 }
 
-mostrar(productos.filter(p=>p.categoria==cat))
+function editPrecio(i,val){
+
+productos[i].precio=val
+
+guardar()
 
 }
 
@@ -207,13 +199,13 @@ function agregar(i){
 
 carrito.push(productos[i])
 
-actualizar()
+renderCarrito()
 
 }
 
-function actualizar(){
+function renderCarrito(){
 
-const lista=document.getElementById("lista")
+let lista=document.getElementById("carrito")
 
 lista.innerHTML=""
 
@@ -221,9 +213,9 @@ let total=0
 
 carrito.forEach(p=>{
 
-lista.innerHTML+=`<div>${p.nombre} - $${p.precio}</div>`
+lista.innerHTML+=`<div>${p.nombre} $${p.precio}</div>`
 
-total+=p.precio
+total+=Number(p.precio)
 
 })
 
@@ -231,13 +223,13 @@ document.getElementById("total").innerText=total
 
 }
 
-function whatsapp(){
+function enviar(){
 
 let texto="Pedido:%0A"
 
 carrito.forEach(p=>{
 
-texto+=p.nombre+" - $"+p.precio+"%0A"
+texto+=p.nombre+" $"+p.precio+"%0A"
 
 })
 
@@ -247,15 +239,50 @@ window.open("https://wa.me/?text="+texto)
 
 document.getElementById("buscar").addEventListener("input",e=>{
 
-const val=e.target.value.toLowerCase()
+let val=e.target.value.toLowerCase()
 
-mostrar(productos.filter(p=>p.nombre.toLowerCase().includes(val)))
+let filtrados=productos.filter(p=>p.nombre.toLowerCase().includes(val))
+
+mostrarBusqueda(filtrados)
 
 })
 
-mostrar(productos)
+function mostrarBusqueda(lista){
+
+const cont=document.getElementById("productos")
+
+cont.innerHTML=""
+
+lista.forEach((p,i)=>{
+
+cont.innerHTML+=`
+
+<div class="card">
+
+<img src="${p.img}">
+
+<h3>${p.nombre}</h3>
+
+<p class="price">$${p.precio}</p>
+
+<button onclick="agregar(${i})">
+
+Agregar
+
+</button>
+
+</div>
+
+`
+
+})
+
+}
+
+render()
 
 </script>
 
 </body>
+
 </html>
