@@ -1,220 +1,205 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tienda PRO - Admin</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tienda con Precios Especiales</title>
+    <style>
+        :root{ --bg:#f4f6f9; --card:#ffffff; --text:#111; --accent:#2563eb; --accent2:#9333ea; --shadow:0 10px 30px rgba(0,0,0,.1); }
+        body.dark{ --bg:#0f172a; --card:#1e293b; --text:#f1f5f9; }
+        body{ margin:0; font-family:sans-serif; background:var(--bg); color:var(--text); transition:.3s; }
+        
+        header{ display:flex; justify-content:space-between; align-items:center; padding:15px 25px; background:var(--card); box-shadow:var(--shadow); position:sticky; top:0; z-index:1000; }
+        .icon{ cursor:pointer; font-size:22px; margin-left:15px; }
+        
+        .products{ display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:20px; padding:25px; }
+        .card{ background:var(--card); padding:15px; border-radius:15px; box-shadow:var(--shadow); text-align:center; }
+        .card img{ width:100%; height:150px; object-fit:contain; border-radius:10px; }
+        
+        .price-tag { font-weight: bold; color: var(--accent); font-size: 1.1em; }
+        .promo-tag { color: #059669; font-size: 0.9em; display: block; margin: 5px 0; }
+        .mayorista-tag { background: #fef3c7; color: #92400e; padding: 2px 5px; border-radius: 4px; font-size: 0.8em; }
 
-<style>
-:root{
---bg:#f4f6f9; --card:#ffffff; --text:#111;
---accent:#2563eb; --accent2:#9333ea;
---shadow:0 15px 40px rgba(0,0,0,.1);
-}
-body.dark{
---bg:#0f172a; --card:#1e293b; --text:#f1f5f9;
---accent:#22d3ee; --accent2:#f43f5e;
---shadow:0 20px 60px rgba(0,0,0,.6);
-}
-body{ margin:0; font-family:system-ui; background:var(--bg); color:var(--text); transition:.3s; }
-
-header{
-display:flex; justify-content:space-between; align-items:center;
-padding:15px 25px; background:var(--card); box-shadow:var(--shadow);
-position:sticky; top:0; z-index:1000;
-}
-.logo{ font-weight:700; font-size:20px; background:linear-gradient(45deg,var(--accent),var(--accent2)); -webkit-background-clip:text; color:transparent; }
-.icon{ cursor:pointer; font-size:22px; margin-left:15px; position:relative; }
-
-.products{ display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:20px; padding:25px; }
-.card{ background:var(--card); padding:15px; border-radius:15px; box-shadow:var(--shadow); transition:.3s; }
-.card img{ width:100%; height:180px; object-fit:cover; border-radius:12px; }
-
-/* ESTILOS PANEL ADMIN */
-#adminPanel {
-    position: fixed; inset: 0; background: var(--bg); z-index: 5000;
-    display: none; flex-direction: column; padding: 20px; overflow-y: auto;
-}
-.admin-form { background: var(--card); padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: var(--shadow); }
-.admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-input, select { width: 100%; padding: 8px; margin-bottom: 10px; border-radius: 5px; border: 1px solid #ccc; }
-button { background: var(--accent); color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; }
-.btn-cerrar { background: #ff4444; margin-top: 10px; }
-
-.drawer{ position:fixed; right:-400px; top:0; width:350px; height:100%; background:var(--card); box-shadow:var(--shadow); padding:20px; transition:.4s; overflow:auto; z-index:2000; }
-.drawer.open{right:0}
-.overlay{ position:fixed; inset:0; background:rgba(0,0,0,.5); display:none; z-index:1500; }
-.overlay.show{display:block}
-</style>
+        /* Modales y Paneles */
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,.7); display: none; justify-content: center; align-items: center; z-index: 5000; overflow-y: auto; padding: 20px; }
+        .modal-content { background: var(--card); padding: 25px; border-radius: 15px; width: 100%; max-width: 400px; position: relative; }
+        
+        #adminPanel { background: var(--bg); display: none; padding: 20px; border: 2px solid var(--accent); margin: 20px; border-radius: 15px; }
+        input { width: 100%; padding: 10px; margin: 5px 0; border-radius: 8px; border: 1px solid #ccc; box-sizing: border-box; }
+        button { background: var(--accent); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; width: 100%; margin-top: 10px; }
+        .btn-alt { background: #64748b; }
+        .btn-del { background: #ef4444; width: auto; padding: 5px 10px; }
+    </style>
 </head>
 <body>
 
 <header>
-<div class="logo">Mi Tienda</div>
-<div>
-<span class="icon" onclick="openAdmin()">🔑</span> <span class="icon" onclick="toggleDark()">🌗</span>
-<span class="icon" onclick="openCart()">🛒<span class="cart-count" id="cartCount">0</span></span>
-</div>
+    <div style="font-weight:bold">MI TIENDA</div>
+    <div>
+        <span class="icon" onclick="openAdmin()">🔑</span>
+        <span class="icon" onclick="document.getElementById('loginModal').style.display='flex'">👤</span>
+        <span class="icon" onclick="toggleDark()">🌗</span>
+    </div>
 </header>
+
+<div id="adminPanel">
+    <h3>Gestión de Productos</h3>
+    <input type="hidden" id="editIndex">
+    <input id="n" placeholder="Nombre (ej: Yerba)">
+    <input id="p_ind" type="number" placeholder="Precio Individual">
+    <input id="p_x2" type="number" placeholder="Precio x2 Unidades">
+    <input id="p_may" type="number" placeholder="Precio Mayorista">
+    <input id="stock" type="number" placeholder="Stock">
+    <input id="img" placeholder="URL Imagen">
+    <button onclick="guardar()">Guardar Producto</button>
+    <div id="listaAdmin" style="margin-top:20px"></div>
+    <button class="btn-alt" onclick="document.getElementById('adminPanel').style.display='none'">Cerrar Admin</button>
+</div>
 
 <div class="products" id="products"></div>
 
-<div id="adminPanel">
-    <h2>🛠 Panel de Control</h2>
-    <div class="admin-form">
-        <h3>Agregar / Editar Producto</h3>
-        <input type="hidden" id="editIndex">
-        <div class="admin-grid">
-            <input id="n" placeholder="Nombre del producto">
-            <input id="p" type="number" placeholder="Precio">
-            <input id="promo" type="number" placeholder="Precio Mayorista">
-            <input id="stock" type="number" placeholder="Stock">
-            <input id="img" placeholder="URL de imagen">
-            <input id="descManual" type="number" placeholder="Descuento Manual %">
+<div class="modal" id="loginModal">
+    <div class="modal-content">
+        <h3 id="modalTitle">Ingreso Mayorista</h3>
+        <input id="user" placeholder="Usuario">
+        <input id="pass" type="password" placeholder="Contraseña">
+        
+        <div id="loginBtns">
+            <button onclick="login()">Entrar</button>
+            <p style="text-align:center; font-size:0.8em; cursor:pointer" onclick="toggleAuthMode(true)">¿No tienes cuenta? Regístrate</p>
         </div>
-        <label><input type="checkbox" id="promo2"> Promo 2</label>
-        <label><input type="checkbox" id="tresx2"> 3x2</label>
-        <label><input type="checkbox" id="tresx1"> 3x1</label>
-        <br><br>
-        <button onclick="guardar()">Guardar Producto</button>
-        <button class="btn-cerrar" onclick="cerrarAdmin()">Salir del Admin</button>
+        
+        <div id="registerBtns" style="display:none">
+            <button onclick="registrar()" style="background:var(--accent2)">Crear Cuenta</button>
+            <p style="text-align:center; font-size:0.8em; cursor:pointer" onclick="toggleAuthMode(false)">Ya tengo cuenta</p>
+        </div>
+        
+        <button class="btn-alt" onclick="logout()" id="btnLogout" style="display:none">Cerrar Sesión</button>
+        <button class="btn-alt" onclick="this.parentElement.parentElement.style.display='none'">Cancelar</button>
     </div>
-
-    <div class="admin-form">
-        <h3>Lista de Productos</h3>
-        <div id="listaAdmin"></div>
-    </div>
-
-    <div class="admin-form">
-        <h3>Historial de Ventas</h3>
-        <div id="historialContenido"></div>
-        <button onclick="borrarHistorial()" style="background:#666">Borrar Historial</button>
-    </div>
-</div>
-
-<div class="overlay" id="overlay" onclick="closeCart()"></div>
-<div class="drawer" id="drawer">
-    <h2>Carrito</h2>
-    <div id="cartItems"></div>
-    <hr>
-    <p>Total: $<span id="total">0</span></p>
-    <button onclick="closeCart()">Cerrar</button>
 </div>
 
 <script>
-let products = JSON.parse(localStorage.getItem("products")) || [];
-let history = JSON.parse(localStorage.getItem("history")) || [];
-let cart = [];
+    let products = JSON.parse(localStorage.getItem("products")) || [];
+    let users = JSON.parse(localStorage.getItem("users")) || [];
+    let currentUser = JSON.parse(localStorage.getItem("currentUser")) || null;
 
-function render() {
-    let c = document.getElementById("products");
-    c.innerHTML = "";
-    products.forEach((p, i) => {
-        c.innerHTML += `
-        <div class="card">
-            <img src="${p.img || 'https://via.placeholder.com/300'}">
-            <h3>${p.name}</h3>
-            <p>Precio: $${p.price}</p>
-            <p>Stock: ${p.stock}</p>
-            <button onclick="add(${i})">Agregar</button>
-        </div>`;
-    });
-}
+    function render() {
+        const container = document.getElementById("products");
+        container.innerHTML = "";
 
-// --- TUS FUNCIONES DE ADMIN ---
-function openAdmin() {
-    let pass = prompt("Contraseña:");
-    if (pass === "admin") {
-        document.getElementById("adminPanel").style.display = "flex";
-        cargarAdmin();
-    } else alert("Incorrecta");
-}
+        products.forEach((p, i) => {
+            // Lógica de visualización de precios
+            let htmlPrecios = `<div class="price-tag">$${p.p_ind} c/u</div>`;
+            
+            if(p.p_x2 > 0) {
+                htmlPrecios += `<div class="promo-tag">Llevando 2: $${p.p_x2} ($${p.p_x2/2} c/u)</div>`;
+            }
 
-function cerrarAdmin() { document.getElementById("adminPanel").style.display = "none"; }
+            if(currentUser) {
+                htmlPrecios += `<div class="mayorista-tag">Precio Mayorista: $${p.p_may}</div>`;
+            }
 
-function guardar() {
-    let index = document.getElementById("editIndex").value;
-    let producto = {
-        name: document.getElementById("n").value,
-        price: parseInt(document.getElementById("p").value),
-        promo: parseInt(document.getElementById("promo").value) || 0,
-        promo2: document.getElementById("promo2").checked,
-        tresx2: document.getElementById("tresx2").checked,
-        tresx1: document.getElementById("tresx1").checked,
-        descManual: parseInt(document.getElementById("descManual").value) || 0,
-        stock: parseInt(document.getElementById("stock").value),
-        img: document.getElementById("img").value
-    };
-    if (index === "") products.push(producto);
-    else products[index] = producto;
-    
-    localStorage.setItem("products", JSON.stringify(products));
-    render();
-    cargarAdmin();
-    resetForm();
-}
+            container.innerHTML += `
+                <div class="card">
+                    <img src="${p.img || 'https://via.placeholder.com/150'}">
+                    <h4>${p.name}</h4>
+                    ${htmlPrecios}
+                    <p style="font-size:0.8em">Stock: ${p.stock}</p>
+                    <button onclick="alert('Añadido al carrito')">Agregar</button>
+                </div>
+            `;
+        });
+    }
 
-function resetForm() {
-    document.getElementById("editIndex").value = "";
-    document.getElementById("n").value = "";
-    document.getElementById("p").value = "";
-    document.getElementById("promo").value = "";
-    document.getElementById("stock").value = "";
-    document.getElementById("img").value = "";
-}
+    // --- FUNCIONES ADMIN ---
+    function openAdmin() {
+        if(prompt("Pass:") === "admin") {
+            document.getElementById("adminPanel").style.display = "block";
+            cargarAdmin();
+        }
+    }
 
-function cargarAdmin() {
-    let l = document.getElementById("listaAdmin");
-    l.innerHTML = "";
-    products.forEach((p, i) => {
-        l.innerHTML += `<div style="margin-bottom:10px; border-bottom:1px solid #eee">
-            ${p.name} - Stock: ${p.stock} 
-            <button onclick="editar(${i})">Editar</button>
-            <button onclick="eliminar(${i})" style="background:red">X</button>
-        </div>`;
-    });
-    
-    let h = document.getElementById("historialContenido");
-    h.innerHTML = history.length > 0 ? history.map(x =>
-        `<p><b>${x.fecha}</b><br>${x.detalle}<br>Total: $${x.total}</p><hr>`
-    ).join("") : "No hay ventas registradas";
-}
+    function guardar() {
+        let index = document.getElementById("editIndex").value;
+        let prod = {
+            name: document.getElementById("n").value,
+            p_ind: parseInt(document.getElementById("p_ind").value),
+            p_x2: parseInt(document.getElementById("p_x2").value) || 0,
+            p_may: parseInt(document.getElementById("p_may").value),
+            stock: parseInt(document.getElementById("stock").value),
+            img: document.getElementById("img").value
+        };
 
-function editar(i) {
-    let prod = products[i];
-    document.getElementById("editIndex").value = i;
-    document.getElementById("n").value = prod.name;
-    document.getElementById("p").value = prod.price;
-    document.getElementById("promo").value = prod.promo;
-    document.getElementById("stock").value = prod.stock;
-    document.getElementById("img").value = prod.img;
-    document.getElementById("promo2").checked = prod.promo2;
-    document.getElementById("tresx2").checked = prod.tresx2;
-    document.getElementById("tresx1").checked = prod.tresx1;
-    document.getElementById("descManual").value = prod.descManual;
-}
+        if(index === "") products.push(prod);
+        else products[index] = prod;
 
-function eliminar(i) {
-    if(confirm("¿Seguro quieres eliminarlo?")){
-        products.splice(i, 1);
         localStorage.setItem("products", JSON.stringify(products));
         render();
         cargarAdmin();
+        document.getElementById("editIndex").value = "";
     }
-}
 
-function borrarHistorial() {
-    history = [];
-    localStorage.setItem("history", JSON.stringify(history));
-    cargarAdmin();
-}
+    function cargarAdmin() {
+        let l = document.getElementById("listaAdmin");
+        l.innerHTML = products.map((p, i) => `
+            <div style="border-bottom:1px solid #ccc; padding:5px">
+                ${p.name} 
+                <button class="btn-del" onclick="eliminar(${i})">Eliminar</button>
+            </div>
+        `).join("");
+    }
 
-// Funciones básicas de interfaz
-function toggleDark() { document.body.classList.toggle("dark"); }
-function openCart() { document.getElementById("drawer").classList.add("open"); document.getElementById("overlay").classList.add("show"); }
-function closeCart() { document.getElementById("drawer").classList.remove("open"); document.getElementById("overlay").classList.remove("show"); }
+    function eliminar(i) {
+        products.splice(i, 1);
+        localStorage.setItem("products", JSON.stringify(products));
+        render(); cargarAdmin();
+    }
 
-render();
+    // --- SISTEMA DE USUARIOS ---
+    function toggleAuthMode(isRegister) {
+        document.getElementById("modalTitle").innerText = isRegister ? "Registro Mayorista" : "Ingreso Mayorista";
+        document.getElementById("loginBtns").style.display = isRegister ? "none" : "block";
+        document.getElementById("registerBtns").style.display = isRegister ? "block" : "none";
+    }
+
+    function registrar() {
+        let u = document.getElementById("user").value;
+        let p = document.getElementById("pass").value;
+        if(u && p) {
+            users.push({user: u, pass: p});
+            localStorage.setItem("users", JSON.stringify(users));
+            alert("Cuenta creada con éxito. Ahora inicia sesión.");
+            toggleAuthMode(false);
+        }
+    }
+
+    function login() {
+        let u = document.getElementById("user").value;
+        let p = document.getElementById("pass").value;
+        let found = users.find(x => x.user === u && x.pass === p);
+        if(found) {
+            currentUser = found;
+            localStorage.setItem("currentUser", JSON.stringify(found));
+            location.reload(); // Recargar para mostrar precios
+        } else alert("Datos incorrectos");
+    }
+
+    function logout() {
+        localStorage.removeItem("currentUser");
+        location.reload();
+    }
+
+    function toggleDark() { document.body.classList.toggle("dark"); }
+
+    // Verificar si hay sesión activa al cargar
+    if(currentUser) {
+        document.getElementById("loginBtns").style.display = "none";
+        document.getElementById("btnLogout").style.display = "block";
+        document.getElementById("modalTitle").innerText = "Bienvenido, " + currentUser.user;
+    }
+
+    render();
 </script>
 </body>
 </html>
