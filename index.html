@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NEO REPUESTOS - SISTEMA PROFESIONAL</title>
+    <title>NEO REPUESTOS - SISTEMA FINAL</title>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script>
 
@@ -21,17 +21,16 @@
         .promo-tag { position:absolute; top:10px; left:10px; background:var(--promo); color:black; font-size:11px; font-weight:bold; padding:4px 8px; border-radius:5px; z-index:10; }
 
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; justify-content: center; align-items: center; z-index: 4000; padding:15px; }
-        .modal-content { background: var(--card); padding: 25px; border-radius: 20px; width: 100%; max-width: 800px; max-height: 90vh; overflow-y: auto; position: relative; }
+        .modal-content { background: var(--card); padding: 25px; border-radius: 20px; width: 100%; max-width: 850px; max-height: 90vh; overflow-y: auto; position: relative; }
         
         input, select { width: 100%; padding: 12px; margin: 8px 0; background: #0f172a; color: white; border: 1px solid #334155; border-radius: 8px; box-sizing: border-box; }
         .btn-main { background: var(--accent); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; width: 100%; cursor: pointer; transition: 0.2s; }
-        .btn-main:hover { opacity: 0.8; }
         
         table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 15px; }
         th, td { border-bottom: 1px solid #334155; padding: 12px; text-align: left; }
-        .btn-action { padding: 6px; border-radius: 5px; cursor: pointer; border: none; color: white; margin-right: 4px; }
+        .btn-act { padding: 6px 10px; border-radius: 5px; cursor: pointer; border: none; color: white; font-weight: bold; }
 
-        #cartDrawer { position:fixed; right:-400px; top:0; width:350px; height:100%; background:var(--card); transition:0.4s; z-index:3500; padding:25px; box-sizing:border-box; box-shadow:-10px 0 30px rgba(0,0,0,0.5); }
+        #cartDrawer { position:fixed; right:-400px; top:0; width:350px; height:100%; background:var(--card); transition:0.4s; z-index:3500; padding:25px; box-sizing:border-box; box-shadow:-10px 0 30px rgba(0,0,0,0.5); display: flex; flex-direction: column; }
         .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; z-index: 3000; }
         .overlay.active { display: block; }
     </style>
@@ -39,7 +38,7 @@
 <body>
 
 <header>
-    <b style="font-size:20px; letter-spacing:1px">NEO <span style="color:var(--accent)">REPUESTOS</span></b>
+    <b onclick="location.reload()" style="cursor:pointer; font-size:20px;">NEO <span style="color:var(--accent)">REPUESTOS</span></b>
     <div style="display:flex; gap:20px; align-items:center">
         <span onclick="abrirModal('loginModal')" style="cursor:pointer; font-size:20px">👤</span>
         <span onclick="abrirAdmin()" style="cursor:pointer; font-size:20px">⚙️</span>
@@ -58,57 +57,56 @@
     <div style="border-top:1px solid #334155; padding-top:15px; margin-top:15px">
         <div id="totalDisplay" style="font-size:20px; font-weight:bold; margin-bottom:15px">Total: $0</div>
         <button class="btn-main" style="background:#25d366" onclick="enviarWhatsApp()">PEDIR POR WHATSAPP</button>
-        <button class="btn-main" style="background:none; margin-top:10px" onclick="closeAll()">Seguir comprando</button>
     </div>
 </div>
 
 <div class="modal" id="loginModal">
     <div class="modal-content" style="max-width:350px">
         <div id="secLogin">
-            <h3>Acceso Clientes</h3>
+            <h3>Acceso Mayorista</h3>
             <input id="u" placeholder="Usuario">
             <input id="p_log" type="password" placeholder="Contraseña">
             <button class="btn-main" onclick="validarLogin()">INGRESAR</button>
-            <p style="text-align:center; font-size:13px">¿No tenés cuenta? <a href="#" onclick="toggleAuth('R')" style="color:var(--accent)">Registrate</a></p>
+            <p style="text-align:center; font-size:13px">¿No tenés cuenta? <a href="#" onclick="toggleAuth('R')" style="color:var(--accent)">Registrate acá</a></p>
         </div>
         <div id="secReg" style="display:none">
-            <h3>Solicitud Mayorista</h3>
-            <input id="rn" placeholder="Nombre / Razón Social">
-            <input id="rc" placeholder="CUIT / DNI">
-            <input id="re" placeholder="Email de contacto">
+            <h3>Solicitud de Alta</h3>
+            <input id="rn" placeholder="Nombre / Empresa">
+            <input id="rc" placeholder="CUIT">
+            <input id="re" placeholder="Email">
             <button class="btn-main" style="background:var(--success)" onclick="registrarMay()">ENVIAR SOLICITUD</button>
-            <button class="btn-main" style="background:none" onclick="toggleAuth('L')">← VOLVER</button>
+            <button class="btn-main" style="background:none; border:1px solid #444; margin-top:10px" onclick="toggleAuth('L')">← VOLVER AL LOGIN</button>
         </div>
     </div>
 </div>
 
 <div class="modal" id="adminModal">
     <div class="modal-content">
-        <button onclick="cerrarModales()" style="float:right; background:none; border:none; color:white; font-size:20px; cursor:pointer">✕</button>
-        <h2>Panel Administrativo</h2>
+        <span onclick="cerrarModales()" style="float:right; cursor:pointer; font-size:20px">✕</span>
+        <h2>Administración</h2>
         
-        <div style="display:flex; gap:10px; margin-bottom:20px">
+        <div style="display:flex; gap:10px; margin-bottom:20px; overflow-x: auto;">
             <button class="btn-main" onclick="tabAdmin('prods')">STOCK</button>
             <button class="btn-main" style="background:#6366f1" onclick="tabAdmin('solis')">SOLICITUDES</button>
             <button class="btn-main" style="background:var(--success)" onclick="tabAdmin('ventas')">VENTAS</button>
         </div>
 
         <div id="tabProds">
-            <div style="background:#0f172a; padding:15px; border-radius:10px; border:1px solid #334155">
+            <div style="background:rgba(0,0,0,0.2); padding:15px; border-radius:10px; margin-bottom:15px">
                 <input type="hidden" id="eid">
-                <input id="an" placeholder="Nombre del Producto">
+                <input id="an" placeholder="Nombre del Repuesto">
                 <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px">
                     <input id="ap" type="number" placeholder="Precio Min.">
                     <input id="apm" type="number" placeholder="Precio May.">
-                    <input id="as" type="number" placeholder="Stock Inicial">
+                    <input id="as" type="number" placeholder="Stock">
                 </div>
                 <select id="apromo">
-                    <option value="">Sin Promoción</option>
-                    <option value="2x1">2x1 (Llevas 2, pagas 1)</option>
-                    <option value="3x2">3x2 (Llevas 3, pagas 2)</option>
-                    <option value="Oferta">Etiqueta "Oferta"</option>
+                    <option value="">Sin Promo</option>
+                    <option value="2x1">2x1</option>
+                    <option value="3x2">3x2</option>
+                    <option value="Pack">Pack Especial</option>
                 </select>
-                <input id="ai" placeholder="URL de la Imagen">
+                <input id="ai" placeholder="Link de Imagen">
                 <button class="btn-main" onclick="guardarFirebase()">GUARDAR PRODUCTO</button>
             </div>
             <table>
@@ -117,18 +115,19 @@
             </table>
         </div>
 
-        <div id="tabVentas" style="display:none">
-            <button onclick="vaciarVentas()" style="background:var(--danger); color:white; border:none; padding:10px; border-radius:8px; cursor:pointer; margin-bottom:15px">⚠️ VACIAR TODO EL HISTORIAL</button>
+        <div id="tabSolis" style="display:none">
+            <h3>Pendientes de Aprobación</h3>
             <table>
-                <thead><tr><th>Fecha y Hora</th><th>Detalle Pedido</th><th>Total</th><th>Acción</th></tr></thead>
-                <tbody id="bodyVentas"></tbody>
+                <thead><tr><th>Cliente</th><th>Email</th><th>CUIT</th><th>Acciones</th></tr></thead>
+                <tbody id="bodySolis"></tbody>
             </table>
         </div>
 
-        <div id="tabSolis" style="display:none">
-            <table id="tablaSolis">
-                <thead><tr><th>Cliente</th><th>CUIT</th><th>Acción</th></tr></thead>
-                <tbody id="bodySolis"></tbody>
+        <div id="tabVentas" style="display:none">
+            <button onclick="vaciarVentas()" style="background:var(--danger); color:white; border:none; padding:10px; border-radius:8px; cursor:pointer; margin-bottom:15px">⚠️ VACIAR TODO EL HISTORIAL</button>
+            <table>
+                <thead><tr><th>Fecha/Hora</th><th>Pedido</th><th>Total</th><th>Acción</th></tr></thead>
+                <tbody id="bodyVentas"></tbody>
             </table>
         </div>
     </div>
@@ -150,19 +149,19 @@
     let carrito = [];
     let esMayorista = sessionStorage.getItem("esMayorista") === "true";
 
-    // SINCRONIZACIÓN
+    // CARGA DE DATOS
     db.collection("productos").onSnapshot(snap => {
         repuestos = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         render();
         cargarTablaProds();
     });
 
-    db.collection("ventas").orderBy("creado", "desc").onSnapshot(snap => {
-        cargarTablaVentas(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-    });
-
     db.collection("solicitudes_mayoristas").onSnapshot(snap => {
         cargarTablaSolis(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    });
+
+    db.collection("ventas").orderBy("creado", "desc").onSnapshot(snap => {
+        cargarTablaVentas(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     });
 
     function render() {
@@ -171,24 +170,17 @@
             <div class="card">
                 ${r.promo ? `<div class="promo-tag">${r.promo}</div>` : ''}
                 <img src="${r.imagen || 'https://via.placeholder.com/150'}">
-                <h3 style="font-size:15px; margin:15px 0">${r.nombre}</h3>
+                <h4>${r.nombre}</h4>
                 <div style="font-size:18px; font-weight:bold; color:var(--accent)">$${esMayorista ? r.precio_may : r.precio}</div>
-                <div style="font-size:12px; margin-bottom:10px; color:${r.stock < 5 ? 'red' : '#94a3b8'}">Stock: ${r.stock} u.</div>
-                <button class="btn-main" onclick="addCar('${r.id}')" ${r.stock <= 0 ? 'disabled style="background:gray"' : ''}>
-                    ${r.stock > 0 ? 'AGREGAR' : 'SIN STOCK'}
-                </button>
+                <div style="font-size:11px; color:#94a3b8">Stock: ${r.stock}</div>
+                <button class="btn-main" onclick="addCar('${r.id}')" ${r.stock <= 0 ? 'disabled' : ''}>AGREGAR</button>
             </div>`).join("");
     }
 
+    // CARRITO Y WHATSAPP
     function addCar(id) {
         const item = carrito.find(c => c.id === id);
-        const r = repuestos.find(x => x.id === id);
-        if(item) {
-            if(item.qty < r.stock) item.qty++;
-            else alert("No hay más stock disponible");
-        } else {
-            carrito.push({id, qty:1});
-        }
+        if(item) item.qty++; else carrito.push({id, qty:1});
         upCart();
     }
 
@@ -197,162 +189,7 @@
         let total = 0;
         list.innerHTML = carrito.map(c => {
             const r = repuestos.find(x => x.id === c.id);
-            let p = esMayorista ? r.precio_may : r.precio;
-            
-            // Lógica de Descuento por Promo
-            let qtyCobrada = c.qty;
-            if(r.promo === "2x1") qtyCobrada = Math.ceil(c.qty / 2) + (c.qty % 2 === 0 ? 0 : 0); // Simplificado: paga la mitad redondeado arriba
-            if(r.promo === "2x1") qtyCobrada = Math.floor(c.qty / 2) + (c.qty % 2); 
-            if(r.promo === "3x2") qtyCobrada = (Math.floor(c.qty / 3) * 2) + (c.qty % 3);
-
-            let sub = p * qtyCobrada;
+            const sub = (esMayorista ? r.precio_may : r.precio) * c.qty;
             total += sub;
-            return `<div style="display:flex; justify-content:space-between; margin-bottom:12px; background:#0f172a; padding:10px; border-radius:8px">
-                <div style="font-size:13px">${r.nombre}<br><small style="color:var(--promo)">Cant: ${c.qty}</small></div>
-                <div style="font-weight:bold">$${sub}</div>
-            </div>`;
-        }).join("");
-        document.getElementById("totalDisplay").innerText = "Total: $" + total;
-        document.getElementById("cartBadge").innerText = carrito.reduce((a,b) => a + b.qty, 0);
-    }
-
-    async function enviarWhatsApp() {
-        if(!carrito.length) return;
-        const ahora = new Date();
-        const fechaHora = ahora.toLocaleString();
-        let totalFinal = 0;
-        let detalleMsg = "*PEDIDO NEO REPUESTOS*\n\n";
-
-        for(let c of carrito) {
-            const r = repuestos.find(x => x.id === c.id);
-            let p = esMayorista ? r.precio_may : r.precio;
-            let qtyCobrada = c.qty;
-            if(r.promo === "2x1") qtyCobrada = Math.floor(c.qty / 2) + (c.qty % 2);
-            if(r.promo === "3x2") qtyCobrada = (Math.floor(c.qty / 3) * 2) + (c.qty % 3);
-            
-            let sub = p * qtyCobrada;
-            totalFinal += sub;
-            detalleMsg += `• ${r.nombre} x${c.qty} ($${sub})\n`;
-            
-            // Descuento de stock real
-            await db.collection("productos").doc(r.id).update({ stock: r.stock - c.qty });
-        }
-
-        // Registro en Historial
-        await db.collection("ventas").add({ creado: ahora.getTime(), fechaHora, detalle: detalleMsg, total: totalFinal });
-        
-        window.open(`https://wa.me/5493434508948?text=${encodeURIComponent(detalleMsg + "\n*TOTAL: $" + totalFinal + "*")}`);
-        carrito = []; upCart(); closeAll();
-    }
-
-    // --- FUNCIONES ADMIN ---
-    function cargarTablaProds() {
-        document.getElementById("bodyProds").innerHTML = repuestos.map(r => `
-            <tr>
-                <td>${r.nombre}</td>
-                <td><b>${r.stock}</b></td>
-                <td>
-                    <button class="btn-action" style="background:var(--accent)" onclick="editarProd('${r.id}')">✏️</button>
-                    <button class="btn-action" style="background:var(--danger)" onclick="eliminarProd('${r.id}')">🗑️</button>
-                </td>
-            </tr>`).join("");
-    }
-
-    async function guardarFirebase() {
-        const id = document.getElementById("eid").value;
-        const data = {
-            nombre: document.getElementById("an").value,
-            precio: Number(document.getElementById("ap").value),
-            precio_may: Number(document.getElementById("apm").value),
-            stock: Number(document.getElementById("as").value),
-            promo: document.getElementById("apromo").value,
-            imagen: document.getElementById("ai").value
-        };
-        if(!data.nombre || !data.precio) return alert("Faltan datos");
-        
-        if(id) {
-            await db.collection("productos").doc(id).update(data);
-        } else {
-            await db.collection("productos").add(data);
-        }
-        limpiarAdmin(); alert("Guardado con éxito");
-    }
-
-    function editarProd(id) {
-        const r = repuestos.find(x => x.id === id);
-        document.getElementById("eid").value = r.id;
-        document.getElementById("an").value = r.nombre;
-        document.getElementById("ap").value = r.precio;
-        document.getElementById("apm").value = r.precio_may;
-        document.getElementById("as").value = r.stock;
-        document.getElementById("apromo").value = r.promo || "";
-        document.getElementById("ai").value = r.imagen || "";
-        document.getElementById("an").focus();
-    }
-
-    async function eliminarProd(id) {
-        if(confirm("¿Seguro que querés borrar este producto?")) await db.collection("productos").doc(id).delete();
-    }
-
-    function cargarTablaVentas(ventas) {
-        document.getElementById("bodyVentas").innerHTML = ventas.map(v => `
-            <tr>
-                <td><small>${v.fechaHora}</small></td>
-                <td style="font-size:10px">${v.detalle.substring(0,50)}...</td>
-                <td><b>$${v.total}</b></td>
-                <td><button class="btn-action" style="background:var(--danger)" onclick="borrarVenta('${v.id}')">🗑️</button></td>
-            </tr>`).join("");
-    }
-
-    async function borrarVenta(id) { await db.collection("ventas").doc(id).delete(); }
-
-    async function vaciarVentas() {
-        if(confirm("ATENCIÓN: Se borrará todo el historial de ventas permanentemente. ¿Continuar?")) {
-            const snap = await db.collection("ventas").get();
-            const batch = db.batch();
-            snap.forEach(doc => batch.delete(doc.ref));
-            await batch.commit();
-        }
-    }
-
-    function cargarTablaSolis(solis) {
-        document.getElementById("bodySolis").innerHTML = solis.map(s => `
-            <tr>
-                <td>${s.nombre}</td>
-                <td>${s.cuit}</td>
-                <td><button class="btn-action" style="background:var(--danger)" onclick="borrarSoli('${s.id}')">Eliminar</button></td>
-            </tr>`).join("");
-    }
-    async function borrarSoli(id) { await db.collection("solicitudes_mayoristas").doc(id).delete(); }
-
-    // --- UI TOOLS ---
-    function toggleCart() { const d = document.getElementById("cartDrawer"); d.style.right = d.style.right === "0px" ? "-400px" : "0px"; document.getElementById("overlay").classList.toggle("active"); }
-    function abrirModal(id) { document.getElementById(id).style.display = "flex"; }
-    function cerrarModales() { document.querySelectorAll(".modal").forEach(m => m.style.display="none"); }
-    function closeAll() { cerrarModales(); document.getElementById("overlay").classList.remove("active"); document.getElementById("cartDrawer").style.right = "-400px"; }
-    function toggleAuth(t) { document.getElementById("secLogin").style.display = t==='L'?'block':'none'; document.getElementById("secReg").style.display = t==='R'?'block':'none'; }
-    function tabAdmin(t) { 
-        document.getElementById("tabProds").style.display = t==='prods'?'block':'none'; 
-        document.getElementById("tabSolis").style.display = t==='solis'?'block':'none'; 
-        document.getElementById("tabVentas").style.display = t==='ventas'?'block':'none'; 
-    }
-    function abrirAdmin() { if(prompt("Clave Admin:") === "admin") abrirModal("adminModal"); }
-    function validarLogin() {
-        if(document.getElementById("u").value === "mayorista" && document.getElementById("p_log").value === "vip") {
-            esMayorista = true; sessionStorage.setItem("esMayorista", "true"); cerrarModales(); render();
-        } else alert("Credenciales inválidas");
-    }
-    async function registrarMay() {
-        const d = { nombre: document.getElementById("rn").value, cuit: document.getElementById("rc").value, email: document.getElementById("re").value };
-        if(!d.nombre) return;
-        await db.collection("solicitudes_mayoristas").add(d);
-        alert("Solicitud enviada correctamente."); toggleAuth('L');
-    }
-    function limpiarAdmin() { 
-        document.getElementById("eid").value=""; 
-        document.querySelectorAll("#tabProds input").forEach(i => i.value="");
-        document.getElementById("apromo").value="";
-    }
-</script>
-</body>
-</html>
+            return `<div style="display:flex; justify-content:space-between; margin-bottom:10px; font-size:13px">
+                <span>${r.nombre} x${c.qty}</span>
