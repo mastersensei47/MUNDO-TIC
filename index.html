@@ -3,50 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NEO REPUESTOS - SISTEMA PREMIUM</title>
+    <title>NEO REPUESTOS - PREMIUM SYSTEM</title>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script>
 
     <style>
         :root {
             --bg: #0f172a; --card: #1e293b; --text: #f1f5f9; --accent: #3b82f6;
-            --success: #10b981; --promo: #f59e0b; --danger: #ef4444; --sidebar: #1e293b;
-            --input-bg: rgba(15, 23, 42, 0.6);
+            --success: #10b981; --promo: #f59e0b; --danger: #ef4444;
+            --input-bg: rgba(30, 41, 59, 0.7);
         }
         body.light {
-            --bg: #f8fafc; --card: #ffffff; --text: #0f172a; --sidebar: #2563eb;
+            --bg: #f8fafc; --card: #ffffff; --text: #0f172a; --accent: #2563eb;
             --input-bg: #f1f5f9;
         }
-        body { margin:0; font-family: 'Inter', 'Segoe UI', sans-serif; background:var(--bg); color:var(--text); transition: 0.3s; overflow-x: hidden; }
+        body { margin:0; font-family: 'Inter', sans-serif; background:var(--bg); color:var(--text); transition: 0.3s; overflow-x: hidden; }
+
+        /* HEADER CON ICONOS VISIBLES */
+        header { 
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 12px 25px; background: var(--card); position: sticky; top: 0; z-index: 1000; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3); border-bottom: 1px solid rgba(128,128,128,0.1);
+        }
+        .header-icons { display: flex; gap: 22px; align-items: center; }
+        .icon-btn { cursor: pointer; font-size: 22px; transition: 0.2s; position: relative; display: flex; align-items: center; }
+        .icon-btn:hover { color: var(--accent); transform: scale(1.1); }
+        .qty-badge { 
+            position: absolute; top: -8px; right: -10px; background: var(--danger); 
+            color: white; font-size: 10px; padding: 2px 6px; border-radius: 50%; border: 2px solid var(--card);
+        }
+
+        /* BUSCADOR */
+        .search-container { flex: 1; max-width: 450px; margin: 0 20px; }
+        .search-bar { 
+            width: 100%; padding: 12px 20px; border-radius: 12px; border: 1px solid rgba(128,128,128,0.3); 
+            background: var(--input-bg); color: inherit; outline: none; transition: 0.3s;
+        }
+        .search-bar:focus { border-color: var(--accent); background: var(--card); box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); }
+
+        /* PRODUCTOS GRID */
+        .products-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:20px; padding:25px; }
+        .product-card { 
+            background: var(--card); padding: 15px; border-radius: 20px; text-align: center; 
+            border: 1px solid rgba(128,128,128,0.1); position: relative; transition: 0.3s;
+        }
+        .product-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .product-card img { width: 100%; height: 130px; object-fit: contain; margin-bottom: 10px; }
+        .promo-tag { 
+            position: absolute; top: 12px; left: 12px; background: var(--promo); 
+            color: #000; font-size: 10px; font-weight: 900; padding: 4px 10px; border-radius: 8px; text-transform: uppercase;
+        }
+
+        /* PANELES MODERNOS */
+        .modal { 
+            position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(10px); 
+            display: none; justify-content: center; align-items: center; z-index: 4000; 
+        }
+        .modal-content { 
+            background: var(--card); padding: 35px; border-radius: 28px; width: 90%; 
+            max-width: 420px; box-shadow: 0 30px 60px rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.1); 
+            text-align: center;
+        }
         
-        /* HEADER */
-        header { display:flex; justify-content:space-between; align-items:center; padding:15px 20px; background:var(--card); position:sticky; top:0; z-index:1000; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-        .sidebar { position: fixed; left: -280px; top: 0; width: 260px; height: 100%; background: var(--sidebar); color: white; transition: 0.3s; z-index: 2500; padding: 20px; box-shadow: 5px 0 15px rgba(0,0,0,0.3); }
-        .sidebar.active { left: 0; }
-        .sidebar a { display: block; padding: 12px; color: white; text-decoration: none; border-bottom: 1px solid rgba(255,255,255,0.1); cursor: pointer; border-radius: 8px; }
-
-        .search-container { flex: 1; max-width: 400px; margin: 0 20px; }
-        .search-bar { width: 100%; padding: 10px 18px; border-radius: 25px; border: 1px solid rgba(128,128,128,0.3); background: var(--input-bg); color: inherit; outline: none; }
-
-        /* PRODUCTOS */
-        .products-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:20px; padding:20px; }
-        .product-card { background:var(--card); padding:15px; border-radius:20px; text-align:center; border: 1px solid rgba(128,128,128,0.1); position: relative; transition: 0.3s; }
-        .product-card img { width: 100%; height: 120px; object-fit: contain; }
-        .promo-badge { position: absolute; top: 12px; left: 12px; background: var(--promo); color: #000; font-size: 10px; font-weight: 800; padding: 4px 10px; border-radius: 20px; }
-
-        /* CARRITO */
-        #cartDrawer { position:fixed; right:-400px; top:0; width:340px; height:100%; background:var(--card); transition:0.3s; z-index:3000; padding:25px; display:flex; flex-direction:column; box-shadow: -10px 0 30px rgba(0,0,0,0.4); }
-        .cart-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 10px; background: rgba(128,128,128,0.05); border-radius: 12px; }
-
-        /* PANELES */
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); display: none; justify-content: center; align-items: center; z-index: 4000; padding: 15px; }
-        .modal-content { background: var(--card); padding: 30px; border-radius: 25px; width: 100%; max-width: 400px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); }
-        
-        input { width: 100%; padding: 14px; margin: 10px 0; background: var(--input-bg); color: inherit; border: 1px solid rgba(128,128,128,0.2); border-radius: 12px; box-sizing: border-box; outline: none; }
-        .btn { padding: 14px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; width: 100%; transition: 0.3s; margin-top: 10px; }
+        input { 
+            width: 100%; padding: 15px; margin: 10px 0; background: var(--input-bg); 
+            color: inherit; border: 1px solid rgba(128,128,128,0.2); border-radius: 12px; box-sizing: border-box; font-size: 15px;
+        }
+        .btn { 
+            padding: 15px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; 
+            width: 100%; transition: 0.3s; font-size: 15px; margin-top: 10px;
+        }
         .btn-primary { background: var(--accent); color: white; }
-        .btn-outline { background: transparent; color: var(--text); border: 1px solid rgba(128,128,128,0.5); }
-        .btn-outline:hover { background: rgba(128,128,128,0.1); }
+        .btn-primary:hover { box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4); }
+        .btn-back { background: transparent; color: var(--text); border: 1px solid rgba(128,128,128,0.3); }
+        .btn-back:hover { background: rgba(128,128,128,0.1); }
+
+        /* CARRITO LATERAL */
+        #cartDrawer { 
+            position: fixed; right: -400px; top: 0; width: 350px; height: 100%; 
+            background: var(--card); transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1); z-index: 3000; 
+            padding: 30px; box-shadow: -15px 0 50px rgba(0,0,0,0.5); display: flex; flex-direction: column;
+        }
+        #cartDrawer.active { right: 0; }
+        .cart-item { display: flex; justify-content: space-between; align-items: center; background: rgba(128,128,128,0.05); padding: 12px; border-radius: 15px; margin-bottom: 12px; }
 
         .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: none; z-index: 2000; }
         .overlay.active { display: block; }
@@ -55,56 +94,67 @@
 <body>
 
 <header>
-    <div style="display:flex; align-items:center; gap:12px">
-        <span onclick="toggleSidebar()" style="cursor:pointer; font-size:26px">☰</span>
-        <b style="font-size:20px" onclick="location.reload()">NEO<span style="color:var(--accent)">REPUESTOS</span></b>
+    <div style="display:flex; align-items:center; gap:10px">
+        <b style="font-size:22px; cursor:pointer; letter-spacing:-1px" onclick="location.reload()">NEO<span style="color:var(--accent)">REPUESTOS</span></b>
     </div>
+
     <div class="search-container">
-        <input type="text" id="searchInput" class="search-bar" placeholder="Buscar repuestos..." onkeyup="renderProducts()">
+        <input type="text" id="searchInput" class="search-bar" placeholder="Busca tu repuesto aquí..." onkeyup="render()">
     </div>
-    <div style="display:flex; gap:18px; align-items:center">
-        <span onclick="toggleTheme()" style="cursor:pointer; font-size:22px">🌗</span>
-        <div onclick="toggleCart()" style="cursor:pointer; position:relative">
-            🛒 <b id="cartCount" style="position:absolute; top:-8px; right:-8px; background:var(--danger); color:white; font-size:10px; padding:2px 6px; border-radius:50%">0</b>
+
+    <div class="header-icons">
+        <span class="icon-btn" onclick="toggleTheme()" title="Cambiar Tema">🌗</span>
+        <span class="icon-btn" onclick="abrirModal('loginModal')" title="Mi Cuenta">👤</span>
+        <span class="icon-btn" onclick="abrirAdmin()" title="Configuración">⚙️</span>
+        <div class="icon-btn" onclick="toggleCart()" title="Ver Carrito">
+            🛒 <b id="cartCount" class="qty-badge">0</b>
         </div>
     </div>
 </header>
 
-<div class="sidebar" id="sidebar">
-    <h2 style="color:var(--accent)">Neo Menú</h2>
-    <a onclick="closeAll()">🏠 Inicio</a>
-    <a onclick="abrirModal('loginModal')">👤 Ingreso Mayorista</a>
-    <a onclick="abrirAdmin()">⚙️ Panel de Control</a>
-    <a href="https://wa.me/5493434508948">💬 WhatsApp</a>
-</div>
-
 <div class="overlay" id="mainOverlay" onclick="closeAll()"></div>
+
 <div class="products-grid" id="productsCont"></div>
 
 <div class="modal" id="loginModal">
     <div class="modal-content">
         <div id="loginView">
-            <h2 style="margin-top:0">Área Clientes</h2>
-            <p style="font-size:14px; opacity:0.8">Ingresa para ver precios especiales.</p>
-            <input id="userInp" placeholder="Usuario">
+            <h2 style="margin: 0 0 10px 0">¡Hola de nuevo!</h2>
+            <p style="opacity: 0.7; font-size: 14px; margin-bottom: 25px">Ingresa para comprar como mayorista.</p>
+            <input id="userInp" placeholder="Usuario / Email">
             <input id="passInp" type="password" placeholder="Contraseña">
-            <button class="btn btn-primary" onclick="checkLogin()">ACCEDER</button>
-            <button class="btn btn-outline" onclick="closeAll()">← VOLVER AL INICIO</button>
-            <p style="text-align:center; font-size:13px; margin-top:20px">¿No tienes cuenta? <a href="#" onclick="switchAuth(true)" style="color:var(--accent); font-weight:bold">Regístrate</a></p>
+            <button class="btn btn-primary" onclick="checkLogin()">INICIAR SESIÓN</button>
+            <button class="btn btn-back" onclick="closeAll()">VOLVER A LA TIENDA</button>
+            <p style="text-align:center; font-size: 13px; margin-top: 25px">¿No tienes cuenta? <a href="#" onclick="switchAuth(true)" style="color:var(--accent); text-decoration: none; font-weight: bold">Regístrate</a></p>
         </div>
-        
+
         <div id="regView" style="display:none">
-            <h2>Registro</h2>
-            <input id="regNom" placeholder="Nombre / Comercio">
-            <input id="regCuit" placeholder="CUIT / CUIL">
-            <button class="btn btn-primary" onclick="enviarSolicitud()">ENVIAR SOLICITUD</button>
-            <button class="btn btn-outline" onclick="switchAuth(false)">← VOLVER AL LOGIN</button>
+            <h2>Solicitud Mayorista</h2>
+            <p style="opacity: 0.7; font-size: 14px; margin-bottom: 20px">Envíanos tus datos para darte el alta.</p>
+            <input id="regNom" placeholder="Nombre completo o Negocio">
+            <input id="regCuit" placeholder="CUIT / DNI">
+            <button class="btn btn-primary" onclick="enviarSolicitud()">ENVIAR DATOS</button>
+            <button class="btn btn-back" onclick="switchAuth(false)">VOLVER AL LOGIN</button>
         </div>
     </div>
 </div>
 
+<div id="cartDrawer">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:25px">
+        <h2 style="margin:0">Tu Carrito</h2>
+        <span onclick="toggleCart()" style="cursor:pointer; font-size:24px">✕</span>
+    </div>
+    <div id="cartList" style="flex-grow:1; overflow-y:auto"></div>
+    <div style="border-top: 1px solid rgba(128,128,128,0.2); padding-top:20px">
+        <div style="display:flex; justify-content:space-between; margin-bottom:15px">
+            <span>Total:</span>
+            <b id="cartTotal" style="font-size:22px">$0</b>
+        </div>
+        <button class="btn btn-primary" style="background:#25d366" onclick="enviarWhatsApp()">PEDIR POR WHATSAPP</button>
+    </div>
+</div>
+
 <script>
-    // Configuración Firebase (Usando la tuya)
     const firebaseConfig = {
         apiKey: "AIzaSyDAqlchDsLHIMMbv6YL2ipggaShXlFqiW8",
         authDomain: "tienda-online-baaf6.firebaseapp.com",
@@ -117,49 +167,92 @@
     const db = firebase.firestore();
 
     let repuestos = [];
+    let carrito = [];
     let esMayorista = sessionStorage.getItem("isMay") === "true";
 
+    // Carga de Datos
     db.collection("productos").onSnapshot(snap => {
         repuestos = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        renderProducts();
+        render();
     });
 
-    function renderProducts() {
+    function render() {
         const query = document.getElementById("searchInput").value.toLowerCase();
         const cont = document.getElementById("productsCont");
         cont.innerHTML = repuestos.filter(r => r.nombre.toLowerCase().includes(query)).map(r => `
             <div class="product-card">
-                ${r.promo ? `<div class="promo-badge">${r.promo}</div>` : ''}
+                ${r.promo ? `<div class="promo-tag">${r.promo}</div>` : ''}
                 <img src="${r.imagen || 'https://via.placeholder.com/150'}">
-                <h4 style="margin:10px 0">${r.nombre}</h4>
-                <div style="color:var(--accent); font-weight:800; font-size:18px">$${esMayorista ? r.precio_may : r.precio}</div>
-                <button class="btn btn-primary" style="padding:10px" onclick="addCar('${r.id}')">AGREGAR</button>
+                <h4 style="margin: 10px 0 5px 0; font-size: 15px">${r.nombre}</h4>
+                <div style="color:var(--accent); font-weight:800; font-size:18px; margin-bottom:12px">$${esMayorista ? r.precio_may : r.precio}</div>
+                <button class="btn btn-primary" style="padding:10px; font-size:13px; margin:0" onclick="addCar('${r.id}')">AGREGAR</button>
             </div>`).join("");
     }
 
-    // UI Lógica
-    function toggleSidebar() { document.getElementById("sidebar").classList.toggle("active"); document.getElementById("mainOverlay").classList.toggle("active"); }
+    function addCar(id) {
+        const item = carrito.find(c => c.id === id);
+        if(item) item.qty++; else carrito.push({id, qty:1});
+        upUI();
+    }
+
+    function upUI() {
+        let total = 0;
+        document.getElementById("cartCount").innerText = carrito.reduce((a,b)=> a+b.qty, 0);
+        const list = document.getElementById("cartList");
+        list.innerHTML = carrito.map(c => {
+            const r = repuestos.find(x => x.id === c.id);
+            const sub = (esMayorista ? r.precio_may : r.precio) * c.qty;
+            total += sub;
+            return `<div class="cart-item">
+                <div style="font-size:13px"><b>${r.nombre}</b><br>Cant: ${c.qty}</div>
+                <div style="font-weight:bold">$${sub}</div>
+            </div>`;
+        }).join("");
+        document.getElementById("cartTotal").innerText = "$" + total;
+    }
+
+    // Navegación y UI
+    function toggleTheme() { document.body.classList.toggle("light"); }
     function abrirModal(id) { document.getElementById(id).style.display = "flex"; }
     function closeAll() { 
         document.querySelectorAll(".modal").forEach(m => m.style.display = "none");
-        document.getElementById("sidebar").classList.remove("active");
+        document.getElementById("cartDrawer").classList.remove("active");
         document.getElementById("mainOverlay").classList.remove("active");
     }
-    function toggleTheme() { document.body.classList.toggle("light"); }
+    function toggleCart() { 
+        document.getElementById("cartDrawer").classList.toggle("active"); 
+        document.getElementById("mainOverlay").classList.toggle("active");
+    }
     function switchAuth(r) { 
         document.getElementById("loginView").style.display = r ? 'none' : 'block'; 
         document.getElementById("regView").style.display = r ? 'block' : 'none'; 
     }
     function checkLogin() { 
         if(document.getElementById("userInp").value === "mayorista") { 
-            esMayorista=true; sessionStorage.setItem("isMay", "true"); closeAll(); renderProducts(); 
+            esMayorista=true; sessionStorage.setItem("isMay", "true"); 
+            alert("¡Modo Mayorista Activado!"); closeAll(); render(); 
         } 
     }
     async function enviarSolicitud() { 
-        await db.collection("solicitudes_mayoristas").add({ nombre: document.getElementById("regNom").value, cuit: document.getElementById("regCuit").value }); 
-        alert("Solicitud enviada!"); switchAuth(false); 
+        await db.collection("solicitudes_mayoristas").add({ 
+            nombre: document.getElementById("regNom").value, 
+            cuit: document.getElementById("regCuit").value,
+            creado: new Date().getTime()
+        }); 
+        alert("Solicitud enviada. Nos contactaremos pronto."); switchAuth(false); 
     }
-    function abrirAdmin() { if(prompt("Clave:") === "admin") alert("Panel Admin abierto (Simulación)"); }
+    function abrirAdmin() { 
+        const pass = prompt("Acceso Administrativo:");
+        if(pass === "admin") alert("Abriendo Panel de Control..."); 
+    }
+    function enviarWhatsApp() {
+        let msg = "Hola Neo Repuestos, quiero pedir: ";
+        carrito.forEach(c => {
+            const r = repuestos.find(x => x.id === c.id);
+            msg += `${r.nombre} (x${c.qty}), `;
+        });
+        window.open(`https://wa.me/5493434508948?text=${encodeURIComponent(msg)}`);
+    }
 </script>
 </body>
 </html>
