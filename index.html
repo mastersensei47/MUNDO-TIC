@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Repuestos PRO - Premium Store</title>
+    <title>Repuestos PRO - Oficial</title>
     <style>
         :root {
             --bg: #0f172a; --card: #1e293b; --text: #f1f5f9;
@@ -14,7 +14,6 @@
         body.light { --bg: #f4f6f9; --card: #ffffff; --text: #111; --sidebar-bg: #2563eb; }
         body { margin:0; font-family: 'Segoe UI', sans-serif; background:var(--bg); color:var(--text); transition:.3s; overflow-x: hidden; }
         
-        /* HEADER SLIM (Más arriba) */
         header { 
             display:flex; justify-content:space-between; align-items:center; 
             padding:5px 20px; background:var(--card); box-shadow:var(--shadow); 
@@ -23,33 +22,33 @@
         .search-bar { flex-grow: 1; max-width: 350px; margin: 0 15px; }
         .search-bar input {
             width: 100%; padding: 6px 15px; border-radius: 20px; border: 1px solid #444;
-            background: rgba(0,0,0,0.2); color: white; font-size: 13px;
+            background: rgba(0,0,0,0.2); color: white; font-size: 13px; outline: none;
         }
         .icon-group { display: flex; gap: 12px; align-items: center; }
         .icon { cursor:pointer; font-size:18px; position: relative; }
         .badge { position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; font-size: 10px; padding: 1px 5px; border-radius: 10px; }
 
-        /* CARRITO Y FORMULARIO */
         .cart-drawer {
             position: fixed; right: -350px; top: 0; width: 320px; height: 100%;
             background: var(--card); transition: 0.3s; z-index: 3000; padding: 15px; box-shadow: -5px 0 20px rgba(0,0,0,0.5);
-            display: flex; flex-direction: column;
+            display: flex; flex-direction: column; box-sizing: border-box;
         }
         .cart-drawer.active { right: 0; }
-        .cart-items { flex-grow: 1; overflow-y: auto; margin: 10px 0; font-size: 14px; }
+        .cart-items { flex-grow: 1; overflow-y: auto; margin-bottom: 10px; font-size: 14px; }
         
-        .delivery-options { background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; margin-bottom: 10px; }
-        .delivery-options label { font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 5px; margin-bottom: 5px; }
+        /* SECCIÓN DE ENVÍO MOVIDA HACIA ARRIBA */
+        .delivery-section { background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #334155; }
+        .delivery-section h4 { margin: 0 0 10px 0; font-size: 14px; color: var(--accent); }
+        .delivery-section label { font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
         #form-envio { display: none; margin-top: 10px; border-top: 1px solid #444; padding-top: 10px; }
-        .cart-input { width: 100%; padding: 6px; margin: 4px 0; border-radius: 5px; border: 1px solid #444; background: #000; color: white; font-size: 12px; }
+        
+        .cart-input { width: 100%; padding: 8px; margin: 4px 0; border-radius: 5px; border: 1px solid #444; background: #000; color: white; font-size: 12px; box-sizing: border-box; }
 
-        /* PRODUCTOS */
         .products { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:15px; padding:15px; }
         .card { background:var(--card); padding:12px; border-radius:12px; text-align:center; box-shadow: var(--shadow); }
         .card img { width: 100%; height: 110px; object-fit: contain; margin-bottom: 8px; }
         .price-main { font-size: 1.1em; font-weight: bold; color: var(--accent); }
 
-        /* SIDEBAR Y MODALES */
         .sidebar { position: fixed; left: -280px; top: 0; width: 260px; height: 100%; background: var(--sidebar-bg); color: white; transition: 0.3s; z-index: 2000; }
         .sidebar.active { left: 0; }
         .sidebar a { display: block; padding: 12px 20px; color: white; text-decoration: none; font-size: 14px; }
@@ -60,6 +59,7 @@
         .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; z-index: 1500; }
         .overlay.show { display: block; }
         button { background: var(--accent); color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; }
+        .btn-wa { background: #25d366; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -70,7 +70,7 @@
         <div style="font-weight:bold; font-size: 14px;">NEO REPUESTOS</div>
     </div>
     <div class="search-bar">
-        <input type="text" id="searchInput" placeholder="Buscar repuesto..." onkeyup="filtrarProductos()">
+        <input type="text" id="searchInput" placeholder="Buscar producto..." onkeyup="filtrarProductos()">
     </div>
     <div class="icon-group">
         <span class="icon" onclick="toggleLightMode()">🌗</span>
@@ -88,36 +88,40 @@
 </nav>
 
 <div class="cart-drawer" id="cartDrawer">
-    <div style="display:flex; justify-content:space-between; align-items:center;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px;">
         <h3 style="margin:0; font-size:18px;">Mi Carrito</h3>
         <span onclick="toggleCart()" style="cursor:pointer; font-size: 20px;">✕</span>
     </div>
     
     <div class="cart-items" id="cartList"></div>
     
-    <div class="delivery-options">
+    <div class="delivery-section">
+        <h4>Método de Entrega</h4>
         <label><input type="radio" name="delivery" value="Local" checked onclick="toggleEnvio(false)"> 🏪 Retiro por local</label>
         <label><input type="radio" name="delivery" value="Envio" onclick="toggleEnvio(true)"> 🚀 Envío a domicilio</label>
         
         <div id="form-envio">
             <input id="f_nombre" class="cart-input" placeholder="Nombre completo">
-            <input id="f_direccion" class="cart-input" placeholder="Dirección">
-            <input id="f_telefono" class="cart-input" placeholder="Teléfono">
+            <input id="f_direccion" class="cart-input" placeholder="Dirección exacta">
+            <input id="f_telefono" class="cart-input" placeholder="Teléfono de contacto">
         </div>
     </div>
 
-    <div style="border-top: 1px solid #444; padding-top: 10px;">
-        <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-weight: bold;">
+    <div style="border-top: 2px solid #444; padding-top: 10px; background: var(--card);">
+        <div style="display:flex; justify-content:space-between; margin-bottom:5px; font-weight: bold; font-size: 1.1em;">
             <span>Total:</span> <span id="cartTotal">$0</span>
         </div>
-        <button onclick="enviarPedido()" style="background:#25d366">Confirmar por WhatsApp</button>
+        <div id="savingsBox" style="color: #10b981; font-size: 12px; margin-bottom: 10px; font-weight: bold;"></div>
+        <button onclick="enviarPedido()" class="btn-wa">Confirmar Pedido</button>
     </div>
 </div>
 
+<div class="products" id="products"></div>
+
 <div class="admin-modal" id="adminModal">
     <div class="admin-content">
-        <span style="float:right; cursor:pointer; font-size:20px;" onclick="document.getElementById('adminModal').style.display='none'">✕</span>
-        <h2 style="font-size:18px;">Panel Admin</h2>
+        <span style="float:right; cursor:pointer;" onclick="document.getElementById('adminModal').style.display='none'">✕</span>
+        <h3>Panel Admin</h3>
         <input type="hidden" id="editIndex">
         <input id="n" class="cart-input" placeholder="Nombre">
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px;">
@@ -127,23 +131,15 @@
             <input id="stock" type="number" class="cart-input" placeholder="Stock">
         </div>
         <input id="img" class="cart-input" placeholder="URL Imagen">
-        <button onclick="guardar()" id="btnGuardar">Guardar Producto</button>
-
-        <div style="display: flex; gap: 10px; margin: 15px 0;">
-            <button onclick="verTab('productos')" style="background:#444; font-size:12px;">Productos</button>
-            <button onclick="verTab('historial')" style="background:#444; font-size:12px;">Ventas</button>
-        </div>
-        <div id="tab-productos"><div id="listaAdmin"></div></div>
-        <div id="tab-historial" style="display:none;"><div id="listaVentas"></div></div>
+        <button onclick="guardar()">Guardar</button>
+        <div id="listaAdmin" style="margin-top:20px;"></div>
     </div>
 </div>
 
-<div class="products" id="products"></div>
-
 <script>
     let products = JSON.parse(localStorage.getItem("products")) || [];
-    let sales = JSON.parse(localStorage.getItem("sales")) || [];
     let cart = [];
+    let currentUser = null; // Para activar precios mayoristas si hiciera falta
 
     function render(filtro = "") {
         const container = document.getElementById("products");
@@ -155,7 +151,8 @@
                     <img src="${p.img || 'https://via.placeholder.com/150'}">
                     <h4 style="font-size:14px; margin:5px 0;">${p.name}</h4>
                     <div class="price-main">$${p.p_ind}</div>
-                    <button onclick="addToCart(${realIdx})" style="margin-top:8px; font-size:12px;">🛒 Agregar</button>
+                    ${p.p_x2 > 0 ? `<div style="color:#10b981; font-size:11px;">Promo x2: $${p.p_x2}</div>` : ''}
+                    <button onclick="addToCart(${realIdx})" style="margin-top:8px;">🛒 Agregar</button>
                 </div>`;
         }).join("");
     }
@@ -170,20 +167,38 @@
         updateCart();
     }
 
+    // --- CORRECCIÓN DE LA CUENTA (PROMOS X2 INCLUIDAS) ---
     function updateCart() {
         const list = document.getElementById("cartList");
-        let total = 0; let count = 0;
+        let total = 0; let count = 0; let ahorro = 0;
+
         list.innerHTML = cart.map((item, idx) => {
             const p = products[item.id];
-            let sub = item.qty * p.p_ind;
-            total += sub; count += item.qty;
-            return `<div style="display:flex; justify-content:space-between; margin-bottom:5px;">
-                <span>${p.name} (x${item.qty})</span>
-                <span>$${sub} <b onclick="removeFromCart(${idx})" style="color:red; cursor:pointer">✕</b></span>
-            </div>`;
+            let subtotal = 0;
+            
+            // Lógica de Promo x2: si lleva 2 o más y el precio x2 existe
+            if (p.p_x2 > 0 && item.qty >= 2) {
+                let pares = Math.floor(item.qty / 2);
+                let sueltos = item.qty % 2;
+                subtotal = (pares * p.p_x2) + (sueltos * p.p_ind);
+                ahorro += (item.qty * p.p_ind) - subtotal;
+            } else {
+                subtotal = item.qty * p.p_ind;
+            }
+
+            total += subtotal;
+            count += item.qty;
+            
+            return `
+                <div style="display:flex; justify-content:space-between; margin-bottom:8px; border-bottom: 1px solid #334155; padding-bottom:4px;">
+                    <span>${p.name} (x${item.qty})</span>
+                    <span>$${subtotal} <b onclick="removeFromCart(${idx})" style="color:red; cursor:pointer; margin-left:8px;">✕</b></span>
+                </div>`;
         }).join("");
+
         document.getElementById("cartTotal").innerText = "$" + total;
         document.getElementById("cartCount").innerText = count;
+        document.getElementById("savingsBox").innerText = ahorro > 0 ? `¡Ahorraste $${ahorro} por las promos! ⚡` : "";
     }
 
     function removeFromCart(idx) { cart.splice(idx, 1); updateCart(); }
@@ -191,31 +206,31 @@
     function enviarPedido() {
         if(cart.length === 0) return;
         const entrega = document.querySelector('input[name="delivery"]:checked').value;
-        let infoCliente = `\nMetodo: ${entrega}`;
+        let datosEnvio = `\n📍 Entrega: ${entrega}`;
         
         if(entrega === "Envio") {
             const nom = document.getElementById("f_nombre").value;
             const dir = document.getElementById("f_direccion").value;
             const tel = document.getElementById("f_telefono").value;
-            if(!nom || !dir) return alert("Completa los datos de envío");
-            infoCliente += `\nNombre: ${nom}\nDir: ${dir}\nTel: ${tel}`;
+            if(!nom || !dir) return alert("Por favor, completa los datos de envío.");
+            datosEnvio += `\n👤 Cliente: ${nom}\n🏠 Dirección: ${dir}\n📞 Tel: ${tel}`;
         }
 
-        let msg = "Nuevo Pedido:\n";
-        cart.forEach(c => msg += `- ${products[c.id].name} x${c.qty}\n`);
-        msg += "Total: " + document.getElementById("cartTotal").innerText + infoCliente;
+        let msg = "✅ NUEVO PEDIDO\n--------------------------\n";
+        cart.forEach(c => {
+            const p = products[c.id];
+            msg += `• ${p.name} (x${c.qty})\n`;
+        });
+        msg += `--------------------------\n💰 TOTAL: ${document.getElementById("cartTotal").innerText}${datosEnvio}`;
         
-        sales.push({ fecha: new Date().toLocaleString(), detalle: msg });
-        localStorage.setItem("sales", JSON.stringify(sales));
         window.open(`https://wa.me/5493434508948?text=${encodeURIComponent(msg)}`);
     }
 
-    // --- ADMIN ---
+    // --- FUNCIONES ADMIN ---
     function abrirAdmin() {
-        if(prompt("Contraseña:") === "admin") {
+        if(prompt("Pass:") === "admin") {
             document.getElementById("adminModal").style.display = "flex";
             cargarAdminList();
-            cargarVentas();
         }
     }
 
@@ -234,41 +249,19 @@
         location.reload();
     }
 
-    function editar(i) {
-        const p = products[i];
-        document.getElementById("n").value = p.name;
-        document.getElementById("p_ind").value = p.p_ind;
-        document.getElementById("editIndex").value = i;
-        document.getElementById("btnGuardar").innerText = "Actualizar";
-    }
-
     function cargarAdminList() {
         document.getElementById("listaAdmin").innerHTML = products.map((p, i) => `
             <div style="display:flex; justify-content:space-between; padding:5px; border-bottom:1px solid #444; font-size:12px;">
                 <span>${p.name}</span>
-                <div><b onclick="editar(${i})" style="color:orange; cursor:pointer">Edit</b> | <b onclick="eliminar(${i})" style="color:red; cursor:pointer">✕</b></div>
+                <span onclick="eliminar(${i})" style="color:red; cursor:pointer">✕</span>
             </div>`).join("");
     }
 
-    function eliminar(i) {
-        if(confirm("¿Eliminar?")) { products.splice(i, 1); localStorage.setItem("products", JSON.stringify(products)); cargarAdminList(); render(); }
-    }
-
-    function cargarVentas() {
-        document.getElementById("listaVentas").innerHTML = sales.map(s => `
-            <div style="font-size:10px; background:#000; padding:5px; margin-bottom:5px;"><b>${s.fecha}</b><br>${s.detalle.replace(/\n/g, '<br>')}</div>
-        `).reverse().join("");
-    }
-
-    function verTab(tab) {
-        document.getElementById("tab-productos").style.display = tab === 'productos' ? 'block' : 'none';
-        document.getElementById("tab-historial").style.display = tab === 'historial' ? 'block' : 'none';
-    }
-
+    function eliminar(i) { if(confirm("¿Eliminar?")) { products.splice(i, 1); localStorage.setItem("products", JSON.stringify(products)); location.reload(); } }
     function filtrarProductos() { render(document.getElementById("searchInput").value); }
     function toggleSidebar() { document.getElementById("sidebar").classList.toggle("active"); document.getElementById("overlay").classList.toggle("show"); }
     function toggleCart() { document.getElementById("cartDrawer").classList.toggle("active"); document.getElementById("overlay").classList.toggle("show"); }
-    function closeAll() { document.querySelectorAll(".active, .show").forEach(el => el.classList.remove("active", "show")); }
+    function closeAll() { document.getElementById("sidebar").classList.remove("active"); document.getElementById("cartDrawer").classList.remove("active"); document.getElementById("overlay").classList.remove("show"); }
     function toggleLightMode() { document.body.classList.toggle("light"); }
 
     render();
