@@ -2,212 +2,258 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Tienda</title>
+<title>Tienda Importados</title>
 
 <style>
+
 body{
-    margin:0;
-    font-family:Arial;
-    background:#0b1a2e;
-    color:white;
+margin:0;
+font-family:Arial;
+background:#f4f4f4;
 }
 
 header{
-    background:#1f2d3d;
-    padding:10px;
-    display:flex;
-    justify-content:center;
+background:#111;
+color:white;
+padding:15px;
+display:flex;
+justify-content:space-between;
+align-items:center;
 }
 
-#buscar{
-    width:300px;
-    padding:8px;
-    border-radius:20px;
-    border:none;
+header input{
+padding:8px;
+width:250px;
+border-radius:5px;
+border:none;
 }
 
 .container{
-    display:flex;
+display:flex;
 }
 
-.menu{
-    width:200px;
-    background:#2c49b0;
-    padding:20px;
+.sidebar{
+width:200px;
+background:#1f2d3d;
+color:white;
+padding:20px;
 }
 
-.menu button{
-    width:100%;
-    margin-bottom:10px;
-    padding:10px;
-    border:none;
-    background:#3b63ff;
-    color:white;
-    cursor:pointer;
+.sidebar button{
+display:block;
+width:100%;
+margin-bottom:10px;
+padding:10px;
+border:none;
+background:#34495e;
+color:white;
+cursor:pointer;
 }
 
-.productos{
-    flex:1;
-    padding:20px;
-    display:grid;
-    grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
-    gap:20px;
+.products{
+flex:1;
+padding:20px;
+display:grid;
+grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
+gap:20px;
 }
 
-.producto{
-    background:#15233a;
-    padding:10px;
-    border-radius:10px;
-    text-align:center;
+.card{
+background:white;
+border-radius:8px;
+padding:10px;
+box-shadow:0 2px 5px rgba(0,0,0,0.2);
+text-align:center;
 }
 
-.producto img{
-    width:100%;
-    height:150px;
-    object-fit:cover;
+.card img{
+width:100%;
+height:150px;
+object-fit:cover;
 }
 
-.producto button{
-    margin-top:10px;
-    background:#3b63ff;
-    border:none;
-    padding:8px;
-    color:white;
-    cursor:pointer;
+.card button{
+background:#27ae60;
+border:none;
+color:white;
+padding:8px;
+margin-top:10px;
+cursor:pointer;
 }
 
-.carrito{
-    width:250px;
-    background:#243248;
-    padding:20px;
+.cart{
+width:250px;
+background:#ecf0f1;
+padding:20px;
 }
 
-.total{
-    margin-top:20px;
-    font-size:18px;
-}
-
-.whatsapp{
-    margin-top:10px;
-    background:#2ecc71;
-    border:none;
-    padding:10px;
-    width:100%;
-    color:white;
-    cursor:pointer;
-}
 </style>
 </head>
 
 <body>
 
 <header>
-<input id="buscar" placeholder="Buscar...">
+
+<h2>Tienda Importados</h2>
+
+<input id="buscar" placeholder="Buscar producto">
+
 </header>
 
 <div class="container">
 
-<div class="menu">
-<button onclick="mostrar('todos')">Inicio</button>
-<button onclick="mostrar('mayorista')">Mayorista</button>
+<div class="sidebar">
+
+<button onclick="filtrar('todos')">Todos</button>
+<button onclick="filtrar('ropa')">Ropa</button>
+<button onclick="filtrar('electronica')">Electrónica</button>
+
 </div>
 
-<div id="productos" class="productos"></div>
+<div class="products" id="productos"></div>
 
-<div class="carrito">
-<h2>Carrito</h2>
-<div id="listaCarrito"></div>
-<div class="total">Total: $<span id="total">0</span></div>
-<button class="whatsapp" onclick="enviarWhatsapp()">Enviar WhatsApp</button>
+<div class="cart">
+
+<h3>Carrito</h3>
+
+<div id="lista"></div>
+
+<p>Total: $<span id="total">0</span></p>
+
+<button onclick="whatsapp()">Enviar pedido</button>
+
 </div>
 
 </div>
 
 <script>
 
-const productos = [
+const productos=[
 {
-nombre:"Producto 1",
-precio:10,
-categoria:"todos",
-img:"https://via.placeholder.com/200"
+nombre:"Cafetera",
+precio:40,
+categoria:"electronica",
+img:"https://picsum.photos/200?1"
 },
 {
-nombre:"Producto 2",
-precio:15,
-categoria:"mayorista",
-img:"https://via.placeholder.com/200"
+nombre:"Olla eléctrica",
+precio:60,
+categoria:"electronica",
+img:"https://picsum.photos/200?2"
 },
 {
-nombre:"Producto 3",
-precio:20,
-categoria:"todos",
-img:"https://via.placeholder.com/200"
+nombre:"Zapatos",
+precio:35,
+categoria:"ropa",
+img:"https://picsum.photos/200?3"
+},
+{
+nombre:"Camisa",
+precio:25,
+categoria:"ropa",
+img:"https://picsum.photos/200?4"
 }
-];
+]
 
-let carrito=[];
+let carrito=[]
 
-function mostrar(categoria){
+function mostrar(lista){
 
-const contenedor=document.getElementById("productos");
-contenedor.innerHTML="";
+const cont=document.getElementById("productos")
 
-productos.forEach((p,i)=>{
+cont.innerHTML=""
 
-if(categoria==="todos" || p.categoria===categoria){
+lista.forEach((p,i)=>{
 
-contenedor.innerHTML+=`
-<div class="producto">
+cont.innerHTML+=`
+
+<div class="card">
+
 <img src="${p.img}">
-<h3>${p.nombre}</h3>
+
+<h4>${p.nombre}</h4>
+
 <p>$${p.precio}</p>
-<button onclick="agregar(${i})">Agregar</button>
+
+<button onclick="agregar(${i})">
+
+Agregar
+
+</button>
+
 </div>
-`;
+
+`
+
+})
 
 }
 
-});
+function filtrar(cat){
+
+if(cat=="todos"){
+
+mostrar(productos)
+
+return
+
+}
+
+mostrar(productos.filter(p=>p.categoria==cat))
 
 }
 
 function agregar(i){
 
-carrito.push(productos[i]);
-actualizarCarrito();
+carrito.push(productos[i])
+
+actualizar()
 
 }
 
-function actualizarCarrito(){
+function actualizar(){
 
-const lista=document.getElementById("listaCarrito");
-lista.innerHTML="";
+const lista=document.getElementById("lista")
 
-let total=0;
+lista.innerHTML=""
+
+let total=0
 
 carrito.forEach(p=>{
-lista.innerHTML+=`<div>${p.nombre} - $${p.precio}</div>`;
-total+=p.precio;
-});
 
-document.getElementById("total").innerText=total;
+lista.innerHTML+=`<div>${p.nombre} - $${p.precio}</div>`
+
+total+=p.precio
+
+})
+
+document.getElementById("total").innerText=total
 
 }
 
-function enviarWhatsapp(){
+function whatsapp(){
 
-let texto="Pedido:%0A";
+let texto="Pedido:%0A"
 
 carrito.forEach(p=>{
-texto+=p.nombre+" - $"+p.precio+"%0A";
-});
 
-window.open("https://wa.me/?text="+texto);
+texto+=p.nombre+" - $"+p.precio+"%0A"
+
+})
+
+window.open("https://wa.me/?text="+texto)
 
 }
 
-mostrar("todos");
+document.getElementById("buscar").addEventListener("input",e=>{
+
+const val=e.target.value.toLowerCase()
+
+mostrar(productos.filter(p=>p.nombre.toLowerCase().includes(val)))
+
+})
+
+mostrar(productos)
 
 </script>
 
