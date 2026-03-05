@@ -3,23 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NEO REPUESTOS - Oficial</title>
+    <title>NEO REPUESTOS - Store</title>
     <style>
         :root {
             --bg: #0f172a; --card: #1e293b; --text: #f1f5f9;
             --accent: #2563eb; --sidebar-bg: #1e40af;
-            --coral: #ff8a80; --danger: #ef4444;
+            --coral: #ff8a80; --danger: #ef4444; --success: #22c55e;
         }
-        body { margin:0; font-family: 'Segoe UI', sans-serif; background:var(--bg); color:var(--text); overflow-x: hidden; }
+        body { margin:0; font-family: 'Segoe UI', sans-serif; background:var(--bg); color:var(--text); transition:.3s; }
         
-        /* HEADER */
+        /* HEADER SLIM */
         header { 
             display:flex; justify-content:space-between; align-items:center; 
-            padding:5px 20px; background:var(--card); position:sticky; top:0; z-index:1000; height: 50px;
+            padding:0 20px; background:var(--card); position:sticky; top:0; z-index:1000; height: 55px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
+        .search-bar { flex-grow: 1; max-width: 400px; margin: 0 20px; }
         .search-bar input {
-            padding: 6px 15px; border-radius: 20px; border: 1px solid #444;
-            background: rgba(0,0,0,0.2); color: white; width: 200px;
+            width: 100%; padding: 8px 15px; border-radius: 20px; border: 1px solid #334155;
+            background: rgba(0,0,0,0.2); color: white; font-size: 14px; outline: none;
         }
 
         /* SIDEBAR */
@@ -28,108 +30,141 @@
             background: var(--sidebar-bg); transition: 0.3s; z-index: 2000; display: flex; flex-direction: column;
         }
         .sidebar.active { left: 0; }
-        .sidebar a { display: block; padding: 15px 20px; color: white; text-decoration: none; }
-        .sidebar-promo { background: var(--coral); padding: 20px; font-weight: bold; text-align: center; cursor: pointer; margin-top: auto; }
+        .sidebar-header { padding: 25px; font-weight: bold; font-size: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .sidebar a { padding: 15px 25px; color: white; text-decoration: none; display: flex; align-items: center; gap: 12px; transition: 0.2s; }
+        .sidebar a:hover { background: rgba(255,255,255,0.1); }
+        .sidebar-promo { background: var(--coral); padding: 20px; font-weight: bold; text-align: center; cursor: pointer; margin-top: auto; color: #fff; }
+
+        /* PRODUCTOS EN GRILLA */
+        .products { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:20px; padding:20px; }
+        .card { background:var(--card); padding:15px; border-radius:15px; text-align:center; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+        .card img { width: 100%; height: 120px; object-fit: contain; margin-bottom: 10px; border-radius: 8px; }
+        .card h4 { margin: 10px 0 5px; font-size: 15px; text-transform: capitalize; }
+        .price-tag { font-size: 18px; font-weight: bold; color: var(--accent); margin-bottom: 5px; }
+        .promo-tag { font-size: 12px; color: var(--success); display: block; }
+        .add-btn { background: var(--accent); color: white; border: none; padding: 10px; border-radius: 8px; width: 100%; cursor: pointer; font-weight: bold; margin-top: 10px; }
 
         /* CARRITO */
         .cart-drawer {
             position: fixed; right: -350px; top: 0; width: 320px; height: 100%;
-            background: var(--card); transition: 0.3s; z-index: 3000; padding: 15px; display: flex; flex-direction: column;
+            background: var(--card); transition: 0.3s; z-index: 3000; padding: 20px; display: flex; flex-direction: column;
+            box-shadow: -10px 0 30px rgba(0,0,0,0.5);
         }
         .cart-drawer.active { right: 0; }
-        .cart-items { flex-grow: 1; overflow-y: auto; font-size: 13px; margin: 10px 0; }
-
-        /* ADMIN TABS */
-        .admin-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; justify-content: center; align-items: center; z-index: 4000; }
-        .admin-content { background: var(--card); width: 95%; max-width: 600px; height: 80vh; border-radius: 15px; padding: 20px; display: flex; flex-direction: column; }
-        .tabs { display: flex; gap: 10px; margin-bottom: 15px; border-bottom: 1px solid #444; padding-bottom: 10px; }
-        .tab-btn { background: #334155; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; }
-        .tab-btn.active { background: var(--accent); }
-        .tab-content { display: none; flex-grow: 1; overflow-y: auto; }
-        .tab-content.active { display: block; }
-
-        /* FORMULARIOS Y BOTONES */
-        .grid-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        input { width: 100%; padding: 10px; margin: 5px 0; border-radius: 5px; border: 1px solid #444; background: #000; color: white; box-sizing: border-box; }
-        button { background: var(--accent); color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; }
-        .btn-danger { background: var(--danger); margin-top: 10px; }
+        .cart-items { flex-grow: 1; overflow-y: auto; margin-bottom: 15px; font-size: 14px; }
+        .cart-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #334155; }
         
-        .product-list-item, .sale-item { 
-            background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; margin-bottom: 8px; font-size: 12px;
-            display: flex; justify-content: space-between; align-items: center;
-        }
+        /* FORMULARIO ENVIO */
+        .ship-box { background: rgba(0,0,0,0.2); padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #334155; }
+        .ship-box input { width: 100%; padding: 8px; margin: 5px 0; background: #000; border: 1px solid #444; color: white; border-radius: 5px; box-sizing: border-box; }
+
+        /* ADMIN CON PESTAÑAS */
+        .admin-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 4000; padding: 10px; }
+        .admin-content { background: var(--card); width: 100%; max-width: 600px; height: 85vh; border-radius: 20px; padding: 25px; display: flex; flex-direction: column; overflow: hidden; }
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; background: rgba(0,0,0,0.2); padding: 5px; border-radius: 10px; }
+        .tab-btn { flex: 1; padding: 10px; border: none; background: none; color: #888; cursor: pointer; font-weight: bold; border-radius: 8px; }
+        .tab-btn.active { background: var(--accent); color: white; }
+        .tab-pane { display: none; flex-grow: 1; overflow-y: auto; }
+        .tab-pane.active { display: block; }
+
+        .sale-card { background: rgba(0,0,0,0.3); padding: 12px; border-radius: 10px; margin-bottom: 10px; font-size: 12px; position: relative; }
+        .sale-card .del-sale { position: absolute; top: 10px; right: 10px; color: var(--danger); cursor: pointer; }
 
         .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; z-index: 1500; }
         .overlay.show { display: block; }
-        .products { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:15px; padding:15px; }
-        .card { background:var(--card); padding:10px; border-radius:12px; text-align:center; }
-        .card img { width: 100%; height: 100px; object-fit: contain; }
     </style>
 </head>
 <body>
 
 <header>
-    <span style="cursor:pointer; font-size: 24px;" onclick="toggleSidebar()">☰</span>
-    <div class="search-bar"><input type="text" id="searchInput" placeholder="Buscar..." onkeyup="filtrar()"></div>
-    <div style="display:flex; gap:15px;">
-        <span onclick="abrirAdmin()" style="cursor:pointer;">🔑</span>
-        <span onclick="toggleCart()" style="cursor:pointer;">🛒<span id="cartCount">0</span></span>
+    <div style="display:flex; align-items:center; gap:15px;">
+        <span style="cursor:pointer; font-size: 24px;" onclick="toggleSidebar()">☰</span>
+        <b style="font-size: 14px; letter-spacing: 1px;">NEO REPUESTOS</b>
+    </div>
+    <div class="search-bar">
+        <input type="text" id="searchInput" placeholder="Buscar repuesto..." onkeyup="filtrar()">
+    </div>
+    <div style="display:flex; gap:20px; align-items:center;">
+        <span onclick="abrirAdmin()" style="cursor:pointer; font-size: 20px;">🔑</span>
+        <div onclick="toggleCart()" style="cursor:pointer; position:relative;">
+            🛒 <span id="cartCount" style="position:absolute; top:-10px; right:-10px; background:var(--danger); font-size:10px; padding:2px 6px; border-radius:10px;">0</span>
+        </div>
     </div>
 </header>
 
 <div class="overlay" id="overlay" onclick="closeAll()"></div>
 
 <nav class="sidebar" id="sidebar">
-    <div style="padding:20px; font-weight:bold;">MENU</div>
+    <div class="sidebar-header">MENÚ</div>
     <a href="#" onclick="closeAll()">🏠 Inicio</a>
-    <a href="#" onclick="alert('Info de tienda')">ℹ️ Información</a>
-    <a href="#" onclick="alert('Ubicación')">📍 Ubicación</a>
+    <a href="#" onclick="alert('Repuestos Premium v3.0')">ℹ️ Información</a>
+    <a href="#" onclick="alert('Santa Fe, Argentina')">📍 Ubicación</a>
     <a href="https://instagram.com" target="_blank">📸 Instagram</a>
-    <div class="sidebar-promo" onclick="window.open('https://wa.me/5493434508948?text=Quiero una tienda!')">¡Quiero una tienda así!</div>
+    <div class="sidebar-promo" onclick="window.open('https://wa.me/5493434508948?text=Hola! Quiero una tienda como esta')">
+        ¡Quiero una tienda así para mi emprendimiento!
+    </div>
 </nav>
 
 <div class="cart-drawer" id="cartDrawer">
-    <h3>Mi Carrito</h3>
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h3>Mi Carrito</h3>
+        <span onclick="toggleCart()" style="cursor:pointer; font-size:24px;">×</span>
+    </div>
+    
     <div class="cart-items" id="cartList"></div>
-    <div style="background:rgba(0,0,0,0.2); padding:10px; border-radius:8px; margin-bottom:10px;">
-        <label><input type="radio" name="delivery" value="Local" checked onclick="document.getElementById('f-envio').style.display='none'"> Local</label>
-        <label><input type="radio" name="delivery" value="Envio" onclick="document.getElementById('f-envio').style.display='block'"> Envío</label>
-        <div id="f-envio" style="display:none; margin-top:5px;">
-            <input id="f_nom" placeholder="Nombre">
-            <input id="f_dir" placeholder="Dirección">
+    
+    <div class="ship-box">
+        <label style="font-size:12px; font-weight:bold; color:var(--accent);">ENTREGA</label>
+        <div style="margin: 10px 0;">
+            <label><input type="radio" name="delivery" value="Local" checked onclick="toggleEnvio(false)"> Retiro Local</label>
+            <label style="margin-left:15px;"><input type="radio" name="delivery" value="Envio" onclick="toggleEnvio(true)"> Envío</label>
+        </div>
+        <div id="envioForm" style="display:none;">
+            <input id="f_nom" placeholder="Nombre completo">
+            <input id="f_dir" placeholder="Dirección y Ciudad">
+            <input id="f_tel" placeholder="WhatsApp de contacto">
         </div>
     </div>
-    <div style="font-weight:bold; font-size:18px; display:flex; justify-content:space-between;">
-        <span>Total:</span> <span id="cartTotal">$0</span>
+
+    <div style="border-top: 1px solid #444; padding-top: 15px;">
+        <div style="display:flex; justify-content:space-between; font-size: 20px; font-weight: bold;">
+            <span>Total:</span> <span id="cartTotal">$0</span>
+        </div>
+        <button onclick="enviarPedido()" style="background:#22c55e; color:white; border:none; padding:15px; border-radius:12px; width:100%; cursor:pointer; font-weight:bold; margin-top:15px; font-size:16px;">
+            Confirmar por WhatsApp
+        </button>
     </div>
-    <button onclick="enviarPedido()" style="background:#25d366; margin-top:10px;">Confirmar WhatsApp</button>
 </div>
 
 <div class="admin-modal" id="adminModal">
     <div class="admin-content">
         <div class="tabs">
-            <button class="tab-btn active" onclick="showTab('tab-productos', this)">📦 Productos</button>
-            <button class="tab-btn" onclick="showTab('tab-ventas', this)">📜 Ventas</button>
-            <button onclick="document.getElementById('adminModal').style.display='none'" style="width:auto; background:none;">✖</button>
+            <button class="tab-btn active" onclick="switchTab(event, 'tab-prod')">Productos</button>
+            <button class="tab-btn" onclick="switchTab(event, 'tab-sales')">Historial Ventas</button>
+            <button onclick="document.getElementById('adminModal').style.display='none'" style="background:none; border:none; color:white; cursor:pointer; font-size:20px;">×</button>
         </div>
 
-        <div id="tab-productos" class="tab-content active">
+        <div id="tab-prod" class="tab-pane active">
             <input type="hidden" id="editIdx">
-            <input id="n" placeholder="Nombre del producto">
-            <div class="grid-inputs">
-                <input id="p1" type="number" placeholder="Precio Un.">
-                <input id="p2" type="number" placeholder="Precio x2">
-                <input id="pm" type="number" placeholder="Precio Mayorista">
-                <input id="st" type="number" placeholder="Stock">
+            <input id="n" class="ship-box" style="margin:0 0 10px 0; background:#000;" placeholder="Nombre del repuesto">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                <input id="p1" type="number" class="ship-box" style="margin:0; background:#000;" placeholder="Precio Unit.">
+                <input id="p2" type="number" class="ship-box" style="margin:0; background:#000;" placeholder="Precio x2">
+                <input id="pm" type="number" class="ship-box" style="margin:0; background:#000;" placeholder="Mayorista">
+                <input id="st" type="number" class="ship-box" style="margin:0; background:#000;" placeholder="Stock">
             </div>
-            <input id="im" placeholder="URL Imagen">
-            <button onclick="guardar()">Guardar / Actualizar</button>
-            <div id="adminProdList" style="margin-top:15px;"></div>
+            <input id="im" class="ship-box" style="margin:10px 0; background:#000;" placeholder="URL de la imagen">
+            <button onclick="guardar()" style="background:var(--accent); color:white; border:none; padding:12px; border-radius:10px; width:100%; font-weight:bold; cursor:pointer;">
+                Guardar Repuesto
+            </button>
+            <div id="adminProdList" style="margin-top:20px;"></div>
         </div>
 
-        <div id="tab-ventas" class="tab-content">
-            <button class="btn-danger" onclick="borrarTodoHistorial()">🗑 Borrar Todo el Historial</button>
-            <div id="adminSalesList" style="margin-top:15px;"></div>
+        <div id="tab-sales" class="tab-pane">
+            <button onclick="borrarTodoHistorial()" style="background:var(--danger); color:white; border:none; padding:8px; border-radius:8px; width:100%; margin-bottom:15px; font-size:12px;">
+                Borrar Historial Completo
+            </button>
+            <div id="adminSalesList"></div>
         </div>
     </div>
 </div>
@@ -137,20 +172,27 @@
 <div class="products" id="products"></div>
 
 <script>
-    let products = JSON.parse(localStorage.getItem("prods")) || [];
-    let sales = JSON.parse(localStorage.getItem("sales")) || [];
+    let products = JSON.parse(localStorage.getItem("prods_v3")) || [];
+    let sales = JSON.parse(localStorage.getItem("sales_v3")) || [];
     let cart = [];
 
-    function render() {
+    function render(f = "") {
         const container = document.getElementById("products");
-        container.innerHTML = products.map((p, i) => `
-            <div class="card">
-                <img src="${p.img || 'https://via.placeholder.com/150'}">
-                <h4>${p.name}</h4>
-                <div style="color:var(--accent); font-weight:bold;">$${p.p1}</div>
-                <button onclick="add(${i})" style="margin-top:5px; font-size:12px;">+ Agregar</button>
-            </div>`).join("");
+        const filtered = products.filter(p => p.name.toLowerCase().includes(f.toLowerCase()));
+        container.innerHTML = filtered.map((p, i) => {
+            const idx = products.indexOf(p);
+            return `
+                <div class="card">
+                    <img src="${p.img || 'https://via.placeholder.com/150'}">
+                    <h4>${p.name}</h4>
+                    <div class="price-tag">$${p.p1}</div>
+                    ${p.p2 > 0 ? `<span class="promo-tag">Llevando 2: $${p.p2}</span>` : ''}
+                    <button class="add-btn" onclick="add(${idx})">+ Agregar</button>
+                </div>`;
+        }).join("");
     }
+
+    function toggleEnvio(s) { document.getElementById('envioForm').style.display = s ? 'block' : 'none'; }
 
     function add(i) {
         const item = cart.find(c => c.id === i);
@@ -163,14 +205,16 @@
         document.getElementById("cartList").innerHTML = cart.map((c, idx) => {
             const p = products[c.id];
             let sub = 0;
-            // Lógica de cuentas: si hay promo x2 y no es mayorista
             if(p.p2 > 0 && c.qty >= 2) {
                 sub = (Math.floor(c.qty/2) * p.p2) + ((c.qty%2) * p.p1);
             } else {
                 sub = c.qty * p.p1;
             }
             total += sub; count += c.qty;
-            return `<div>${p.name} x${c.qty} - $${sub} <span onclick="cart.splice(${idx},1);updateCart()" style="color:red; cursor:pointer;">✕</span></div>`;
+            return `<div class="cart-item">
+                <span>${p.name} (x${c.qty})</span>
+                <span>$${sub} <b onclick="cart.splice(${idx},1);updateCart()" style="color:red; cursor:pointer; margin-left:10px;">×</b></span>
+            </div>`;
         }).join("");
         document.getElementById("cartTotal").innerText = "$" + total;
         document.getElementById("cartCount").innerText = count;
@@ -180,33 +224,34 @@
         if(cart.length === 0) return;
         const entrega = document.querySelector('input[name="delivery"]:checked').value;
         const nom = document.getElementById("f_nom").value;
-        let det = cart.map(c => `- ${products[c.id].name} (x${c.qty})`).join("\n");
-        let totalStr = document.getElementById("cartTotal").innerText;
+        const dir = document.getElementById("f_dir").value;
         
-        let msg = `NUEVO PEDIDO\n----------\n${det}\n----------\nTOTAL: ${totalStr}\nENTREGA: ${entrega}\nCLIENTE: ${nom}`;
-        
-        // Guardar en historial
-        sales.push({ id: Date.now(), fecha: new Date().toLocaleString(), detalle: det, total: totalStr, cliente: nom });
-        localStorage.setItem("sales", JSON.stringify(sales));
-        
+        let detalle = cart.map(c => `- ${products[c.id].name} (x${c.qty})`).join("\n");
+        let t = document.getElementById("cartTotal").innerText;
+        let msg = `NUEVO PEDIDO\n----------\n${detalle}\n----------\nTOTAL: ${t}\nENTREGA: ${entrega}`;
+        if(entrega === "Envio") msg += `\nCLIENTE: ${nom}\nDIR: ${dir}`;
+
+        // Guardar en historial antes de enviar
+        sales.push({ fecha: new Date().toLocaleString(), detalle, total: t, cliente: nom || 'Local' });
+        localStorage.setItem("sales_v3", JSON.stringify(sales));
+
         window.open(`https://wa.me/5493434508948?text=${encodeURIComponent(msg)}`);
         cart = []; updateCart(); closeAll();
     }
 
-    // --- ADMIN LOGIC ---
-    function showTab(id, btn) {
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-        btn.classList.add('active');
-        if(id === 'tab-ventas') renderSales();
-        if(id === 'tab-productos') renderAdminProds();
+    // ADMIN LOGIC
+    function switchTab(e, tabId) {
+        document.querySelectorAll('.tab-pane, .tab-btn').forEach(el => el.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        e.target.classList.add('active');
+        if(tabId === 'tab-sales') renderSales();
+        if(tabId === 'tab-prod') renderAdminList();
     }
 
     function abrirAdmin() {
         if(prompt("Clave:") === "admin") {
             document.getElementById("adminModal").style.display = "flex";
-            renderAdminProds();
+            renderAdminList();
         }
     }
 
@@ -217,18 +262,19 @@
             p1: parseInt(document.getElementById("p1").value),
             p2: parseInt(document.getElementById("p2").value) || 0,
             pm: parseInt(document.getElementById("pm").value) || 0,
+            st: parseInt(document.getElementById("st").value) || 0,
             img: document.getElementById("im").value
         };
         if(id === "") products.push(p); else products[id] = p;
-        localStorage.setItem("prods", JSON.stringify(products));
+        localStorage.setItem("prods_v3", JSON.stringify(products));
         location.reload();
     }
 
-    function renderAdminProds() {
+    function renderAdminList() {
         document.getElementById("adminProdList").innerHTML = products.map((p, i) => `
-            <div class="product-list-item">
-                <span onclick="editar(${i})" style="cursor:pointer; color:cyan;">${p.name} ($${p.p1})</span>
-                <span onclick="eliminar(${i})" style="color:red; cursor:pointer;">Borrar</span>
+            <div style="display:flex; justify-content:space-between; padding:10px; background:rgba(0,0,0,0.2); margin-bottom:5px; border-radius:8px; font-size:13px;">
+                <span onclick="editar(${i})" style="color:cyan; cursor:pointer;">${p.name}</span>
+                <span onclick="borrarProd(${i})" style="color:red; cursor:pointer;">Borrar</span>
             </div>`).join("");
     }
 
@@ -238,25 +284,26 @@
         document.getElementById("p1").value = p.p1;
         document.getElementById("p2").value = p.p2;
         document.getElementById("pm").value = p.pm;
+        document.getElementById("st").value = p.st;
         document.getElementById("im").value = p.img;
         document.getElementById("editIdx").value = i;
     }
 
     function renderSales() {
         document.getElementById("adminSalesList").innerHTML = sales.map((s, i) => `
-            <div class="sale-item">
-                <div>
-                    <b>${s.fecha}</b><br>${s.cliente || 'Anonimo'}<br>
-                    <small>${s.detalle}</small><br>
-                    <b>${s.total}</b>
-                </div>
-                <button onclick="borrarVenta(${i})" style="width:auto; padding:5px; background:red;">✕</button>
+            <div class="sale-card">
+                <span class="del-sale" onclick="borrarVenta(${i})">×</span>
+                <b style="color:var(--accent)">${s.fecha}</b><br>
+                <span>Cliente: ${s.cliente}</span><br>
+                <small style="color:#aaa">${s.detalle.replace(/\n/g, '<br>')}</small><br>
+                <b style="color:var(--success)">Total: ${s.total}</b>
             </div>`).reverse().join("");
     }
 
-    function borrarVenta(i) { sales.splice(i, 1); localStorage.setItem("sales", JSON.stringify(sales)); renderSales(); }
-    function borrarTodoHistorial() { if(confirm("¿Borrar todo?")) { sales = []; localStorage.setItem("sales", JSON.stringify(sales)); renderSales(); } }
-    function eliminar(i) { products.splice(i,1); localStorage.setItem("prods", JSON.stringify(products)); renderAdminProds(); render(); }
+    function borrarProd(i) { products.splice(i, 1); localStorage.setItem("prods_v3", JSON.stringify(products)); renderAdminList(); render(); }
+    function borrarVenta(i) { sales.splice(i, 1); localStorage.setItem("sales_v3", JSON.stringify(sales)); renderSales(); }
+    function borrarTodoHistorial() { if(confirm("¿Vaciamos todo el historial?")) { sales = []; localStorage.setItem("sales_v3", JSON.stringify(sales)); renderSales(); } }
+    function filtrar() { render(document.getElementById("searchInput").value); }
     function toggleSidebar() { document.getElementById("sidebar").classList.toggle("active"); document.getElementById("overlay").classList.toggle("show"); }
     function toggleCart() { document.getElementById("cartDrawer").classList.toggle("active"); document.getElementById("overlay").classList.toggle("show"); }
     function closeAll() { document.querySelectorAll(".active, .show").forEach(el => el.classList.remove("active", "show")); }
