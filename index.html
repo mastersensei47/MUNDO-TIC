@@ -3,145 +3,97 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Repuestos PRO - Firebase Full</title>
-    
+    <title>Repuestos PRO - Firebase & Promos</title>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script>
 
     <style>
         :root {
-            --bg: #0f172a; --card: #1e293b; --text: #f1f5f9;
-            --accent: #2563eb; --sidebar-bg: #1e40af;
-            --shadow: 0 10px 30px rgba(0,0,0,0.5);
-            --success: #10b981; --coral: #ff8a80;
+            --bg: #0f172a; --card: #1e293b; --text: #f1f5f9; --accent: #2563eb;
+            --sidebar-bg: #1e40af; --success: #10b981; --promo: #f59e0b;
         }
-        body.light { --bg: #f4f6f9; --card: #ffffff; --text: #111; --sidebar-bg: #2563eb; }
-        body { margin:0; font-family: 'Segoe UI', sans-serif; background:var(--bg); color:var(--text); transition:.3s; overflow-x: hidden; }
+        body.light {
+            --bg: #f1f5f9; --card: #ffffff; --text: #1e293b; --sidebar-bg: #2563eb;
+        }
+        body { margin:0; font-family: 'Segoe UI', sans-serif; background:var(--bg); color:var(--text); transition: 0.3s; }
         
         header { 
-            display:flex; justify-content:space-between; align-items:center; 
-            padding:5px 20px; background:var(--card); box-shadow:var(--shadow); 
-            position:sticky; top:0; z-index:1000; height: 50px;
+            display:flex; justify-content:space-between; align-items:center; padding:10px 20px;
+            background:var(--card); position:sticky; top:0; z-index:1000; box-shadow: 0 2px 10px rgba(0,0,0,0.3);
         }
-        .search-bar { flex-grow: 1; max-width: 350px; margin: 0 15px; }
-        .search-bar input {
-            width: 100%; padding: 6px 15px; border-radius: 20px; border: 1px solid #444;
-            background: rgba(0,0,0,0.2); color: white; font-size: 13px; outline: none;
-        }
-        .icon-group { display: flex; gap: 12px; align-items: center; }
-        .icon { cursor:pointer; font-size:18px; position: relative; }
-        .badge { position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; font-size: 10px; padding: 1px 5px; border-radius: 10px; }
-
-        .sidebar { 
-            position: fixed; left: -280px; top: 0; width: 260px; height: 100%; 
-            background: var(--sidebar-bg); color: white; transition: 0.3s; z-index: 2000;
-            display: flex; flex-direction: column;
-        }
-        .sidebar.active { left: 0; }
-        .sidebar-header { padding: 20px; font-weight: bold; font-size: 18px; border-bottom: 1px solid #ffffff22; }
-        .sidebar-nav { flex-grow: 1; }
-        .sidebar a { display: block; padding: 15px 20px; color: white; text-decoration: none; font-size: 14px; }
-
-        .cart-drawer {
-            position: fixed; right: -350px; top: 0; width: 320px; height: 100%;
-            background: var(--card); transition: 0.3s; z-index: 3000; padding: 15px; box-shadow: -5px 0 20px rgba(0,0,0,0.5);
-            display: flex; flex-direction: column; box-sizing: border-box;
-        }
-        .cart-drawer.active { right: 0; }
-        .cart-items { flex-grow: 1; overflow-y: auto; margin-bottom: 10px; font-size: 13px; }
+        .search-bar input { padding:8px 15px; border-radius:20px; border:1px solid #444; background:rgba(0,0,0,0.1); color:inherit; width:200px; }
         
-        .products { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:15px; padding:15px; }
-        .card { background:var(--card); padding:12px; border-radius:12px; text-align:center; box-shadow: var(--shadow); transition: 0.3s; }
-        .card img { width: 100%; height: 110px; object-fit: contain; margin-bottom: 8px; }
-        .stock-label { font-size: 11px; color: #94a3b8; margin-bottom: 5px; }
-
-        .qty-control { display: flex; align-items: center; gap: 10px; background: rgba(0,0,0,0.2); padding: 5px; border-radius: 5px; }
-        .qty-btn { background: #444; color: white; border: none; width: 25px; height: 25px; border-radius: 3px; cursor: pointer; font-weight: bold; }
-
-        .admin-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 4000; }
-        .admin-content { background: var(--card); width: 95%; max-width: 600px; max-height: 85vh; border-radius: 15px; padding: 20px; overflow-y: auto; position: relative; }
+        .products { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:20px; padding:20px; }
+        .card { background:var(--card); padding:15px; border-radius:15px; text-align:center; position:relative; transition:0.3s; border: 1px solid rgba(255,255,255,0.05); }
+        .card img { width:100%; height:130px; object-fit:contain; }
         
-        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; z-index: 1500; }
-        .overlay.show { display: block; }
-        button { background: var(--accent); color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 5px; }
-        .btn-wa { background: #25d366; margin-top: 10px; font-size: 15px; }
-        input { background: rgba(0,0,0,0.3); color: white; border: 1px solid #444; padding: 8px; border-radius: 5px; width: 100%; box-sizing: border-box; margin-bottom: 8px;}
+        .promo-tag { position:absolute; top:10px; right:10px; background:var(--promo); color:#000; font-size:10px; font-weight:bold; padding:3px 8px; border-radius:5px; }
+        
+        .cart-drawer { position:fixed; right:-350px; top:0; width:320px; height:100%; background:var(--card); transition:0.3s; z-index:3000; padding:20px; display:flex; flex-direction:column; box-shadow:-5px 0 15px rgba(0,0,0,0.3); }
+        .cart-drawer.active { right:0; }
+        
+        .qty-btn { background:#444; color:white; border:none; width:25px; height:25px; cursor:pointer; border-radius:4px; }
+        .admin-modal { position:fixed; inset:0; background:rgba(0,0,0,0.8); display:none; justify-content:center; align-items:center; z-index:4000; }
+        .admin-box { background:var(--card); padding:25px; border-radius:20px; width:90%; max-width:500px; max-height:85vh; overflow-y:auto; }
+        
+        input, select { width:100%; padding:10px; margin:5px 0; background:rgba(0,0,0,0.2); color:inherit; border:1px solid #444; border-radius:8px; box-sizing:border-box; }
+        button { cursor:pointer; padding:10px; border-radius:8px; border:none; font-weight:bold; }
+        .btn-main { background:var(--accent); color:white; width:100%; }
     </style>
 </head>
-<body>
+<body class="dark">
 
 <header>
-    <div style="display: flex; align-items: center; gap: 10px;">
-        <span style="cursor:pointer; font-size: 22px;" onclick="toggleSidebar()">☰</span>
-        <div style="font-weight:bold; font-size: 14px;">NEO REPUESTOS</div>
-    </div>
-    <div class="search-bar">
-        <input type="text" id="searchInput" placeholder="Buscar producto..." onkeyup="filtrarProductos()">
-    </div>
-    <div class="icon-group">
-        <span class="icon" onclick="abrirLogin()">👤</span>
-        <span class="icon" onclick="toggleLightMode()">🌗</span>
-        <span class="icon" onclick="abrirAdmin()">🔑</span>
-        <span class="icon" onclick="toggleCart()">🛒<span id="cartCount" class="badge">0</span></span>
+    <div style="font-weight:bold" onclick="location.reload()">NEO REPUESTOS</div>
+    <div class="search-bar"><input type="text" placeholder="Buscar..." onkeyup="render(this.value)"></div>
+    <div style="display:flex; gap:15px; align-items:center">
+        <span onclick="toggleMode()" style="cursor:pointer">🌗</span>
+        <span onclick="abrirModal('loginModal')" style="cursor:pointer">👤</span>
+        <span onclick="abrirAdmin()" style="cursor:pointer">🔑</span>
+        <span onclick="document.getElementById('cartDrawer').classList.add('active')" style="cursor:pointer">🛒 <b id="cartCount">0</b></span>
     </div>
 </header>
 
-<div class="overlay" id="overlay" onclick="closeAll()"></div>
-
-<nav class="sidebar" id="sidebar">
-    <div class="sidebar-header">MENU</div>
-    <div class="sidebar-nav">
-        <a href="#" onclick="closeAll()">🏠 Inicio</a>
-        <a href="https://instagram.com" target="_blank">📸 Instagram</a>
-    </div>
-</nav>
+<div class="products" id="productsCont"></div>
 
 <div class="cart-drawer" id="cartDrawer">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px;">
-        <h3 style="margin:0; font-size:18px;">Mi Carrito</h3>
-        <span onclick="toggleCart()" style="cursor:pointer; font-size: 20px;">✕</span>
-    </div>
-    <div class="cart-items" id="cartList"></div>
-    <div style="border-top: 2px solid #444; padding-top: 10px;">
-        <div style="display:flex; justify-content:space-between; font-weight: bold; font-size: 1.1em;">
-            <span>Total:</span> <span id="cartTotal">$0</span>
+    <div style="display:flex; justify-content:space-between"><h3>Mi Pedido</h3> <span onclick="this.parentElement.parentElement.classList.remove('active')" style="cursor:pointer">✕</span></div>
+    <div id="cartList" style="flex-grow:1; overflow-y:auto"></div>
+    <div id="cartTotal" style="font-size:20px; font-weight:bold; padding:10px 0">Total: $0</div>
+    <button class="btn-main" style="background:#25d366" onclick="enviarPedido()">Confirmar por WhatsApp</button>
+</div>
+
+<div class="admin-modal" id="adminModal">
+    <div class="admin-box">
+        <h3 id="formTitle">Panel de Control</h3>
+        <input type="hidden" id="prodId">
+        <input id="n" placeholder="Nombre del Producto">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px">
+            <input id="p" type="number" placeholder="Precio Individual">
+            <input id="st" type="number" placeholder="Stock">
         </div>
-        <button onclick="enviarPedido()" class="btn-wa">Confirmar Pedido</button>
+        <select id="promoType">
+            <option value="">Sin Promoción</option>
+            <option value="2x1">Promoción 2x1</option>
+            <option value="3x2">Promoción 3x2</option>
+            <option value="pack">Precio por Pack (2 unidades)</option>
+        </select>
+        <input id="p_pack" type="number" placeholder="Precio si lleva 2 (Solo para Pack)">
+        <input id="img" placeholder="URL de Imagen">
+        <button class="btn-main" onclick="guardarFirebase()">Guardar en la Nube</button>
+        <hr>
+        <div id="listaAdmin"></div>
+        <button onclick="cerrarModales()">Cerrar</button>
     </div>
 </div>
 
-<div class="products" id="productsCont"></div>
-
-<div class="admin-modal" id="adminModal">
-    <div class="admin-content">
-        <span style="float:right; cursor:pointer; font-size:24px;" onclick="cerrarModales()">✕</span>
-        <div style="display: flex; gap: 5px; margin-bottom: 15px; border-bottom: 1px solid #444; padding-bottom: 10px;">
-            <button onclick="showTab('tab-prods')" style="background:#444; font-size:12px">📦 Productos</button>
-            <button onclick="showTab('tab-users')" style="background:#444; font-size:12px">👥 Mayoristas</button>
-            <button onclick="showTab('tab-hist')" style="background:#444; font-size:12px">📜 Historial</button>
-        </div>
-
-        <div id="tab-prods">
-            <h4>Gestionar Producto</h4>
-            <input type="hidden" id="editIdx" value="">
-            <input id="n" placeholder="Nombre">
-            <input id="p" type="number" placeholder="Precio">
-            <input id="pm" type="number" placeholder="Precio Mayorista">
-            <input id="st" type="number" placeholder="Stock disponible">
-            <input id="img" placeholder="URL Imagen">
-            <button onclick="guardarFirebase()" style="background:var(--success)">Guardar</button>
-            <div id="listaAdmin" style="margin-top:15px; max-height: 200px; overflow-y: auto;"></div>
-        </div>
-
-        <div id="tab-users" style="display:none">
-            <h4>Mayoristas</h4>
-            <div id="listaUsers"></div>
-        </div>
-
-        <div id="tab-hist" style="display:none">
-            <h4>Historial</h4>
-            <div id="listaHist"></div>
-        </div>
+<div class="admin-modal" id="loginModal">
+    <div class="admin-box" style="max-width:300px">
+        <h3>Ingreso Mayorista</h3>
+        <input id="logUser" placeholder="Usuario">
+        <input id="logPass" type="password" placeholder="Contraseña">
+        <button class="btn-main" onclick="login()">Entrar</button>
+        <button onclick="cerrarModales()" style="background:none; color:inherit; margin-top:10px">Cancelar</button>
     </div>
 </div>
 
@@ -160,8 +112,23 @@
 
     let productos = [];
     let carrito = [];
-    let currentUser = JSON.parse(sessionStorage.getItem("currentUser")) || null;
 
+    // --- REGLAS DE NEGOCIO (PROMOS) ---
+    function calcularPrecioItem(p, qty) {
+        let total = 0;
+        if (p.promoType === "2x1") {
+            total = (Math.floor(qty / 2) + (qty % 2)) * p.precio;
+        } else if (p.promoType === "3x2") {
+            total = (Math.floor(qty / 3) * 2 + (qty % 3)) * p.precio;
+        } else if (p.promoType === "pack" && qty >= 2) {
+            total = Math.floor(qty / 2) * p.p_pack + (qty % 2 * p.precio);
+        } else {
+            total = qty * p.precio;
+        }
+        return total;
+    }
+
+    // --- FIREBASE SYNC ---
     db.collection("productos").onSnapshot(snap => {
         productos = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         render();
@@ -170,139 +137,106 @@
 
     function render(filtro = "") {
         const cont = document.getElementById("productsCont");
-        const filtrados = productos.filter(p => p.nombre.toLowerCase().includes(filtro.toLowerCase()));
-        
-        cont.innerHTML = filtrados.map(p => {
-            let precio = (currentUser && p.precio_may > 0) ? p.precio_may : p.precio;
-            let agotado = p.stock <= 0;
-            return `
-                <div class="card" style="${agotado ? 'opacity: 0.6' : ''}">
-                    <img src="${p.imagen || 'https://via.placeholder.com/150'}">
-                    <h4>${p.nombre}</h4>
-                    <div class="stock-label">Stock: ${p.stock || 0} unidades</div>
-                    <div style="font-weight:bold; color:var(--accent)">$${precio}</div>
-                    <button onclick="addCart('${p.id}')" ${agotado ? 'disabled style="background:gray"' : ''}>
-                        ${agotado ? 'Sin Stock' : '🛒 Agregar'}
-                    </button>
-                </div>`;
-        }).join("");
+        cont.innerHTML = productos.filter(p => p.nombre.toLowerCase().includes(filtro.toLowerCase())).map(p => `
+            <div class="card">
+                ${p.promoType ? `<div class="promo-tag">${p.promoType.toUpperCase()}</div>` : ''}
+                <img src="${p.imagen || 'https://via.placeholder.com/150'}">
+                <h4>${p.nombre}</h4>
+                <p style="font-weight:bold; color:var(--accent)">$${p.precio}</p>
+                <small>Stock: ${p.stock}</small>
+                <button class="btn-main" onclick="addCart('${p.id}')" ${p.stock <= 0 ? 'disabled' : ''}>
+                    ${p.stock <= 0 ? 'Agotado' : 'Agregar'}
+                </button>
+            </div>
+        `).join("");
     }
 
+    // --- CARRITO ---
     function addCart(id) {
-        const p = productos.find(x => x.id === id);
         const item = carrito.find(c => c.id === id);
-        
-        if(item) {
-            if(item.qty < p.stock) item.qty++;
-            else alert("Llegaste al límite de stock disponible");
-        } else {
-            carrito.push({id: id, qty: 1});
-        }
-        updateCart();
-    }
-
-    function changeQty(index, delta) {
-        const item = carrito[index];
-        const p = productos.find(x => x.id === item.id);
-        
-        if (delta > 0 && item.qty < p.stock) item.qty++;
-        else if (delta < 0 && item.qty > 1) item.qty--;
-        else if (delta < 0 && item.qty === 1) carrito.splice(index, 1);
-        
+        if(item) item.qty++; else carrito.push({id, qty: 1});
         updateCart();
     }
 
     function updateCart() {
         const list = document.getElementById("cartList");
-        let total = 0;
+        let totalGeneral = 0;
         list.innerHTML = carrito.map((c, i) => {
             const p = productos.find(x => x.id === c.id);
-            let precio = (currentUser && p.precio_may > 0) ? p.precio_may : p.precio;
-            total += (precio * c.qty);
+            const subtotal = calcularPrecioItem(p, c.qty);
+            totalGeneral += subtotal;
             return `
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid #444; padding-bottom:5px">
-                    <div style="flex:1">
-                        <div style="font-weight:bold">${p.nombre}</div>
-                        <div>$${precio * c.qty}</div>
-                    </div>
-                    <div class="qty-control">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; font-size:14px">
+                    <div><b>${p.nombre}</b><br>$${subtotal}</div>
+                    <div>
                         <button class="qty-btn" onclick="changeQty(${i}, -1)">-</button>
-                        <span>${c.qty}</span>
+                        <span style="margin:0 8px">${c.qty}</span>
                         <button class="qty-btn" onclick="changeQty(${i}, 1)">+</button>
                     </div>
                 </div>`;
         }).join("");
-        document.getElementById("cartTotal").innerText = "$" + total;
+        document.getElementById("cartTotal").innerText = "Total: $" + totalGeneral;
         document.getElementById("cartCount").innerText = carrito.reduce((a, b) => a + b.qty, 0);
     }
 
-    async function enviarPedido() {
-        if(carrito.length === 0) return alert("Carrito vacío");
-        let msg = `NUEVO PEDIDO ${currentUser ? '(MAYORISTA)' : ''}\n`;
-        
-        for (let c of carrito) {
-            const p = productos.find(x => x.id === c.id);
-            msg += `- ${p.nombre} (x${c.qty})\n`;
-            // Descontar stock en Firebase
-            await db.collection("productos").doc(p.id).update({
-                stock: p.stock - c.qty
-            });
-        }
-        msg += `TOTAL: ${document.getElementById("cartTotal").innerText}`;
-        db.collection("historial").add({ fecha: new Date().toLocaleString(), detalles: msg });
-        window.open(`https://wa.me/5493434508948?text=${encodeURIComponent(msg)}`);
-        carrito = []; updateCart();
+    function changeQty(i, d) {
+        const prod = productos.find(x => x.id === carrito[i].id);
+        if(d > 0 && carrito[i].qty >= prod.stock) return alert("No hay más stock");
+        carrito[i].qty += d;
+        if(carrito[i].qty <= 0) carrito.splice(i, 1);
+        updateCart();
     }
 
+    // --- ADMIN & LOGIN ---
+    function toggleMode() { document.body.classList.toggle("light"); }
+    function abrirModal(id) { document.getElementById(id).style.display = "flex"; }
+    function cerrarModales() { document.querySelectorAll(".admin-modal").forEach(m => m.style.display="none"); }
+    
+    function abrirAdmin() { if(prompt("Clave Admin:") === "admin") abrirModal("adminModal"); }
+
     async function guardarFirebase() {
-        const id = document.getElementById("editIdx").value;
+        const id = document.getElementById("prodId").value;
         const data = {
             nombre: document.getElementById("n").value,
             precio: Number(document.getElementById("p").value),
-            precio_may: Number(document.getElementById("pm").value),
             stock: Number(document.getElementById("st").value),
+            promoType: document.getElementById("promoType").value,
+            p_pack: Number(document.getElementById("p_pack").value),
             imagen: document.getElementById("img").value
         };
         if(id) await db.collection("productos").doc(id).update(data);
         else await db.collection("productos").add(data);
-        limpiarForm();
+        cerrarModales();
     }
 
     function cargarListaAdmin() {
         document.getElementById("listaAdmin").innerHTML = productos.map(p => `
-            <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:5px">
-                <span>${p.nombre} (Stock: ${p.stock})</span>
-                <div>
-                    <button onclick="prepararEdit('${p.id}')" style="width:auto; background:orange; padding:2px 5px">✏️</button>
-                    <button onclick="eliminarProd('${p.id}')" style="width:auto; background:red; padding:2px 5px">✕</button>
-                </div>
+            <div style="display:flex; justify-content:space-between; font-size:12px; padding:5px; border-bottom:1px solid #444">
+                <span>${p.nombre}</span>
+                <button onclick="prepararEdit('${p.id}')">✏️</button>
             </div>`).join("");
     }
 
     function prepararEdit(id) {
         const p = productos.find(x => x.id === id);
-        document.getElementById("editIdx").value = p.id;
+        document.getElementById("prodId").value = p.id;
         document.getElementById("n").value = p.nombre;
         document.getElementById("p").value = p.precio;
-        document.getElementById("pm").value = p.precio_may || 0;
-        document.getElementById("st").value = p.stock || 0;
+        document.getElementById("st").value = p.stock;
+        document.getElementById("promoType").value = p.promoType || "";
+        document.getElementById("p_pack").value = p.p_pack || "";
         document.getElementById("img").value = p.imagen;
-        showTab('tab-prods');
     }
 
-    function showTab(t) {
-        document.getElementById("tab-prods").style.display = t === 'tab-prods' ? 'block' : 'none';
-        document.getElementById("tab-users").style.display = t === 'tab-users' ? 'block' : 'none';
-        document.getElementById("tab-hist").style.display = t === 'tab-hist' ? 'block' : 'none';
+    async function enviarPedido() {
+        let msg = "MI PEDIDO:\n";
+        for(let c of carrito) {
+            const p = productos.find(x => x.id === c.id);
+            msg += `- ${p.nombre} x${c.qty} ($${calcularPrecioItem(p, c.qty)})\n`;
+            await db.collection("productos").doc(p.id).update({ stock: p.stock - c.qty });
+        }
+        window.open(`https://wa.me/5493434508948?text=${encodeURIComponent(msg)}`);
     }
-
-    function toggleSidebar() { document.getElementById("sidebar").classList.toggle("active"); document.getElementById("overlay").classList.toggle("show"); }
-    function toggleCart() { document.getElementById("cartDrawer").classList.toggle("active"); document.getElementById("overlay").classList.toggle("show"); }
-    function closeAll() { document.querySelectorAll(".active, .show").forEach(el => el.classList.remove("active", "show")); }
-    function abrirAdmin() { if(prompt("Clave:") === "admin") document.getElementById("adminModal").style.display = "flex"; }
-    function cerrarModales() { document.querySelectorAll(".admin-modal").forEach(m => m.style.display="none"); }
-    function limpiarForm() { document.getElementById("editIdx").value = ""; document.getElementById("n").value = ""; document.getElementById("p").value = ""; document.getElementById("pm").value = ""; document.getElementById("st").value = ""; document.getElementById("img").value = ""; }
-    function filtrarProductos() { render(document.getElementById("searchInput").value); }
 </script>
 </body>
 </html>
