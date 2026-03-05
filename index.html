@@ -1,102 +1,66 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Tienda</title>
+<title>NEO REPUESTOS - Oficial</title>
 
 <style>
 
+:root{
+--bg:#0f172a;
+--card:#1e293b;
+--text:#f1f5f9;
+--accent:#2563eb;
+--sidebar-bg:#1e40af;
+--coral:#ff8a80;
+--danger:#ef4444;
+}
+
 body{
 margin:0;
-font-family:Arial;
-background:#0f172a;
-color:white;
+font-family:'Segoe UI',sans-serif;
+background:var(--bg);
+color:var(--text);
+overflow-x:hidden;
 }
+
+/* HEADER */
 
 header{
 display:flex;
 justify-content:space-between;
 align-items:center;
-padding:10px;
-background:#1e293b;
+padding:5px 20px;
+background:var(--card);
 position:sticky;
 top:0;
+z-index:1000;
+height:50px;
 }
 
 .search-bar input{
-padding:6px 10px;
+padding:6px 15px;
 border-radius:20px;
-border:none;
-}
-
-.products{
-display:grid;
-grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
-gap:15px;
-padding:15px;
-}
-
-.card{
-background:#1e293b;
-padding:10px;
-border-radius:10px;
-text-align:center;
-}
-
-.card img{
-width:100%;
-height:120px;
-object-fit:contain;
-}
-
-button{
-background:#2563eb;
-border:none;
-padding:8px;
+border:1px solid #444;
+background:rgba(0,0,0,0.2);
 color:white;
-border-radius:5px;
-cursor:pointer;
+width:200px;
 }
 
-.cart{
-position:fixed;
-right:-300px;
-top:0;
-width:300px;
-height:100%;
-background:#1e293b;
-transition:.3s;
-padding:10px;
-display:flex;
-flex-direction:column;
-}
-
-.cart.active{
-right:0;
-}
-
-.cart-item{
-display:flex;
-justify-content:space-between;
-margin-bottom:10px;
-}
-
-.qty button{
-width:25px;
-height:25px;
-}
+/* SIDEBAR */
 
 .sidebar{
 position:fixed;
-left:-200px;
+left:-280px;
 top:0;
-width:200px;
+width:260px;
 height:100%;
-background:#1e40af;
+background:var(--sidebar-bg);
 transition:.3s;
+z-index:2000;
+display:flex;
+flex-direction:column;
 }
 
 .sidebar.active{
@@ -105,193 +69,346 @@ left:0;
 
 .sidebar a{
 display:block;
-padding:15px;
+padding:15px 20px;
 color:white;
 text-decoration:none;
 }
 
-</style>
+.sidebar-promo{
+background:var(--coral);
+padding:20px;
+font-weight:bold;
+text-align:center;
+cursor:pointer;
+margin-top:auto;
+}
 
+/* CARRITO */
+
+.cart-drawer{
+position:fixed;
+right:-350px;
+top:0;
+width:320px;
+height:100%;
+background:var(--card);
+transition:.3s;
+z-index:3000;
+padding:15px;
+display:flex;
+flex-direction:column;
+}
+
+.cart-drawer.active{
+right:0;
+}
+
+.cart-items{
+flex-grow:1;
+overflow-y:auto;
+font-size:13px;
+margin:10px 0;
+}
+
+/* ADMIN */
+
+.admin-modal{
+position:fixed;
+inset:0;
+background:rgba(0,0,0,.9);
+display:none;
+justify-content:center;
+align-items:center;
+z-index:4000;
+}
+
+.admin-content{
+background:var(--card);
+width:95%;
+max-width:600px;
+height:80vh;
+border-radius:15px;
+padding:20px;
+display:flex;
+flex-direction:column;
+}
+
+.tabs{
+display:flex;
+gap:10px;
+margin-bottom:15px;
+border-bottom:1px solid #444;
+padding-bottom:10px;
+}
+
+.tab-btn{
+background:#334155;
+color:white;
+border:none;
+padding:8px 15px;
+border-radius:5px;
+cursor:pointer;
+}
+
+.tab-btn.active{
+background:var(--accent);
+}
+
+.tab-content{
+display:none;
+flex-grow:1;
+overflow-y:auto;
+}
+
+.tab-content.active{
+display:block;
+}
+
+.grid-inputs{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:10px;
+}
+
+input{
+width:100%;
+padding:10px;
+margin:5px 0;
+border-radius:5px;
+border:1px solid #444;
+background:#000;
+color:white;
+box-sizing:border-box;
+}
+
+button{
+background:var(--accent);
+color:white;
+border:none;
+padding:12px;
+border-radius:6px;
+cursor:pointer;
+font-weight:bold;
+width:100%;
+}
+
+.btn-danger{
+background:var(--danger);
+margin-top:10px;
+}
+
+.product-list-item,.sale-item{
+background:rgba(0,0,0,.3);
+padding:10px;
+border-radius:8px;
+margin-bottom:8px;
+font-size:12px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+}
+
+.overlay{
+position:fixed;
+inset:0;
+background:rgba(0,0,0,.5);
+display:none;
+z-index:1500;
+}
+
+.overlay.show{
+display:block;
+}
+
+.products{
+display:grid;
+grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
+gap:15px;
+padding:15px;
+}
+
+.card{
+background:var(--card);
+padding:10px;
+border-radius:12px;
+text-align:center;
+}
+
+.card img{
+width:100%;
+height:100px;
+object-fit:contain;
+}
+
+</style>
 </head>
 
 <body>
 
 <header>
 
-<span onclick="toggleSidebar()" style="cursor:pointer;font-size:20px;">☰</span>
+<span style="cursor:pointer;font-size:24px" onclick="toggleSidebar()">☰</span>
 
 <div class="search-bar">
-<input id="searchInput" placeholder="Buscar..." onkeyup="render()">
+<input type="text" id="searchInput" placeholder="Buscar..." onkeyup="filtrar()">
 </div>
 
-<div>
-
-<span id="modeLabel">Cliente</span>
-
-<span onclick="toggleCart()" style="cursor:pointer;margin-left:10px;">
-🛒 <span id="cartCount">0</span>
-</span>
-
+<div style="display:flex;gap:15px">
+<span onclick="abrirAdmin()" style="cursor:pointer">🔑</span>
+<span onclick="toggleCart()" style="cursor:pointer">🛒<span id="cartCount">0</span></span>
 </div>
 
 </header>
 
-<!-- SIDEBAR -->
+<div class="overlay" id="overlay" onclick="closeAll()"></div>
 
-<div class="sidebar" id="sidebar">
+<nav class="sidebar" id="sidebar">
 
-<a href="#">Inicio</a>
+<div style="padding:20px;font-weight:bold">MENU</div>
 
-<a onclick="loginMayorista()">Mayorista</a>
+<a href="#" onclick="closeAll()">🏠 Inicio</a>
+<a href="#">ℹ️ Información</a>
+<a href="#">📍 Ubicación</a>
+
+<a href="https://instagram.com" target="_blank">📸 Instagram</a>
+
+<div class="sidebar-promo" onclick="window.open('https://wa.me/5493434508948?text=Quiero una tienda!')">
+¡Quiero una tienda así!
+</div>
+
+</nav>
+
+<div class="cart-drawer" id="cartDrawer">
+
+<h3>Mi Carrito</h3>
+
+<div class="cart-items" id="cartList"></div>
+
+<div style="font-weight:bold;font-size:18px;display:flex;justify-content:space-between">
+<span>Total:</span>
+<span id="cartTotal">$0</span>
+</div>
+
+<button onclick="enviarPedido()" style="background:#25d366;margin-top:10px">
+Enviar WhatsApp
+</button>
 
 </div>
 
-<!-- PRODUCTOS -->
+<div class="admin-modal" id="adminModal">
+
+<div class="admin-content">
+
+<div class="tabs">
+<button class="tab-btn active" onclick="showTab('tab-productos',this)">📦 Productos</button>
+<button class="tab-btn" onclick="showTab('tab-ventas',this)">📜 Ventas</button>
+<button onclick="document.getElementById('adminModal').style.display='none'" style="width:auto;background:none">✖</button>
+</div>
+
+<div id="tab-productos" class="tab-content active">
+
+<input type="hidden" id="editIdx">
+
+<input id="n" placeholder="Nombre del producto">
+
+<div class="grid-inputs">
+<input id="p1" type="number" placeholder="Precio">
+<input id="pm" type="number" placeholder="Mayorista">
+<input id="st" type="number" placeholder="Stock">
+</div>
+
+<input id="im" placeholder="URL Imagen">
+
+<button onclick="guardar()">Guardar</button>
+
+<div id="adminProdList" style="margin-top:15px"></div>
+
+</div>
+
+<div id="tab-ventas" class="tab-content">
+
+<button class="btn-danger" onclick="borrarTodoHistorial()">🗑 Borrar Historial</button>
+
+<div id="adminSalesList" style="margin-top:15px"></div>
+
+</div>
+
+</div>
+
+</div>
 
 <div class="products" id="products"></div>
 
-<!-- CARRITO -->
-
-<div class="cart" id="cartDrawer">
-
-<h3>Carrito</h3>
-
-<div id="cartList" style="flex:1;overflow:auto;"></div>
-
-<div>Total: <span id="cartTotal">$0</span></div>
-
-<button onclick="enviarPedido()">Enviar WhatsApp</button>
-
-</div>
-
 <script>
 
-/* PRODUCTOS DEMO */
+let products=JSON.parse(localStorage.getItem("prods"))||[];
+let sales=JSON.parse(localStorage.getItem("sales"))||[];
+let cart=[];
 
-let products = JSON.parse(localStorage.getItem("prods"));
+if(products.length===0){
 
-if(!products){
-
-products = [
-
-{
-name:"Bujía NGK",
-p1:3500,
-pm:2500,
-img:"https://i.imgur.com/7Q9Z1Zm.png"
-},
-
-{
-name:"Filtro Aire",
-p1:8000,
-pm:6000,
-img:"https://i.imgur.com/YZ6XK8H.png"
-},
-
-{
-name:"Aceite 10w40",
-p1:12000,
-pm:9000,
-img:"https://i.imgur.com/3KXvY5K.png"
-}
-
+products=[
+{name:"Bujía NGK",p1:3500,pm:2500,img:"https://i.imgur.com/7Q9Z1Zm.png"},
+{name:"Filtro Aire",p1:8000,pm:6000,img:"https://i.imgur.com/YZ6XK8H.png"}
 ];
 
 localStorage.setItem("prods",JSON.stringify(products));
 
 }
 
-/* USUARIO */
-
-let userType = localStorage.getItem("userType") || "cliente";
-
-document.getElementById("modeLabel").innerText =
-userType === "mayorista" ? "Mayorista" : "Cliente";
-
-/* CARRITO */
-
-let cart = JSON.parse(localStorage.getItem("cart")) || [];
-
-/* RENDER */
-
 function render(){
 
-const search = document.getElementById("searchInput").value.toLowerCase();
+const container=document.getElementById("products");
 
-const container = document.getElementById("products");
-
-container.innerHTML = products
-.filter(p => p.name.toLowerCase().includes(search))
-.map((p,i)=>{
-
-let precio = userType==="mayorista" ? p.pm : p.p1;
-
-return `
+container.innerHTML=products.map((p,i)=>`
 
 <div class="card">
 
-<img src="${p.img}">
+<img src="${p.img||'https://via.placeholder.com/150'}">
 
 <h4>${p.name}</h4>
 
-<div>$${precio}</div>
+<div style="color:var(--accent);font-weight:bold">$${p.p1}</div>
 
 <button onclick="add(${i})">Agregar</button>
 
 </div>
 
-`;
-
-}).join("");
+`).join("");
 
 }
 
-/* AGREGAR */
-
 function add(i){
 
-let item = cart.find(c=>c.id===i);
+const item=cart.find(c=>c.id===i);
 
-if(item) item.qty++;
+if(item)item.qty++;
 else cart.push({id:i,qty:1});
 
 updateCart();
 
 }
 
-/* ACTUALIZAR CARRITO */
-
 function updateCart(){
 
-let total = 0;
-let count = 0;
+let total=0;
+let count=0;
 
-document.getElementById("cartList").innerHTML = cart.map((c,idx)=>{
+document.getElementById("cartList").innerHTML=cart.map((c,idx)=>{
 
-let p = products[c.id];
+const p=products[c.id];
+const sub=c.qty*p.p1;
 
-let precio = userType==="mayorista" ? p.pm : p.p1;
+total+=sub;
+count+=c.qty;
 
-let sub = precio * c.qty;
+return `
 
-total += sub;
-count += c.qty;
+<div>
 
-return`
+${p.name} x${c.qty} - $${sub}
 
-<div class="cart-item">
-
-<div>${p.name}</div>
-
-<div class="qty">
-
-<button onclick="cart[${idx}].qty--;if(cart[${idx}].qty<=0)cart.splice(${idx},1);updateCart()">-</button>
-
-<span>${c.qty}</span>
-
-<button onclick="cart[${idx}].qty++;updateCart()">+</button>
-
-</div>
+<span onclick="cart.splice(${idx},1);updateCart()" style="color:red;cursor:pointer">✕</span>
 
 </div>
 
@@ -299,71 +416,160 @@ return`
 
 }).join("");
 
-document.getElementById("cartTotal").innerText = "$"+total;
-
-document.getElementById("cartCount").innerText = count;
-
-localStorage.setItem("cart",JSON.stringify(cart));
+document.getElementById("cartTotal").innerText="$"+total;
+document.getElementById("cartCount").innerText=count;
 
 }
-
-/* LOGIN MAYORISTA */
-
-function loginMayorista(){
-
-let clave = prompt("Clave mayorista");
-
-if(clave==="mayo123"){
-
-userType="mayorista";
-
-localStorage.setItem("userType","mayorista");
-
-alert("Modo mayorista activado");
-
-render();
-updateCart();
-
-}
-
-}
-
-/* WHATSAPP */
 
 function enviarPedido(){
 
-if(cart.length===0) return;
+if(cart.length===0)return;
 
-let detalle = cart.map(c=>{
+let detalle=cart.map(c=>`- ${products[c.id].name} x${c.qty}`).join("\n");
 
-let p = products[c.id];
+let total=document.getElementById("cartTotal").innerText;
 
-return `- ${p.name} x${c.qty}`;
+let msg=`PEDIDO
 
-}).join("\n");
+${detalle}
 
-let total = document.getElementById("cartTotal").innerText;
-
-let msg = `PEDIDO\n\n${detalle}\n\nTOTAL ${total}`;
+Total ${total}`;
 
 window.open(`https://wa.me/5493434508948?text=${encodeURIComponent(msg)}`);
 
 }
 
-/* UI */
+function abrirAdmin(){
+
+if(prompt("Clave")!=="admin")return;
+
+document.getElementById("adminModal").style.display="flex";
+
+renderAdminProds();
+
+}
+
+function guardar(){
+
+const id=document.getElementById("editIdx").value;
+
+const p={
+name:document.getElementById("n").value,
+p1:parseInt(document.getElementById("p1").value),
+pm:parseInt(document.getElementById("pm").value)||0,
+img:document.getElementById("im").value
+};
+
+if(id==="")products.push(p);
+else products[id]=p;
+
+localStorage.setItem("prods",JSON.stringify(products));
+
+location.reload();
+
+}
+
+function renderAdminProds(){
+
+document.getElementById("adminProdList").innerHTML=products.map((p,i)=>`
+
+<div class="product-list-item">
+
+<span onclick="editar(${i})" style="cursor:pointer;color:cyan">
+
+${p.name} ($${p.p1})
+
+</span>
+
+<span onclick="eliminar(${i})" style="color:red;cursor:pointer">
+
+Borrar
+
+</span>
+
+</div>
+
+`).join("");
+
+}
+
+function editar(i){
+
+const p=products[i];
+
+document.getElementById("n").value=p.name;
+document.getElementById("p1").value=p.p1;
+document.getElementById("pm").value=p.pm;
+document.getElementById("im").value=p.img;
+document.getElementById("editIdx").value=i;
+
+}
+
+function eliminar(i){
+
+products.splice(i,1);
+
+localStorage.setItem("prods",JSON.stringify(products));
+
+renderAdminProds();
+render();
+
+}
+
+function showTab(id,btn){
+
+document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+
+document.getElementById(id).classList.add('active');
+
+btn.classList.add('active');
+
+}
+
+function borrarTodoHistorial(){
+
+sales=[];
+localStorage.setItem("sales",JSON.stringify(sales));
+
+renderSales();
+
+}
 
 function toggleSidebar(){
+
 document.getElementById("sidebar").classList.toggle("active");
+document.getElementById("overlay").classList.toggle("show");
+
 }
 
 function toggleCart(){
+
 document.getElementById("cartDrawer").classList.toggle("active");
+document.getElementById("overlay").classList.toggle("show");
+
 }
 
-/* INICIO */
+function closeAll(){
+
+document.querySelectorAll(".active").forEach(el=>el.classList.remove("active"));
+document.querySelectorAll(".show").forEach(el=>el.classList.remove("show"));
+
+}
+
+function filtrar(){
+
+const txt=document.getElementById("searchInput").value.toLowerCase();
+
+document.querySelectorAll(".card").forEach(card=>{
+
+card.style.display=card.innerText.toLowerCase().includes(txt)?"block":"none";
+
+});
+
+}
 
 render();
-updateCart();
 
 </script>
 
