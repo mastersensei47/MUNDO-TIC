@@ -112,14 +112,7 @@
         <p>📍 <b>Ubicación:</b><br>Paraná, Entre Ríos</p>
         <p>📞 <b>WhatsApp:</b><br>+54 9 343 450-8948</p>
         <p>⏰ <b>Horarios:</b><br>Lun a Vie: 08:00 - 18:00</p>
-        <div style="border-radius:15px; overflow:hidden; height:140px; margin:15px 0; border:1px solid rgba(128,128,128,0.2)">
-            <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d108535.4514311145!2d-60.59600508511677!3d-31.77093557579132!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x95b452880f42773d%3A0x464e320d75005897!2sParan%C3%A1%2C%20Entre%20R%C3%ADos!5e0!3m2!1ses-419!2sar!4v1700000000000!5m2!1ses-419!2sar" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
-        </div>
         <a href="https://wa.me/5493434508948" target="_blank" class="btn btn-primary" style="background:#25d366; text-decoration:none; display:block; text-align:center">CONSULTAR WHATSAPP</a>
-        <div style="margin-top:25px; padding:12px; border:1px dashed var(--accent); border-radius:12px; text-align:center; background:rgba(59,130,246,0.05)">
-            <p style="font-weight:bold; color:var(--accent); margin:0; font-size:13px">¿Querés una web como esta?</p>
-            <p style="font-size:11px; margin:5px 0">Potenciá tu negocio hoy mismo.</p>
-        </div>
     </div>
 </div>
 
@@ -150,7 +143,7 @@
             <h2 style="margin-top:0">Acceso Mayorista</h2>
             <input id="userInp" placeholder="Usuario">
             <input id="passInp" type="password" placeholder="Contraseña">
-            <button class="btn btn-primary" onclick="checkLogin()">INGRESAR</button>
+            <button class="btn btn-primary" id="btnLogin" onclick="checkLogin()">INGRESAR</button>
             <button class="btn" style="margin-top:10px; background:none; color:var(--text)" onclick="closeAll()">Cerrar</button>
             <p style="text-align:center; margin-top:15px; font-size: 13px;">¿Nuevo cliente? <a href="#" onclick="switchAuth(true)" style="color:var(--accent)">Solicitar alta</a></p>
         </div>
@@ -158,6 +151,8 @@
             <h2>Solicitud de Alta</h2>
             <input id="regNom" placeholder="Nombre / Comercio">
             <input id="regCuit" placeholder="CUIT / DNI">
+            <input id="regUser" placeholder="Elegir Usuario">
+            <input id="regPass" type="password" placeholder="Elegir Contraseña">
             <button class="btn btn-primary" onclick="enviarSolicitud()">ENVIAR SOLICITUD</button>
             <button class="btn" style="margin-top:10px; background:none; color:var(--text)" onclick="switchAuth(false)">Volver</button>
         </div>
@@ -194,7 +189,7 @@
                 <table><thead><tr><th>Nombre</th><th>Stock</th><th>Acción</th></tr></thead><tbody id="adminProdsList"></tbody></table>
             </div>
         </div>
-        <div id="tab2" style="display:none"><div style="overflow-x:auto"><table><thead><tr><th>Cliente</th><th>ID</th><th>Acción</th></tr></thead><tbody id="adminSolisList"></tbody></table></div></div>
+        <div id="tab2" style="display:none"><div style="overflow-x:auto"><table><thead><tr><th>Cliente</th><th>Usuario/Clave</th><th>Acción</th></tr></thead><tbody id="adminSolisList"></tbody></table></div></div>
         <div id="tab3" style="display:none"><button class="btn" style="background:var(--danger); margin-bottom:10px; font-size:12px; width:auto" onclick="vaciarVentas()">Limpiar Historial</button><div style="overflow-x:auto"><table><thead><tr><th>Fecha</th><th>Total</th><th>Info</th></tr></thead><tbody id="adminSalesList"></tbody></table></div></div>
     </div>
 </div>
@@ -224,7 +219,7 @@
     db.collection("solicitudes_mayoristas").onSnapshot(snap => { 
         document.getElementById("adminSolisList").innerHTML = snap.docs.map(doc => { 
             const s = doc.data(); 
-            return `<tr><td>${s.nombre}</td><td>${s.cuit}</td><td><button onclick="aprobarSoli('${doc.id}')">✅</button> <button onclick="eliminarSoli('${doc.id}')">🗑️</button></td></tr>`; 
+            return `<tr><td>${s.nombre}</td><td>U: ${s.user}<br>P: ${s.pass}</td><td><button onclick="aprobarSoli('${doc.id}', '${s.user}', '${s.pass}', '${s.nombre}')">✅</button> <button onclick="eliminarSoli('${doc.id}')">🗑️</button></td></tr>`; 
         }).join(""); 
     });
 
@@ -260,7 +255,6 @@
         document.getElementById("cartCount").innerText = carrito.reduce((a,b)=>a+b.qty,0);
         const list = document.getElementById("cartItemsList");
         if(!carrito.length) { list.innerHTML = `<p style="text-align:center; opacity:0.5; margin-top:20px">El carrito está vacío</p>`; document.getElementById("cartTotalText").innerText = "Total: $0"; return; }
-        
         list.innerHTML = carrito.map(it => {
             const p = productos.find(x => x.id === it.id);
             let pU = esMayorista ? p.precio_may : p.precio;
@@ -275,14 +269,13 @@
                     <b style="font-size:13px; flex:1; padding-right:5px">${p.nombre}</b>
                     <b style="color:var(--accent)">$${sub.toFixed(0)}</b>
                 </div>
-                <div style="font-size:11px; opacity:0.8; color:${promoActive?'var(--promo)':'inherit'}">${promoActive?'✨ Precio Promo: ':'Unitario: '}$${pU.toFixed(0)}</div>
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px">
                     <div style="background:var(--bg); display:flex; align-items:center; gap:12px; padding:4px 12px; border-radius:8px">
                         <button onclick="changeQty('${it.id}',-1)" style="background:none; border:none; color:white; cursor:pointer; font-weight:bold">-</button>
-                        <span style="font-weight:bold; min-width:15px; text-align:center">${it.qty}</span>
+                        <span style="font-weight:bold">${it.qty}</span>
                         <button onclick="changeQty('${it.id}',1)" style="background:none; border:none; color:white; cursor:pointer; font-weight:bold">+</button>
                     </div>
-                    <button onclick="removeItem('${it.id}')" style="background:none; border:none; color:var(--danger); font-size:11px; text-decoration:underline">Quitar</button>
+                    <button onclick="removeItem('${it.id}')" style="background:none; border:none; color:var(--danger); font-size:11px">Quitar</button>
                 </div>
             </div>`;
         }).join("");
@@ -293,7 +286,7 @@
         if(!carrito.length) return;
         const met = document.getElementById("deliveryMethod").value;
         const n = document.getElementById("envioNombre").value, d = document.getElementById("envioDireccion").value, l = document.getElementById("envioLocalidad").value;
-        if(met === "envio" && (!n || !d || !l)) return alert("Por favor, completa los datos de envío.");
+        if(met === "envio" && (!n || !d || !l)) return alert("Completa los datos de envío.");
         let t = 0, msg = "*NUEVO PEDIDO NEO*\n----------------\n";
         carrito.forEach(it => {
             const p = productos.find(x => x.id === it.id);
@@ -317,9 +310,62 @@
     function abrirModal(id) { closeAll(); document.getElementById(id).style.display = "flex"; }
     function tab(t) { ['tab1','tab2','tab3'].forEach(x => document.getElementById(x).style.display = x===t?'block':'none'); document.querySelectorAll(".tab-btn").forEach(b => b.classList.toggle("active", b.id==='btn-'+t)); }
     function verificarAdmin() { if(prompt("Clave:") === "admin") abrirModal("adminModal"); }
-    function checkLogin() { if(document.getElementById("userInp").value === "mayorista") { esMayorista=true; localStorage.setItem("neo_may", "true"); closeAll(); render(); } }
+
+    // --- LÓGICA DE LOGIN REAL ---
+    async function checkLogin() { 
+        const u = document.getElementById("userInp").value;
+        const p = document.getElementById("passInp").value;
+        const btn = document.getElementById("btnLogin");
+
+        if(!u || !p) return alert("Ingresa usuario y clave");
+        
+        btn.innerText = "Verificando...";
+        btn.disabled = true;
+
+        try {
+            const query = await db.collection("usuarios_mayoristas")
+                .where("user", "==", u)
+                .where("pass", "==", p)
+                .get();
+
+            if(!query.empty) {
+                esMayorista = true; 
+                localStorage.setItem("neo_may", "true"); 
+                closeAll(); render(); 
+                alert("¡Bienvenido " + u + "! Precios mayoristas activados.");
+            } else {
+                alert("Usuario o Clave incorrectos, o aún no has sido aprobado.");
+            }
+        } catch(e) {
+            console.error(e);
+            alert("Error al conectar.");
+        }
+        btn.innerText = "INGRESAR";
+        btn.disabled = false;
+    }
+
+    // --- LÓGICA DE ADMINISTRACIÓN DE USUARIOS ---
+    async function aprobarSoli(id, user, pass, nombre) { 
+        try {
+            // 1. Lo agregamos a la lista de aprobados
+            await db.collection("usuarios_mayoristas").add({ user, pass, nombre });
+            // 2. Borramos la solicitud
+            await db.collection("solicitudes_mayoristas").doc(id).delete();
+            alert("¡Usuario " + user + " aprobado con éxito!");
+        } catch(e) { alert("Error al aprobar"); }
+    }
+
     function switchAuth(r) { document.getElementById("loginView").style.display = r ? 'none' : 'block'; document.getElementById("regView").style.display = r ? 'block' : 'none'; }
-    async function enviarSolicitud() { const n = document.getElementById("regNom").value, c = document.getElementById("regCuit").value; await db.collection("solicitudes_mayoristas").add({ nombre: n, cuit: c }); alert("Enviado"); switchAuth(false); }
+    
+    async function enviarSolicitud() { 
+        const n = document.getElementById("regNom").value, c = document.getElementById("regCuit").value;
+        const u = document.getElementById("regUser").value, p = document.getElementById("regPass").value;
+        if(!n || !c || !u || !p) return alert("Completa todo");
+        await db.collection("solicitudes_mayoristas").add({ nombre: n, cuit: c, user: u, pass: p }); 
+        alert("Solicitud enviada. El administrador te habilitará pronto."); 
+        switchAuth(false); 
+    }
+
     async function guardarProducto() {
         const id = document.getElementById("editId").value;
         const d = { nombre: document.getElementById("fNom").value, precio: Number(document.getElementById("fPre").value), precio_may: Number(document.getElementById("fPreM").value), promo: document.getElementById("fPromo").value, stock: Number(document.getElementById("fStock").value), imagen: document.getElementById("fImg").value };
@@ -329,8 +375,7 @@
     function renderAdminProds() { document.getElementById("adminProdsList").innerHTML = productos.map(p => `<tr><td>${p.nombre}</td><td>${p.stock}</td><td><button onclick="editP('${p.id}')">✏️</button><button onclick="deleteP('${p.id}')">🗑️</button></td></tr>`).join(""); }
     function editP(id) { const p = productos.find(x => x.id === id); document.getElementById("editId").value=p.id; document.getElementById("fNom").value=p.nombre; document.getElementById("fPre").value=p.precio; document.getElementById("fPreM").value=p.precio_may; document.getElementById("fPromo").value=p.promo||""; document.getElementById("fStock").value=p.stock; document.getElementById("fImg").value=p.imagen||""; tab('tab1'); }
     async function deleteP(id) { if(confirm("Borrar?")) await db.collection("productos").doc(id).delete(); }
-    async function aprobarSoli(id) { await db.collection("solicitudes_mayoristas").doc(id).delete(); alert("Aprobado"); }
-    async function eliminarSoli(id) { await db.collection("solicitudes_mayoristas").doc(id).delete(); }
+    async function eliminarSoli(id) { if(confirm("¿Eliminar solicitud?")) await db.collection("solicitudes_mayoristas").doc(id).delete(); }
     async function vaciarVentas() { if(confirm("Borrar todo?")) { const s = await db.collection("ventas").get(); s.forEach(d => d.ref.delete()); } }
     function limpiarForm() { document.getElementById("editId").value = ""; document.querySelectorAll("#tab1 input").forEach(i => i.value = ""); }
 </script>
