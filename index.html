@@ -19,30 +19,30 @@
         }
         body { margin:0; font-family: 'Inter', sans-serif; background:var(--bg); color:var(--text); transition: 0.3s; overflow-x: hidden; }
 
-        /* HEADER REDISEÑADO PARA LOGO 1080x1080 */
-header { 
+        header { 
             display: flex; justify-content: space-between; align-items: center; 
             padding: 0 20px; background: var(--card); position: sticky; top: 0; z-index: 1000; 
             box-shadow: 0 4px 20px rgba(0,0,0,0.4); border-bottom: 1px solid rgba(128,128,128,0.1);
-            height: 100px; /* Header más alto para un logo imponente */
+            height: 100px; 
             box-sizing: border-box; 
         }
         
         .header-left { display: flex; align-items: center; gap: 20px; }
         
         .main-logo {
-            height: 80px; /* Tamaño del logo aumentado considerablemente */
+            height: 80px; 
             width: auto; 
             max-width: 150px;
             object-fit: contain; 
             cursor: pointer;
-            filter: drop-shadow(0 2px 8px rgba(0,0,0,0.3)); /* Sombra para que resalte */
+            filter: drop-shadow(0 2px 8px rgba(0,0,0,0.3)); 
             transition: transform 0.3s;
         }
 
-        .main-logo:hover {
-            transform: scale(1.05); /* Efecto sutil al pasar el mouse */
-        }
+        .main-logo:hover { transform: scale(1.05); }
+
+        .search-container { flex-grow: 1; max-width: 500px; margin: 0 20px; }
+        .search-bar { width: 100%; padding: 10px; border-radius: 10px; border: none; background: var(--input-bg); color: white; }
 
         @media (max-width: 480px) {
             header { height: 85px; padding: 0 10px; }
@@ -50,7 +50,7 @@ header {
             .search-container { margin: 0 10px; }
         }
 
-        /* Resto de estilos del cuerpo */
+        .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; padding: 20px; }
         .product-card { background: var(--card); border-radius: 18px; overflow: hidden; border: 1px solid rgba(128,128,128,0.1); position: relative; transition: 0.3s; display: flex; flex-direction: column; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         .img-box { background: #fff; width: 100%; height: 140px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
         .img-box img { max-width: 85%; max-height: 85%; object-fit: contain; }
@@ -76,6 +76,8 @@ header {
         input, select { width: 100%; padding: 10px; margin: 6px 0; background: var(--input-bg); color: inherit; border: 1px solid rgba(128,128,128,0.2); border-radius: 8px; box-sizing: border-box; font-size: 14px; }
         .btn { padding: 12px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; width: 100%; transition: 0.3s; font-size: 14px; }
         .btn-primary { background: var(--accent); color: white; }
+        .icon-btn { cursor: pointer; font-size: 20px; padding: 5px; display: flex; align-items: center; justify-content: center; }
+        .header-icons { display: flex; gap: 15px; align-items: center; position: relative; }
         
         .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; z-index: 2000; }
         .overlay.active { display: block; }
@@ -134,11 +136,10 @@ header {
             CONSULTAR WHATSAPP
         </a>
 
-        <div style="flex-grow: 1; min-height: 40px;"></div>
+        <div style="flex-grow: 1; min-height: 50px;"></div>
 
         <div style="text-align: center; padding: 20px 0; border-top: 1px solid rgba(128,128,128,0.1);">
-            <img src="logoo.png" alt="Logo Grande" style="width: 80%; max-width: 200px; height: auto; border-radius: 15px; filter: drop-shadow(0 5px 15px rgba(0,0,0,0.3));">
-            <p style="margin-top: 10px; opacity: 0.6; font-weight: bold; letter-spacing: 2px;">MS<span style="color:var(--accent)">47</span></p>
+            <img src="logoo.png" alt="Logo Empresa" style="width: 95%; max-width: 280px; height: auto; border-radius: 15px; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.4));">
         </div>
     </div>
 </div>
@@ -287,11 +288,6 @@ header {
         list.innerHTML = carrito.map(it => {
             const p = productos.find(x => x.id === it.id);
             let pU = esMayorista ? p.precio_may : p.precio;
-            let promoActive = false;
-            if(!esMayorista && p.promo) { 
-                const m = p.promo.match(/llevando\s*(\d+)\s*\$?(\d+)/i); 
-                if(m && it.qty >= parseInt(m[1])) { pU = parseInt(m[2]) / parseInt(m[1]); promoActive = true; } 
-            }
             const sub = pU * it.qty; total += sub;
             return `<div style="background:rgba(255,255,255,0.05); padding:12px; border-radius:12px; margin-bottom:10px; border:1px solid rgba(128,128,128,0.1)">
                 <div style="display:flex; justify-content:space-between; margin-bottom:5px">
