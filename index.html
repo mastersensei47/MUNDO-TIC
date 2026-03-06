@@ -30,44 +30,33 @@
         .search-container { flex: 1; max-width: 450px; margin: 0 15px; }
         .search-bar { width: 100%; padding: 10px 15px; border-radius: 12px; border: 1px solid rgba(128,128,128,0.3); background: var(--input-bg); color: inherit; outline: none; box-sizing: border-box; }
 
-        .products-grid { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); 
-            gap: 15px; padding: 15px; 
-        }
-        @media (min-width: 768px) {
-            .products-grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 25px; padding: 25px; }
-        }
+        .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); gap: 15px; padding: 15px; }
+        @media (min-width: 768px) { .products-grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 25px; padding: 25px; } }
 
-        .product-card { 
-            background: var(--card); border-radius: 20px; overflow: hidden; 
-            border: 1px solid rgba(128,128,128,0.1); position: relative; transition: 0.3s;
-            display: flex; flex-direction: column; box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-        .img-box { background: #fff; width: 100%; height: 140px; display: flex; align-items: center; justify-content: center; position: relative; }
+        .product-card { background: var(--card); border-radius: 20px; overflow: hidden; border: 1px solid rgba(128,128,128,0.1); position: relative; transition: 0.3s; display: flex; flex-direction: column; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .img-box { background: #fff; width: 100%; height: 140px; display: flex; align-items: center; justify-content: center; }
         .img-box img { max-width: 75%; max-height: 75%; object-fit: contain; }
-        
-        .promo-banner { background: var(--promo); color: #000; font-size: 11px; font-weight: 900; padding: 8px; text-align: center; border-bottom: 2px solid rgba(0,0,0,0.1); }
-
+        .promo-banner { background: var(--promo); color: #000; font-size: 11px; font-weight: 900; padding: 8px; text-align: center; }
         .stock-indicator { font-size: 10px; color: var(--success); font-weight: 700; display: flex; align-items: center; gap: 4px; margin-bottom: 5px; background: rgba(16, 185, 129, 0.1); padding: 4px 8px; border-radius: 6px; width: fit-content; }
-
         .info-box { padding: 12px; flex-grow: 1; display: flex; flex-direction: column; }
-        .product-title { margin: 0 0 8px 0; font-size: 14px; font-weight: 600; line-height: 1.2; color: var(--text); height: 34px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-        .price-container { margin-top: auto; padding-top: 10px; border-top: 1px solid rgba(128,128,128,0.1); }
+        .product-title { margin: 0 0 8px 0; font-size: 14px; font-weight: 600; line-height: 1.2; height: 34px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
         .price-val { font-size: 22px; font-weight: 900; color: var(--accent); }
+
+        /* SIDEBARS (Izquierda y Derecha) */
+        .drawer { position: fixed; top: 0; width: 100%; max-width: 320px; height: 100%; background: var(--card); transition: 0.4s; z-index: 3000; padding: 20px; box-shadow: 0 0 40px rgba(0,0,0,0.5); display: flex; flex-direction: column; box-sizing: border-box; }
+        #infoDrawer { left: -100%; }
+        #infoDrawer.active { left: 0; }
+        #cartDrawer { right: -100%; }
+        #cartDrawer.active { right: 0; }
 
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); display: none; justify-content: center; align-items: center; z-index: 4000; padding: 10px; }
         .modal-content { background: var(--card); padding: 25px; border-radius: 25px; width: 100%; max-width: 650px; max-height: 90vh; overflow-y: auto; border: 1px solid rgba(255,255,255,0.1); }
-
         .tab-nav { display: flex; gap: 10px; margin-bottom: 20px; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 15px; }
-        .tab-btn { flex: 1; text-align: center; cursor: pointer; padding: 10px; border-radius: 10px; font-weight: bold; opacity: 0.5; transition: 0.3s; font-size: 12px; }
+        .tab-btn { flex: 1; text-align: center; cursor: pointer; padding: 10px; border-radius: 10px; font-weight: bold; opacity: 0.5; font-size: 12px; }
         .tab-btn.active { opacity: 1; background: var(--accent); color: white; }
-        
-        #cartDrawer { position: fixed; right: -100%; top: 0; width: 100%; max-width: 350px; height: 100%; background: var(--card); transition: 0.4s; z-index: 3000; padding: 20px; box-shadow: -10px 0 40px rgba(0,0,0,0.5); display:flex; flex-direction:column; box-sizing: border-box; }
-        #cartDrawer.active { right: 0; }
-        
-        input, select { width: 100%; padding: 12px; margin: 8px 0; background: var(--input-bg); color: inherit; border: 1px solid rgba(128,128,128,0.2); border-radius: 10px; box-sizing: border-box; font-size: 14px; }
-        .btn { padding: 12px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; width: 100%; transition: 0.3s; margin-top: 5px; font-size: 14px; text-align: center; }
+
+        input, select { width: 100%; padding: 12px; margin: 8px 0; background: var(--input-bg); color: inherit; border: 1px solid rgba(128,128,128,0.2); border-radius: 10px; box-sizing: border-box; }
+        .btn { padding: 12px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; width: 100%; transition: 0.3s; margin-top: 5px; text-align: center; }
         .btn-primary { background: var(--accent); color: white; }
         .btn-back { background: transparent; color: var(--text); border: 1px solid rgba(128,128,128,0.3); }
         
@@ -76,16 +65,19 @@
         .qty-badge { position: absolute; top: -5px; right: -8px; background: var(--danger); color: white; font-size: 10px; padding: 2px 6px; border-radius: 50%; }
 
         #deliveryForm { background: rgba(0,0,0,0.1); padding: 10px; border-radius: 10px; margin-top: 10px; display: none; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 12px; }
-        th, td { padding: 8px; text-align: left; border-bottom: 1px solid rgba(128,128,128,0.1); }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 10px; }
+        th, td { padding: 8px; border-bottom: 1px solid rgba(128,128,128,0.1); text-align: left; }
     </style>
 </head>
 <body>
 
 <header>
-    <b style="font-size:20px; cursor:pointer" onclick="location.reload()">NEO<span style="color:var(--accent)">REPUESTOS</span></b>
+    <div style="display:flex; align-items:center; gap:10px">
+        <span class="icon-btn" onclick="toggleInfo()">☰</span>
+        <b style="font-size:18px; cursor:pointer" onclick="location.reload()">NEO<span style="color:var(--accent)">REPUESTOS</span></b>
+    </div>
     <div class="search-container">
-        <input type="text" id="searchInput" class="search-bar" placeholder="Buscar producto..." onkeyup="render()">
+        <input type="text" id="searchInput" class="search-bar" placeholder="Buscar..." onkeyup="render()">
     </div>
     <div class="header-icons">
         <span class="icon-btn" onclick="toggleTheme()">🌗</span>
@@ -98,6 +90,50 @@
 <div class="overlay" id="mainOverlay" onclick="closeAll()"></div>
 <div class="products-grid" id="productsCont"></div>
 
+<div id="infoDrawer" class="drawer">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px">
+        <h2 style="margin:0; color:var(--accent)">Información</h2>
+        <span onclick="toggleInfo()" style="cursor:pointer; font-size:24px">✕</span>
+    </div>
+    <div style="flex-grow:1; overflow-y:auto; font-size:14px">
+        <p>📍 <b>Ubicación:</b><br>Paraná, Entre Ríos, Argentina</p>
+        <p>📞 <b>WhatsApp:</b><br>+54 9 343 450-8948</p>
+        <p>⏰ <b>Horarios:</b><br>Lun a Vie: 08:00 - 18:00</p>
+        
+        <div style="border-radius:15px; overflow:hidden; height:150px; margin:15px 0; border:1px solid rgba(128,128,128,0.3)">
+            <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3392.1!2d-60.5!3d-31.7!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMzHCsDQyJzAwLjAiUyA2MMKwMzAnMDAuMCJX!5e0!3m2!1ses!2sar!4v1700000000000" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+        </div>
+
+        <a href="https://wa.me/5493434508948" target="_blank" class="btn btn-primary" style="background:#25d366; text-decoration:none; display:block">CONSULTAR WHATSAPP</a>
+
+        <div style="margin-top:30px; padding:15px; border:1px dashed var(--accent); border-radius:12px; text-align:center; background:rgba(59,130,246,0.05)">
+            <p style="font-weight:bold; color:var(--accent); margin:0">¿Querés una web como esta?</p>
+            <p style="font-size:12px; margin:5px 0">Consultanos para crear tu propia tienda online.</p>
+        </div>
+    </div>
+</div>
+
+<div id="cartDrawer" class="drawer">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px">
+        <h2 style="margin:0">Mi Pedido</h2>
+        <span onclick="toggleCart()" style="cursor:pointer; font-size:24px">✕</span>
+    </div>
+    <div id="cartItemsList" style="flex-grow:1; overflow-y:auto"></div>
+    <div style="padding-top:15px; border-top:1px solid rgba(128,128,128,0.2)">
+        <select id="deliveryMethod" onchange="toggleDeliveryForm()">
+            <option value="retiro">Retiro en local</option>
+            <option value="envio">Envío a domicilio</option>
+        </select>
+        <div id="deliveryForm">
+            <input id="envioNombre" placeholder="Tu Nombre">
+            <input id="envioDireccion" placeholder="Dirección">
+            <input id="envioLocalidad" placeholder="Localidad">
+        </div>
+        <h3 id="cartTotalText" style="margin: 15px 0 10px 0">Total: $0</h3>
+        <button class="btn btn-primary" style="background:#25d366" onclick="enviarWhatsApp()">PEDIR POR WHATSAPP</button>
+    </div>
+</div>
+
 <div class="modal" id="loginModal">
     <div class="modal-content" style="max-width:380px">
         <div id="loginView">
@@ -105,7 +141,7 @@
             <input id="userInp" placeholder="Usuario">
             <input id="passInp" type="password" placeholder="Contraseña">
             <button class="btn btn-primary" onclick="checkLogin()">INGRESAR</button>
-            <button class="btn btn-back" style="margin-top:10px; width:100%" onclick="closeAll()">VOLVER</button>
+            <button class="btn btn-back" style="margin-top:10px" onclick="closeAll()">VOLVER</button>
             <p style="text-align:center; margin-top:15px; font-size: 14px;">¿No eres cliente? <a href="#" onclick="switchAuth(true)" style="color:var(--accent)">Crear Solicitud</a></p>
         </div>
         <div id="regView" style="display:none">
@@ -113,7 +149,7 @@
             <input id="regNom" placeholder="Nombre / Comercio">
             <input id="regCuit" placeholder="CUIT / DNI">
             <button class="btn btn-primary" onclick="enviarSolicitud()">ENVIAR DATOS</button>
-            <button class="btn btn-back" style="margin-top:10px; width:100%" onclick="switchAuth(false)">VOLVER AL LOGIN</button>
+            <button class="btn btn-back" style="margin-top:10px" onclick="switchAuth(false)">VOLVER AL LOGIN</button>
         </div>
     </div>
 </div>
@@ -129,93 +165,21 @@
             <div class="tab-btn" id="btn-tab2" onclick="tab('tab2')">SOLICITUDES</div>
             <div class="tab-btn" id="btn-tab3" onclick="tab('tab3')">VENTAS</div>
         </div>
-        
         <div id="tab1">
             <div style="background:rgba(255,255,255,0.05); padding:15px; border-radius:15px; border:1px solid rgba(128,128,128,0.2)">
-                <input type="hidden" id="editId">
-                <input id="fNom" placeholder="Nombre del Producto">
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px">
-                    <input id="fPre" type="number" placeholder="Precio Min">
-                    <input id="fPreM" type="number" placeholder="Precio May">
-                </div>
-                <div style="display:grid; grid-template-columns: 2fr 1fr; gap:10px">
-                    <input id="fPromo" placeholder="Ej: Llevando 2 $4500 c/u">
-                    <input id="fStock" type="number" placeholder="Stock cant.">
-                </div>
+                <input type="hidden" id="editId"><input id="fNom" placeholder="Nombre">
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px"><input id="fPre" type="number" placeholder="Precio Min"><input id="fPreM" type="number" placeholder="Precio May"></div>
+                <div style="display:grid; grid-template-columns: 2fr 1fr; gap:10px"><input id="fPromo" placeholder="Promo (Ej: Llevando 2 $4000)"><input id="fStock" type="number" placeholder="Stock"></div>
                 <input id="fImg" placeholder="URL Imagen">
                 <button class="btn btn-primary" onclick="guardarProducto()">GUARDAR</button>
-                <button class="btn btn-back" style="margin-top:5px; width:100%" onclick="limpiarForm()">LIMPIAR</button>
+                <button class="btn btn-back" style="margin-top:5px" onclick="limpiarForm()">LIMPIAR</button>
             </div>
-            <div style="overflow-x:auto">
-                <table>
-                    <thead><tr><th>Producto</th><th>Cant.</th><th>Acciones</th></tr></thead>
-                    <tbody id="adminProdsList"></tbody>
-                </table>
-            </div>
+            <table><thead><tr><th>Prod</th><th>Cant</th><th>Acción</th></tr></thead><tbody id="adminProdsList"></tbody></table>
         </div>
-
-        <div id="tab2" style="display:none">
-            <table>
-                <thead><tr><th>Cliente</th><th>ID</th><th>Acción</th></tr></thead>
-                <tbody id="adminSolisList"></tbody>
-            </table>
-        </div>
-
-        <div id="tab3" style="display:none">
-            <button class="btn" style="background:var(--danger); margin-bottom:10px; width:auto;" onclick="vaciarVentas()">BORRAR HISTORIAL</button>
-            <table>
-                <thead><tr><th>Fecha</th><th>Total</th><th>Detalle</th></tr></thead>
-                <tbody id="adminSalesList"></tbody>
-            </table>
-        </div>
+        <div id="tab2" style="display:none"><table><thead><tr><th>Cliente</th><th>ID</th><th>Acción</th></tr></thead><tbody id="adminSolisList"></tbody></table></div>
+        <div id="tab3" style="display:none"><button class="btn btn-danger" onclick="vaciarVentas()" style="width:auto">BORRAR HISTORIAL</button><table><thead><tr><th>Fecha</th><th>Total</th><th>Ver</th></tr></thead><tbody id="adminSalesList"></tbody></table></div>
     </div>
 </div>
-
-<div id="cartDrawer">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px">
-        <h2 style="margin:0">Mi Carrito</h2>
-        <span onclick="toggleCart()" style="cursor:pointer; font-size:24px">✕</span>
-    </div>
-    <div id="cartItemsList" style="flex-grow:1; overflow-y:auto"></div>
-    <div style="padding-top:15px; border-top:1px solid rgba(128,128,128,0.2)">
-        <select id="deliveryMethod" onchange="toggleDeliveryForm()">
-            <option value="retiro">Retiro en local</option>
-            <option value="envio">Envío a domicilio</option>
-        </select>
-        <div id="deliveryForm">
-            <input id="envioNombre" placeholder="Tu nombre">
-            <input id="envioDireccion" placeholder="Dirección">
-            <input id="envioLocalidad" placeholder="Localidad">
-        </div>
-        <h3 id="cartTotalText" style="margin: 15px 0 10px 0">Total: $0</h3>
-        <button class="btn btn-primary" style="background:#25d366" onclick="enviarWhatsApp()">WHATSAPP</button>
-    </div>
-</div>
-
-<section id="info-section" style="padding: 40px 20px; background: var(--card); margin-top: 40px; border-top: 1px solid rgba(128,128,128,0.2);">
-    <div style="max-width: 800px; margin: 0 auto;">
-        <h2 style="color: var(--accent); margin-bottom: 20px;">CONTACTO E INFORMACIÓN</h2>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px;">
-            <div>
-                <p>📍 <b>Ubicación:</b> Paraná, Entre Ríos</p>
-                <p>📞 <b>WhatsApp:</b> +54 9 343 450-8948</p>
-                <p>⏰ <b>Atención:</b> Lun a Vie 08:00 - 18:00</p>
-                <a href="https://wa.me/5493434508948" target="_blank" class="btn btn-primary" style="display: inline-block; width: auto; background: #25d366; text-decoration: none; padding: 10px 20px; margin-top: 10px;">Consultar ahora</a>
-            </div>
-            <div style="border-radius: 15px; overflow: hidden; height: 200px; border: 1px solid rgba(128,128,128,0.3);">
-                <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3393.3643750835495!2d-60.5186835!3d-31.7333333!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x95b45262f2d9ec77%3A0x6b779a1f11e032d!2sParan%C3%A1%2C%20Entre%20R%C3%ADos!5e0!3m2!1ses!2sar!4v1700000000000" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
-            </div>
-        </div>
-    </div>
-</section>
-
-<footer style="padding: 30px; text-align: center; background: #000; color: #fff; font-size: 13px;">
-    <p style="opacity: 0.6; margin-bottom: 15px;">© 2024 NEO REPUESTOS - Oficial</p>
-    <div style="background: rgba(59, 130, 246, 0.1); padding: 15px; border-radius: 12px; border: 1px dashed var(--accent); display: inline-block;">
-        <p style="margin: 0; font-weight: bold; color: var(--accent);">¿Querés una página como esta para tu negocio?</p>
-        <p style="margin: 5px 0 0 0; opacity: 0.8;">Potenciá tus ventas. Consultanos al WhatsApp.</p>
-    </div>
-</footer>
 
 <script>
     const firebaseConfig = {
@@ -233,28 +197,10 @@
     let carrito = [];
     let esMayorista = localStorage.getItem("neo_may") === "true";
 
-    // SINCRONIZACIÓN FIREBASE
-    db.collection("productos").onSnapshot(snap => {
-        productos = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        render();
-        renderAdminProds();
-    });
+    db.collection("productos").onSnapshot(snap => { productos = snap.docs.map(doc => ({ id: doc.id, ...doc.data() })); render(); renderAdminProds(); });
+    db.collection("solicitudes_mayoristas").onSnapshot(snap => { document.getElementById("adminSolisList").innerHTML = snap.docs.map(doc => { const s = doc.data(); return `<tr><td>${s.nombre}</td><td>${s.cuit}</td><td><button onclick="aprobarSoli('${doc.id}')">✅</button> <button onclick="eliminarSoli('${doc.id}')">🗑️</button></td></tr>`; }).join(""); });
+    db.collection("ventas").orderBy("creado", "desc").onSnapshot(snap => { document.getElementById("adminSalesList").innerHTML = snap.docs.map(doc => { const v = doc.data(); return `<tr><td>${v.hora}</td><td>$${v.total}</td><td><button onclick="alert('${v.detalle}')">👁️</button></td></tr>`; }).join(""); });
 
-    db.collection("solicitudes_mayoristas").onSnapshot(snap => {
-        document.getElementById("adminSolisList").innerHTML = snap.docs.map(doc => {
-            const s = doc.data();
-            return `<tr><td>${s.nombre}</td><td>${s.cuit}</td><td><button onclick="aprobarSoli('${doc.id}')">✅</button> <button onclick="eliminarSoli('${doc.id}')">🗑️</button></td></tr>`;
-        }).join("");
-    });
-
-    db.collection("ventas").orderBy("creado", "desc").onSnapshot(snap => {
-        document.getElementById("adminSalesList").innerHTML = snap.docs.map(doc => {
-            const v = doc.data();
-            return `<tr><td>${v.hora}</td><td>$${v.total}</td><td><button onclick="alert('${v.detalle}')">Ver</button></td></tr>`;
-        }).join("");
-    });
-
-    // FUNCIONES CORE
     function render() {
         const query = document.getElementById("searchInput").value.toLowerCase();
         const cont = document.getElementById("productsCont");
@@ -263,166 +209,89 @@
                 ${p.promo ? `<div class="promo-banner">🔥 ${p.promo}</div>` : ''}
                 <div class="img-box"><img src="${p.imagen || 'https://via.placeholder.com/150'}"></div>
                 <div class="info-box">
-                    <div class="stock-indicator">📦 ${p.stock || 0} stock</div>
+                    <div class="stock-indicator">📦 ${p.stock || 0} disp.</div>
                     <h4 class="product-title">${p.nombre}</h4>
-                    <div class="price-container">
-                        <div class="price-val">$${esMayorista ? p.precio_may : p.precio}</div>
-                    </div>
+                    <div class="price-val">$${esMayorista ? p.precio_may : p.precio}</div>
                     <button class="btn btn-primary" onclick="addToCart('${p.id}')" style="margin-top:10px">AGREGAR</button>
                 </div>
             </div>`).join("");
     }
 
-    function addToCart(id) {
-        const exist = carrito.find(c => c.id === id);
-        if(exist) exist.qty++; else carrito.push({id, qty:1});
-        updateCartUI();
-    }
-
-    function changeQty(id, delta) {
-        const item = carrito.find(c => c.id === id);
-        if (item) {
-            item.qty += delta;
-            if (item.qty <= 0) removeItem(id);
-            else updateCartUI();
-        }
-    }
-
-    function removeItem(id) {
-        carrito = carrito.filter(c => c.id !== id);
-        updateCartUI();
-    }
+    function addToCart(id) { const ex = carrito.find(c => c.id === id); if(ex) ex.qty++; else carrito.push({id, qty:1}); updateCartUI(); }
+    function changeQty(id, delta) { const it = carrito.find(c => c.id === id); if(it) { it.qty += delta; if(it.qty <= 0) removeItem(id); else updateCartUI(); } }
+    function removeItem(id) { carrito = carrito.filter(c => c.id !== id); updateCartUI(); }
 
     function updateCartUI() {
-        let totalTotal = 0;
+        let total = 0;
+        document.getElementById("cartCount").innerText = carrito.reduce((a,b)=>a+b.qty,0);
         const list = document.getElementById("cartItemsList");
-        const countBadge = document.getElementById("cartCount");
-        countBadge.innerText = carrito.reduce((a, b) => a + b.qty, 0);
-
-        if (carrito.length === 0) {
-            list.innerHTML = `<p style="text-align:center; opacity:0.5; margin-top:20px;">Carrito vacío</p>`;
-            document.getElementById("cartTotalText").innerText = "Total: $0";
-            return;
-        }
-
-        list.innerHTML = carrito.map(item => {
-            const p = productos.find(x => x.id === item.id);
-            let pUnit = esMayorista ? p.precio_may : p.precio;
-            let tienePromo = false;
-
-            if (p.promo) {
-                const m = p.promo.match(/llevando\s*(\d+)\s*\$?(\d+)/i);
-                if (m && item.qty >= parseInt(m[1])) {
-                    pUnit = parseInt(m[2]) / parseInt(m[1]);
-                    tienePromo = true;
-                }
-            }
-            
-            const sub = pUnit * item.qty;
-            totalTotal += sub;
-
-            return `
-                <div style="background: rgba(255,255,255,0.05); padding: 12px; border-radius: 12px; margin-bottom: 10px; border: 1px solid rgba(128,128,128,0.1)">
-                    <div style="display:flex; justify-content:space-between; margin-bottom: 8px;">
-                        <div style="flex:1">
-                            <div style="font-weight:bold; font-size:13px;">${p.nombre}</div>
-                            <div style="font-size:11px; color: ${tienePromo ? 'var(--promo)' : 'inherit'};">
-                                ${tienePromo ? 'Precio Promo: ' : 'Precio unit: '} $${pUnit.toFixed(0)}
-                            </div>
-                        </div>
-                        <div style="font-weight: 900; color: var(--accent);">$${sub.toFixed(0)}</div>
+        if(!carrito.length) { list.innerHTML = `<p style="text-align:center; opacity:0.5">Vacío</p>`; document.getElementById("cartTotalText").innerText = "Total: $0"; return; }
+        
+        list.innerHTML = carrito.map(it => {
+            const p = productos.find(x => x.id === it.id);
+            let pU = esMayorista ? p.precio_may : p.precio;
+            let promo = false;
+            if(p.promo) { const m = p.promo.match(/llevando\s*(\d+)\s*\$?(\d+)/i); if(m && it.qty >= parseInt(m[1])) { pU = parseInt(m[2]) / parseInt(m[1]); promo = true; } }
+            const sub = pU * it.qty; total += sub;
+            return `<div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:10px; margin-bottom:8px">
+                <div style="display:flex; justify-content:space-between; font-size:13px"><b>${p.nombre}</b><b>$${sub.toFixed(0)}</b></div>
+                <div style="font-size:11px; color:${promo?'var(--promo)':'inherit'}">${promo?'✨ Promo: ':'Unit: '}$${pU.toFixed(0)}</div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:5px">
+                    <div style="background:var(--bg); display:flex; gap:10px; padding:2px 8px; border-radius:5px">
+                        <button onclick="changeQty('${it.id}',-1)" style="background:none; border:none; color:white; cursor:pointer">-</button>
+                        <span>${it.qty}</span>
+                        <button onclick="changeQty('${it.id}',1)" style="background:none; border:none; color:white; cursor:pointer">+</button>
                     </div>
-                    <div style="display:flex; justify-content: space-between; align-items: center;">
-                        <div style="display:flex; gap: 10px; background: var(--bg); padding: 2px 10px; border-radius: 8px;">
-                            <button onclick="changeQty('${item.id}', -1)" style="background:none; border:none; color:white; cursor:pointer;">-</button>
-                            <b>${item.qty}</b>
-                            <button onclick="changeQty('${item.id}', 1)" style="background:none; border:none; color:white; cursor:pointer;">+</button>
-                        </div>
-                        <button onclick="removeItem('${item.id}')" style="background:none; border:none; color:var(--danger); font-size:11px; cursor:pointer;">Eliminar</button>
-                    </div>
-                </div>`;
+                    <button onclick="removeItem('${it.id}')" style="background:none; border:none; color:var(--danger); font-size:10px">Quitar</button>
+                </div>
+            </div>`;
         }).join("");
-        document.getElementById("cartTotalText").innerText = "Total: $" + totalTotal.toFixed(0);
-    }
-
-    function toggleDeliveryForm() {
-        document.getElementById("deliveryForm").style.display = document.getElementById("deliveryMethod").value === "envio" ? "block" : "none";
+        document.getElementById("cartTotalText").innerText = "Total: $" + total.toFixed(0);
     }
 
     async function enviarWhatsApp() {
-        if(!carrito.length) return;
-        const metodo = document.getElementById("deliveryMethod").value;
-        const n = document.getElementById("envioNombre").value;
-        const d = document.getElementById("envioDireccion").value;
-        const l = document.getElementById("envioLocalidad").value;
-        if (metodo === "envio" && (!n || !d || !l)) return alert("Completa los datos de envío.");
-
-        let total = 0;
-        let msg = "*NUEVO PEDIDO NEO*\n--------------------------\n";
-        carrito.forEach(c => {
-            const p = productos.find(x => x.id === c.id);
-            let pFinal = esMayorista ? p.precio_may : p.precio;
-            if (p.promo) {
-                const m = p.promo.match(/llevando\s*(\d+)\s*\$?(\d+)/i);
-                if (m && c.qty >= parseInt(m[1])) pFinal = parseInt(m[2]) / parseInt(m[1]);
-            }
-            const sub = pFinal * c.qty;
-            total += sub;
-            msg += `• ${p.nombre} (x${c.qty}) = $${sub.toFixed(0)}\n`;
+        const met = document.getElementById("deliveryMethod").value;
+        const n = document.getElementById("envioNombre").value, d = document.getElementById("envioDireccion").value, l = document.getElementById("envioLocalidad").value;
+        if(met === "envio" && (!n || !d || !l)) return alert("Completa los datos");
+        let t = 0, msg = "*PEDIDO NEO*\n----------------\n";
+        carrito.forEach(it => {
+            const p = productos.find(x => x.id === it.id);
+            let pF = esMayorista ? p.precio_may : p.precio;
+            if(p.promo) { const m = p.promo.match(/llevando\s*(\d+)\s*\$?(\d+)/i); if(m && it.qty >= parseInt(m[1])) pF = parseInt(m[2]) / parseInt(m[1]); }
+            const sub = pF * it.qty; t += sub;
+            msg += `• ${p.nombre} (x${it.qty}) = $${sub.toFixed(0)}\n`;
         });
-        msg += `--------------------------\n*TOTAL: $${total.toFixed(0)}*\n\n`;
-        msg += `📍 ENTREGA: ${metodo === 'retiro' ? 'Retira en Local' : 'Envío'}\n`;
-        if(metodo === "envio") msg += `👤 ${n}\n🏠 ${d}\n🏙️ ${l}`;
-
-        await db.collection("ventas").add({ creado: Date.now(), hora: new Date().toLocaleString(), total: total.toFixed(0), detalle: msg });
+        msg += `----------------\n*TOTAL: $${t.toFixed(0)}*\n\n📍 ENTREGA: ${met==='retiro'?'Local':'Envío'}\n`;
+        if(met==='envio') msg += `👤 ${n}\n🏠 ${d}\n🏙️ ${l}`;
+        await db.collection("ventas").add({ creado: Date.now(), hora: new Date().toLocaleString(), total: t.toFixed(0), detalle: msg });
         window.open(`https://wa.me/5493434508948?text=${encodeURIComponent(msg)}`);
         carrito = []; updateCartUI(); closeAll();
     }
 
-    // ADMIN Y SESIÓN
-    function verificarAdmin() { if(prompt("Clave:") === "admin") abrirModal("adminModal"); }
-    function abrirModal(id) { document.getElementById(id).style.display = "flex"; }
-    function closeAll() { document.querySelectorAll(".modal").forEach(m => m.style.display = "none"); document.getElementById("cartDrawer").classList.remove("active"); document.getElementById("mainOverlay").classList.remove("active"); }
+    // UTILS
+    function toggleInfo() { document.getElementById("infoDrawer").classList.toggle("active"); document.getElementById("mainOverlay").classList.toggle("active"); }
     function toggleCart() { document.getElementById("cartDrawer").classList.toggle("active"); document.getElementById("mainOverlay").classList.toggle("active"); }
     function toggleTheme() { document.body.classList.toggle("light"); }
-    function tab(t) {
-        ['tab1','tab2','tab3'].forEach(x => document.getElementById(x).style.display = x===t?'block':'none');
-        document.querySelectorAll(".tab-btn").forEach(b => b.classList.toggle("active", b.id==='btn-'+t));
-    }
-    async function guardarProducto() {
-        const id = document.getElementById("editId").value;
-        const data = {
-            nombre: document.getElementById("fNom").value,
-            precio: Number(document.getElementById("fPre").value),
-            precio_may: Number(document.getElementById("fPreM").value),
-            promo: document.getElementById("fPromo").value,
-            stock: Number(document.getElementById("fStock").value),
-            imagen: document.getElementById("fImg").value
-        };
-        id ? await db.collection("productos").doc(id).update(data) : await db.collection("productos").add(data);
-        limpiarForm();
-    }
-    function renderAdminProds() {
-        document.getElementById("adminProdsList").innerHTML = productos.map(p => `<tr><td>${p.nombre}</td><td>${p.stock || 0}</td><td><button onclick="editP('${p.id}')">✏️</button> <button onclick="deleteP('${p.id}')">🗑️</button></td></tr>`).join("");
-    }
-    function editP(id) {
-        const p = productos.find(x => x.id === id);
-        document.getElementById("editId").value = p.id;
-        document.getElementById("fNom").value = p.nombre;
-        document.getElementById("fPre").value = p.precio;
-        document.getElementById("fPreM").value = p.precio_may;
-        document.getElementById("fPromo").value = p.promo || "";
-        document.getElementById("fStock").value = p.stock || 0;
-        document.getElementById("fImg").value = p.imagen || "";
-        tab('tab1');
-    }
+    function toggleDeliveryForm() { document.getElementById("deliveryForm").style.display = document.getElementById("deliveryMethod").value === "envio" ? "block" : "none"; }
+    function closeAll() { document.querySelectorAll(".drawer").forEach(d => d.classList.remove("active")); document.getElementById("mainOverlay").classList.remove("active"); document.querySelectorAll(".modal").forEach(m => m.style.display="none"); }
+    function abrirModal(id) { closeAll(); document.getElementById(id).style.display = "flex"; }
+    function tab(t) { ['tab1','tab2','tab3'].forEach(x => document.getElementById(x).style.display = x===t?'block':'none'); document.querySelectorAll(".tab-btn").forEach(b => b.classList.toggle("active", b.id==='btn-'+t)); }
+    function verificarAdmin() { if(prompt("Clave:") === "admin") abrirModal("adminModal"); }
     function checkLogin() { if(document.getElementById("userInp").value === "mayorista") { esMayorista=true; localStorage.setItem("neo_may", "true"); closeAll(); render(); } }
     function switchAuth(r) { document.getElementById("loginView").style.display = r ? 'none' : 'block'; document.getElementById("regView").style.display = r ? 'block' : 'none'; }
-    async function enviarSolicitud() { await db.collection("solicitudes_mayoristas").add({ nombre: document.getElementById("regNom").value, cuit: document.getElementById("regCuit").value }); alert("Solicitud Enviada"); switchAuth(false); }
-    async function deleteP(id) { if(confirm("¿Borrar?")) await db.collection("productos").doc(id).delete(); }
-    async function aprobarSoli(id) { alert("¡Aprobado!"); await db.collection("solicitudes_mayoristas").doc(id).delete(); }
+    async function enviarSolicitud() { await db.collection("solicitudes_mayoristas").add({ nombre: document.getElementById("regNom").value, cuit: document.getElementById("regCuit").value }); alert("Enviado"); switchAuth(false); }
+    async function guardarProducto() {
+        const id = document.getElementById("editId").value;
+        const d = { nombre: document.getElementById("fNom").value, precio: Number(document.getElementById("fPre").value), precio_may: Number(document.getElementById("fPreM").value), promo: document.getElementById("fPromo").value, stock: Number(document.getElementById("fStock").value), imagen: document.getElementById("fImg").value };
+        id ? await db.collection("productos").doc(id).update(d) : await db.collection("productos").add(d);
+        limpiarForm();
+    }
+    function renderAdminProds() { document.getElementById("adminProdsList").innerHTML = productos.map(p => `<tr><td>${p.nombre}</td><td>${p.stock}</td><td><button onclick="editP('${p.id}')">✏️</button><button onclick="deleteP('${p.id}')">🗑️</button></td></tr>`).join(""); }
+    function editP(id) { const p = productos.find(x => x.id === id); document.getElementById("editId").value=p.id; document.getElementById("fNom").value=p.nombre; document.getElementById("fPre").value=p.precio; document.getElementById("fPreM").value=p.precio_may; document.getElementById("fPromo").value=p.promo||""; document.getElementById("fStock").value=p.stock; document.getElementById("fImg").value=p.imagen||""; tab('tab1'); }
+    async function deleteP(id) { if(confirm("Borrar?")) await db.collection("productos").doc(id).delete(); }
+    async function aprobarSoli(id) { await db.collection("solicitudes_mayoristas").doc(id).delete(); alert("Aprobado"); }
     async function eliminarSoli(id) { await db.collection("solicitudes_mayoristas").doc(id).delete(); }
-    async function vaciarVentas() { if(confirm("¿Borrar historial?")) { const s = await db.collection("ventas").get(); s.forEach(d => d.ref.delete()); } }
+    async function vaciarVentas() { if(confirm("Borrar todo?")) { const s = await db.collection("ventas").get(); s.forEach(d => d.ref.delete()); } }
     function limpiarForm() { document.getElementById("editId").value = ""; document.querySelectorAll("#tab1 input").forEach(i => i.value = ""); }
 </script>
 </body>
