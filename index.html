@@ -27,7 +27,19 @@
         }
         
         .header-left { display: flex; align-items: center; gap: 12px; }
-        .main-logo { height: 60px; width: auto; max-width: 80px; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
+        ..main-logo {
+    height: 85px; /* Antes era 60px */
+    width: auto; 
+    max-width: 120px; /* Antes era 80px */
+    object-fit: contain; 
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+    transition: transform 0.3s ease;
+}
+
+/* Efecto opcional: se agranda un poquito al pasar el mouse */
+.main-logo:hover {
+    transform: scale(1.05);
+}
         .header-icons { display: flex; gap: 15px; align-items: center; }
         .icon-btn { cursor: pointer; font-size: 20px; transition: 0.2s; position: relative; display: flex; align-items: center; }
 
@@ -106,10 +118,14 @@
 
 <div id="infoDrawer" class="drawer">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px">
-        <h2 style="margin:0; color:var(--accent); font-size: 20px;">Menú</h2>
+        <img src="logoo.png" alt="Logo" style="height: 70px; width: auto; object-fit: contain;">
+        
         <span onclick="toggleInfo()" style="cursor:pointer; font-size:24px">✕</span>
     </div>
+
     <div style="flex-grow:1; overflow-y:auto; font-size:14px">
+        <h2 style="margin: 0 0 15px 0; color: var(--accent); font-size: 22px;">Distribuidora Elnen</h2>
+
         <div id="userBadge" style="display:none; background:rgba(59,130,246,0.1); padding:15px; border-radius:15px; margin-bottom:20px; border:1px solid var(--accent)">
             <p style="margin:0; font-weight:bold; color:var(--accent)">MODO MAYORISTA ACTIVO</p>
             <button class="btn" style="background:var(--danger); color:white; padding:5px; margin-top:10px; font-size:11px" onclick="logout()">Cerrar Sesión</button>
