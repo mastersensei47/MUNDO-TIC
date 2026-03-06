@@ -274,29 +274,86 @@
         updateCartUI();
     }
 
-    function updateCartUI() {
-        let total = 0;
-        document.getElementById("cartCount").innerText = carrito.reduce((a,b)=>a+b.qty, 0);
-        const list = document.getElementById("cartItemsList");
-        list.innerHTML = carrito.map(c => {
-            const p = productos.find(x => x.id === c.id);
-            let pUnit = esMayorista ? p.precio_may : p.precio;
-            
-            // Corrección de lógica de promo
-            if (p.promo) {
-                const m = p.promo.match(/llevando\s*(\d+)\s*\$?(\d+)/i);
-                if (m && c.qty >= parseInt(m[1])) pUnit = parseInt(m[2]) / parseInt(m[1]);
-            }
-            
-            const sub = pUnit * c.qty;
-            total += sub;
-            return `<div style="display:flex; justify-content:space-between; margin-bottom:10px; font-size:12px">
-                <span>${p.nombre} (x${c.qty})</span>
-                <b>$${sub.toFixed(0)}</b>
-            </div>`;
-        }).join("");
-        document.getElementById("cartTotalText").innerText = "Total: $" + total.toFixed(0);
+// --- REEMPLAZA ESTAS FUNCIONES EN TU SCRIPT ---
+
+function updateCartUI() {
+    let totalTotal = 0;
+    const list = document.getElementById("cartItemsList");
+    const countBadge = document.getElementById("cartCount");
+    
+    // Actualizar badge del header
+    const totalItems = carrito.reduce((a, b) => a + b.qty, 0);
+    countBadge.innerText = totalItems;
+
+    if (carrito.length === 0) {
+        list.innerHTML = `<p style="text-align:center; opacity:0.5; margin-top:20px;">Tu carrito está vacío</p>`;
+        document.getElementById("cartTotalText").innerText = "Total: $0";
+        return;
     }
+
+    list.innerHTML = carrito.map((item, index) => {
+        const p = productos.find(x => x.id === item.id);
+        let pUnitBase = esMayorista ? p.precio_may : p.precio;
+        let pUnitFinal = pUnitBase;
+        let tienePromo = false;
+
+        // Lógica de detección de Promo
+        if (p.promo) {
+            const m = p.promo.match(/llevando\s*(\d+)\s*\$?(\d+)/i);
+            if (m && item.qty >= parseInt(m[1])) {
+                pUnitFinal = parseInt(m[2]) / parseInt(m[1]);
+                tienePromo = true;
+            }
+        }
+
+        const subtotal = pUnitFinal * item.qty;
+        totalTotal += subtotal;
+
+        return `
+            <div style="background: rgba(255,255,255,0.05); padding: 12px; border-radius: 12px; margin-bottom: 10px; border: 1px solid rgba(128,128,128,0.1)">
+                <div style="display:flex; justify-content:space-between; align-items: flex-start; margin-bottom: 8px;">
+                    <div style="flex:1">
+                        <div style="font-weight:bold; font-size:13px; line-height:1.2">${p.nombre}</div>
+                        <div style="font-size:11px; color: ${tienePromo ? 'var(--promo)' : 'inherit'}; opacity: 0.8; margin-top:4px">
+                            ${tienePromo ? '✨ Precio Promo: ' : 'Precio unit: '} $${pUnitFinal.toFixed(0)}
+                        </div>
+                    </div>
+                    <div style="font-weight: 900; color: var(--accent); font-size: 15px;">$${subtotal.toFixed(0)}</div>
+                </div>
+                
+                <div style="display:flex; justify-content: space-between; align-items: center;">
+                    <div style="display:flex; align-items: center; gap: 10px; background: var(--bg); padding: 5px 10px; border-radius: 8px;">
+                        <button onclick="changeQty('${item.id}', -1)" style="background:none; border:none; color:white; cursor:pointer; font-weight:bold; padding:0 5px">-</button>
+                        <b style="font-size:14px; min-width:20px; text-align:center">${item.qty}</b>
+                        <button onclick="changeQty('${item.id}', 1)" style="background:none; border:none; color:white; cursor:pointer; font-weight:bold; padding:0 5px">+</button>
+                    </div>
+                    <button onclick="removeItem('${item.id}')" style="background:none; border:none; color:var(--danger); font-size:11px; cursor:pointer; text-decoration:underline">Quitar</button>
+                </div>
+            </div>
+        `;
+    }).join("");
+
+    document.getElementById("cartTotalText").innerText = "Total: $" + totalTotal.toFixed(0);
+}
+
+// Función para sumar o restar desde el carrito
+function changeQty(id, delta) {
+    const item = carrito.find(c => c.id === id);
+    if (item) {
+        item.qty += delta;
+        if (item.qty <= 0) {
+            removeItem(id);
+        } else {
+            updateCartUI();
+        }
+    }
+}
+
+// Función para eliminar producto
+function removeItem(id) {
+    carrito = carrito.filter(c => c.id !== id);
+    updateCartUI();
+}
 
     function toggleDeliveryForm() {
         document.getElementById("deliveryForm").style.display = document.getElementById("deliveryMethod").value === "envio" ? "block" : "none";
