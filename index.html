@@ -58,38 +58,16 @@
         .info-box { padding: 15px; flex-grow: 1; display: flex; flex-direction: column; }
         .product-title { margin: 0 0 8px; font-size: 14px; font-weight: 600; height: 34px; overflow: hidden; }
         .price-val { font-size: 22px; font-weight: 800; color: var(--accent); }
-        .btn-add { background: var(--accent); color: white; border: none; padding: 12px; border-radius: 12px; font-weight: 700; cursor: pointer; margin-top: 12px; }
+        .btn-add { background: var(--accent); color: white; border: none; padding: 12px; border-radius: 12px; font-weight: 700; cursor: pointer; margin-top: auto; }
 
-        /* --- CORRECCIÓN DE PANALES (DRAWERS) --- */
-        .drawer { 
-            position: fixed; 
-            top: 0; 
-            width: 85%; 
-            max-width: 320px; 
-            height: 100%; 
-            background: var(--card); 
-            transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
-            z-index: 5000; /* Prioridad máxima */
-            padding: 25px; 
-            box-shadow: 0 0 40px rgba(0,0,0,0.5); 
-            display: flex; 
-            flex-direction: column; 
-            box-sizing: border-box; 
-        }
-        #infoDrawer { left: -110%; } 
+        /* PANALES Y OVERLAY CORREGIDOS */
+        .drawer { position: fixed; top: 0; width: 85%; max-width: 350px; height: 100%; background: var(--card); transition: 0.4s; z-index: 5000; padding: 25px; box-shadow: 0 0 40px rgba(0,0,0,0.5); display: flex; flex-direction: column; box-sizing: border-box; }
+        #infoDrawer { left: -100%; } 
         #infoDrawer.active { left: 0; }
-        #cartDrawer { right: -110%; } 
+        #cartDrawer { right: -100%; } 
         #cartDrawer.active { right: 0; }
         
-        /* OVERLAY CORREGIDO */
-        .overlay { 
-            position: fixed; 
-            inset: 0; 
-            background: rgba(0,0,0,0.6); 
-            backdrop-filter: blur(4px); 
-            display: none; 
-            z-index: 4000; /* Debajo de los drawers pero arriba del resto */
-        }
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); display: none; z-index: 4000; }
         .overlay.active { display: block; }
         
         .qty-badge { position: absolute; top: 0; right: 0; background: var(--danger); color: white; font-size: 10px; padding: 2px 6px; border-radius: 10px; }
@@ -228,6 +206,7 @@
             const matchesCat = p.categoria && p.categoria.toLowerCase() === query;
             return matchesNombre || matchesCat;
         });
+
         cont.innerHTML = filtrados.map(p => `
             <div class="product-card">
                 <div class="img-box"><img src="${p.imagen || 'https://via.placeholder.com/150'}"></div>
@@ -247,29 +226,15 @@
         render();
     }
 
-    /* --- FUNCIONES DE CONTROL CORREGIDAS --- */
+    // CONTROL DE PANELES
     function toggleInfo() { 
-        const d = document.getElementById("infoDrawer");
-        const o = document.getElementById("mainOverlay");
-        // Cerramos el carrito si está abierto
-        document.getElementById("cartDrawer").classList.remove("active");
-        
-        d.classList.toggle("active");
-        if(d.classList.contains("active")) o.classList.add("active");
-        else o.classList.remove("active");
+        document.getElementById("infoDrawer").classList.toggle("active"); 
+        document.getElementById("mainOverlay").classList.toggle("active"); 
     }
-
     function toggleCart() { 
-        const d = document.getElementById("cartDrawer");
-        const o = document.getElementById("mainOverlay");
-        // Cerramos info si está abierto
-        document.getElementById("infoDrawer").classList.remove("active");
-
-        d.classList.toggle("active");
-        if(d.classList.contains("active")) o.classList.add("active");
-        else o.classList.remove("active");
+        document.getElementById("cartDrawer").classList.toggle("active"); 
+        document.getElementById("mainOverlay").classList.toggle("active"); 
     }
-
     function closeAll() { 
         document.getElementById("infoDrawer").classList.remove("active");
         document.getElementById("cartDrawer").classList.remove("active");
@@ -277,6 +242,7 @@
         document.querySelectorAll(".modal").forEach(m => m.style.display = "none");
     }
 
+    // CARRITO
     function addToCart(id) {
         const ex = carrito.find(c => c.id === id);
         if(ex) ex.qty++; else carrito.push({id, qty:1});
@@ -299,6 +265,16 @@
         document.getElementById("cartTotalText").innerText = "Total: $" + total;
     }
 
+    // LOGIN MAYORISTA
+    function checkLogin() {
+        if(document.getElementById("userInp").value === "elnen" && document.getElementById("passInp").value === "mayorista") {
+            localStorage.setItem("neo_may", "true");
+            location.reload();
+        } else alert("Datos incorrectos");
+    }
+    function logout() { localStorage.removeItem("neo_may"); location.reload(); }
+
+    // ADMIN
     function verificarAdmin() { if(prompt("Clave:") === "admin") abrirModal("adminModal"); }
     function abrirModal(id) { closeAll(); document.getElementById(id).style.display = "flex"; }
     
@@ -314,7 +290,8 @@
         };
         id ? await db.collection("productos").doc(id).update(d) : await db.collection("productos").add(d);
         alert("Guardado");
-        closeAll();
+        document.getElementById("editId").value = "";
+        document.querySelectorAll("#adminModal input").forEach(i => i.value = "");
     }
 
     function renderAdminProds() {
@@ -336,6 +313,15 @@
 
     function toggleTheme() { document.body.classList.toggle("light"); }
     function toggleDeliveryForm() { document.getElementById("deliveryForm").style.display = document.getElementById("deliveryMethod").value === "envio" ? "block" : "none"; }
+    
+    function enviarWhatsApp() {
+        let msg = "*NUEVO PEDIDO MS47*\n\n";
+        carrito.forEach(it => {
+            const p = productos.find(x => x.id === it.id);
+            msg += `• ${p.nombre} (x${it.qty}) - $${(esMayorista ? p.precio_may : p.precio) * it.qty}\n`;
+        });
+        window.open(`https://wa.me/5493434508948?text=${encodeURIComponent(msg)}`);
+    }
 </script>
 </body>
 </html>
