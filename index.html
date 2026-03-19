@@ -23,60 +23,56 @@
         header { 
             display: flex; justify-content: space-between; align-items: center; 
             padding: 0 20px; background: var(--card); position: sticky; top: 0; z-index: 1000; 
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3); height: 90px; box-sizing: border-box; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4); height: 100px;
         }
-        .main-logo { height: 70px; width: auto; filter: drop-shadow(0 0 8px var(--accent)); }
-        .icon-btn { cursor: pointer; font-size: 20px; position: relative; padding: 8px; border-radius: 50%; transition: 0.2s; }
+        .main-logo { height: 80px; width: auto; object-fit: contain; }
 
-        .search-container { max-width: 600px; margin: 20px auto; padding: 0 15px; }
-        .search-bar { width: 100%; padding: 15px; border-radius: 14px; border: 1px solid rgba(128,128,128,0.2); background: var(--input-bg); color: inherit; outline: none; }
+        /* BUSCADOR: Como en tu captura, centrado y amplio */
+        .search-container { max-width: 800px; margin: 20px auto; padding: 0 20px; }
+        .search-bar { width: 100%; padding: 15px 25px; border-radius: 15px; border: 1px solid rgba(128,128,128,0.2); background: var(--input-bg); color: inherit; font-size: 16px; outline: none; }
 
-        .products-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; padding: 15px; max-width: 1200px; margin: auto; }
-        @media (min-width: 768px) { .products-grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); } }
+        .header-icons { display: flex; gap: 20px; align-items: center; }
+        .icon-btn { cursor: pointer; font-size: 22px; position: relative; transition: 0.2s; }
+        .badge { position: absolute; top: -8px; right: -10px; background: var(--danger); color: white; font-size: 11px; padding: 2px 7px; border-radius: 12px; font-weight: 800; }
+
+        .products-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; padding: 15px; max-width: 1400px; margin: auto; }
+        @media (min-width: 768px) { .products-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 25px; } }
         
-        .product-card { background: var(--card); border-radius: var(--radius); overflow: hidden; border: 1px solid rgba(128,128,128,0.1); display: flex; flex-direction: column; position: relative; }
-        .promo-badge { position: absolute; top: 10px; left: 10px; background: var(--promo); color: #000; font-size: 10px; font-weight: 800; padding: 4px 8px; border-radius: 6px; z-index: 5; }
-        .img-box { background: #fff; height: 160px; display: flex; align-items: center; justify-content: center; padding: 10px; }
-        .img-box img { max-width: 100%; max-height: 100%; object-fit: contain; }
+        .product-card { background: var(--card); border-radius: 20px; overflow: hidden; border: 1px solid rgba(128,128,128,0.1); position: relative; display: flex; flex-direction: column; transition: 0.3s; }
+        .promo-tag { position: absolute; top: 12px; left: 12px; background: var(--promo); color: #000; font-size: 11px; font-weight: 800; padding: 5px 10px; border-radius: 8px; z-index: 10; }
         
-        .info-box { padding: 15px; flex-grow: 1; display: flex; flex-direction: column; }
-        .product-title { font-size: 14px; font-weight: 600; margin-bottom: 10px; height: 35px; overflow: hidden; }
-        .price-val { font-size: 20px; font-weight: 800; color: var(--accent); }
+        .img-container { background: #fff; height: 180px; display: flex; align-items: center; justify-content: center; padding: 10px; }
+        .img-container img { max-width: 90%; max-height: 90%; object-fit: contain; }
+        
+        .product-info { padding: 15px; flex-grow: 1; display: flex; flex-direction: column; }
+        .product-name { font-size: 15px; font-weight: 600; margin-bottom: 8px; height: 36px; overflow: hidden; }
+        .product-price { font-size: 22px; font-weight: 900; color: var(--accent); margin-bottom: 15px; }
 
-        .drawer { position: fixed; top: 0; width: 85%; max-width: 380px; height: 100%; background: var(--card); transition: 0.5s; z-index: 5000; padding: 25px; box-sizing: border-box; display: flex; flex-direction: column; box-shadow: 0 0 50px rgba(0,0,0,0.5); }
-        #infoDrawer { left: -100%; } #infoDrawer.active { left: 0; }
+        .drawer { position: fixed; top: 0; width: 85%; max-width: 400px; height: 100%; background: var(--card); transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); z-index: 5000; padding: 25px; box-sizing: border-box; display: flex; flex-direction: column; box-shadow: -10px 0 30px rgba(0,0,0,0.5); }
         #cartDrawer { right: -100%; } #cartDrawer.active { right: 0; }
+        #menuDrawer { left: -100%; } #menuDrawer.active { left: 0; }
+
+        .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid rgba(128,128,128,0.1); }
+        .qty-box { display: flex; align-items: center; gap: 12px; background: rgba(0,0,0,0.2); padding: 5px 12px; border-radius: 10px; }
         
-        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); display: none; z-index: 4000; }
+        .btn-action { background: var(--accent); color: white; border: none; padding: 14px; border-radius: 12px; font-weight: 700; cursor: pointer; width: 100%; transition: 0.2s; }
+        .btn-action:active { transform: scale(0.97); }
+
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(4px); display: none; z-index: 4000; }
         .overlay.active { display: block; }
-
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); display: none; justify-content: center; align-items: center; z-index: 6000; padding: 20px; }
-        .modal-content { background: var(--card); padding: 25px; border-radius: 20px; width: 100%; max-width: 550px; border: 1px solid rgba(255,255,255,0.1); }
-
-        .qty-controls { display: flex; align-items: center; gap: 10px; background: rgba(0,0,0,0.2); padding: 5px 10px; border-radius: 8px; width: fit-content; }
-        .qty-btn { background: none; border: none; color: white; font-weight: bold; cursor: pointer; padding: 0 5px; }
-
-        .summary-box { background: rgba(0,0,0,0.2); padding: 15px; border-radius: 12px; margin: 15px 0; font-size: 14px; }
-        .summary-item { display: flex; justify-content: space-between; margin-bottom: 5px; }
-        .total-row { font-size: 18px; font-weight: 800; color: var(--accent); border-top: 1px dashed gray; margin-top: 10px; padding-top: 10px; }
-
-        input, select { width: 100%; padding: 12px; margin: 8px 0; border-radius: 10px; border: 1px solid rgba(128,128,128,0.2); background: var(--input-bg); color: inherit; box-sizing: border-box; }
-        .btn-main { background: var(--accent); color: white; border: none; padding: 15px; border-radius: 12px; font-weight: 700; cursor: pointer; width: 100%; }
-        .back-btn { background: none; border: 1px solid rgba(255,255,255,0.2); color: var(--text); padding: 10px; border-radius: 10px; width: 100%; margin-top: 10px; cursor: pointer; }
     </style>
 </head>
 <body class="dark">
 
 <header>
-    <div class="header-left">
-        <span class="icon-btn" onclick="toggleInfo()">☰</span>
+    <div style="display: flex; align-items: center; gap: 15px;">
+        <span class="icon-btn" onclick="toggleMenu()">☰</span>
         <img src="logoo.png" class="main-logo">
     </div>
     <div class="header-icons">
         <span class="icon-btn" onclick="toggleTheme()">🌗</span>
-        <span class="icon-btn" onclick="abrirModal('loginModal')">👤</span>
         <span class="icon-btn" onclick="verificarAdmin()">⚙️</span>
-        <div class="icon-btn" onclick="toggleCart()">🛒 <b id="cartCount" style="background:var(--danger); font-size:10px; padding:2px 6px; border-radius:10px; position:absolute; top:-5px; right:-5px">0</b></div>
+        <div class="icon-btn" onclick="toggleCart()">🛒 <b id="cartCount" class="badge">0</b></div>
     </div>
 </header>
 
@@ -88,68 +84,29 @@
 
 <div class="overlay" id="mainOverlay" onclick="closeAll()"></div>
 
-<div class="modal" id="loginModal">
-    <div class="modal-content" style="max-width:380px">
-        <div id="loginView">
-            <h2 style="margin-top:0">Acceso Mayorista</h2>
-            <input id="userInp" placeholder="Usuario">
-            <input id="passInp" type="password" placeholder="Contraseña">
-            <button class="btn-main" onclick="checkLogin()">INGRESAR</button>
-            <p style="text-align:center; font-size:13px">¿No tenés cuenta? <b style="color:var(--accent); cursor:pointer" onclick="switchAuth(true)">Solicitar alta</b></p>
-            <button class="back-btn" onclick="closeAll()">VOLVER</button>
-        </div>
-        <div id="regView" style="display:none">
-            <h2>Solicitud de Alta</h2>
-            <input id="regNom" placeholder="Nombre / Comercio">
-            <input id="regTel" placeholder="WhatsApp">
-            <input id="regUser" placeholder="Usuario deseado">
-            <input id="regPass" type="password" placeholder="Contraseña deseada">
-            <button class="btn-main" style="background:var(--success)" onclick="enviarSolicitud()">ENVIAR SOLICITUD</button>
-            <button class="back-btn" onclick="switchAuth(false)">VOLVER AL LOGIN</button>
-        </div>
-    </div>
-</div>
-
-<div class="modal" id="adminModal">
-    <div class="modal-content">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px">
-            <h3 style="margin:0">Panel Maestro</h3>
-            <button onclick="closeAll()" style="background:none; border:none; color:white; font-size:20px">✕</button>
-        </div>
-        <div id="adminContent" style="max-height:70vh; overflow-y:auto">
-            <p>Panel cargado correctamente.</p>
-        </div>
-    </div>
-</div>
-
-<div id="infoDrawer" class="drawer">
-    <h2 style="color:var(--accent)">Mi Perfil</h2>
-    <div id="userBadge" style="display:none; background:rgba(16,185,129,0.1); padding:15px; border-radius:12px; color:var(--success); border:1px solid var(--success); margin-bottom:20px">✓ MAYORISTA ACTIVO</div>
-    <p>📍 Belgrano 7102, Santa Fe</p>
-    <p>📞 3434508948</p>
-    <button class="btn-main" style="background:var(--danger); margin-top:auto" onclick="logout()">Cerrar Sesión</button>
-</div>
-
 <div id="cartDrawer" class="drawer">
-    <h2 style="margin-top:0">Mi Pedido</h2>
-    <div id="cartItemsList" style="flex-grow:1; overflow-y:auto"></div>
-    
-    <div class="summary-box">
-        <select id="deliveryMethod" onchange="toggleDeliveryForm(); updateCartUI();">
-            <option value="retiro">Retiro en local</option>
-            <option value="envio">Envío a domicilio</option>
-        </select>
-        <div id="deliveryForm" style="display:none">
-            <input id="envioNombre" placeholder="Nombre">
-            <input id="envioDir" placeholder="Dirección">
-        </div>
-        <div id="summaryContent"></div>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px">
+        <h2 style="margin:0">Mi Pedido</h2>
+        <span onclick="toggleCart()" style="cursor:pointer; font-size:24px">✕</span>
     </div>
+    <div id="cartItemsList" style="flex-grow:1; overflow-y:auto"></div>
+    <div id="cartSummary" style="margin-top:20px; padding-top:20px; border-top:2px dashed rgba(128,128,128,0.3)">
+        </div>
+    <button class="btn-action" style="background:#25d366; margin-top:15px" onclick="enviarWhatsApp()">PEDIR POR WHATSAPP</button>
+</div>
 
-    <button class="btn-main" style="background:#25d366" onclick="finalizarPedido()">ENVIAR WHATSAPP</button>
+<div id="menuDrawer" class="drawer">
+    <h2 style="color:var(--accent)">Distribuidora Elnen</h2>
+    <hr style="opacity:0.1; margin:20px 0">
+    <p>📍 Belgrano 7102, Santa Fe</p>
+    <p>📞 WhatsApp: 3434508948</p>
+    <div style="margin-top:auto">
+        <button class="btn-action" onclick="logout()">Cerrar Sesión</button>
+    </div>
 </div>
 
 <script>
+    // Configuración Firebase
     const firebaseConfig = {
         apiKey: "AIzaSyDAqlchDsLHIMMbv6YL2ipggaShXlFqiW8",
         authDomain: "tienda-online-baaf6.firebaseapp.com",
@@ -161,123 +118,125 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    let productos = [], carrito = [], usuarios = [];
+    let productos = [], carrito = [];
     let esMayorista = localStorage.getItem("ms47_may") === "true";
 
-    db.collection("productos").onSnapshot(s => { productos = s.docs.map(d => ({id:d.id, ...d.data()})); render(); });
-    db.collection("usuarios_mayoristas").onSnapshot(s => { usuarios = s.docs.map(d => ({id:d.id, ...d.data()})); });
+    // Listener de productos
+    db.collection("productos").onSnapshot(snap => {
+        productos = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        render();
+    });
 
     function render() {
-        const q = document.getElementById("searchInput").value.toLowerCase();
+        const query = document.getElementById("searchInput").value.toLowerCase();
         const cont = document.getElementById("productsCont");
-        cont.innerHTML = productos.filter(p => p.nombre.toLowerCase().includes(q)).map(p => `
+        
+        cont.innerHTML = productos.filter(p => p.nombre.toLowerCase().includes(query)).map(p => {
+            const precioMostrar = esMayorista ? p.precio_may : p.precio;
+            return `
             <div class="product-card">
-                ${p.promo ? `<div class="promo-badge">${p.promo}</div>` : ''}
-                <div class="img-box"><img src="${p.imagen}"></div>
-                <div class="info-box">
-                    <span class="product-title">${p.nombre}</span>
-                    <span class="price-val">$${esMayorista ? p.precio_may : p.precio}</span>
-                    <button class="btn-main" style="margin-top:10px; padding:10px; font-size:12px" onclick="addToCart('${p.id}')">AGREGAR</button>
+                ${p.promo && !esMayorista ? `<div class="promo-tag">Llevando ${p.promo}</div>` : ''}
+                <div class="img-container"><img src="${p.imagen}"></div>
+                <div class="product-info">
+                    <span class="product-name">${p.nombre}</span>
+                    <span class="product-price">$${precioMostrar}</span>
+                    <button class="btn-action" onclick="addToCart('${p.id}')">AGREGAR</button>
                 </div>
-            </div>`).join("");
-        if(esMayorista) document.getElementById("userBadge").style.display = "block";
+            </div>`;
+        }).join("");
+    }
+
+    // LÓGICA DE CÁLCULO DE PROMOCIONES (Basado en tus fotos)
+    function calcularPrecioFinal(p, qty) {
+        let precioBase = esMayorista ? p.precio_may : p.precio;
+        
+        if (!esMayorista && p.promo) {
+            // Ejemplo de p.promo: "3 10000" o "3x10000"
+            const match = p.promo.match(/(\d+)\s*[xX]?\s*(\d+)/);
+            if (match) {
+                const cantRequerida = parseInt(match[1]);
+                const precioPromoTotal = parseInt(match[2]);
+                if (qty >= cantRequerida) {
+                    return (precioPromoTotal / cantRequerida); // Precio unitario con descuento
+                }
+            }
+        }
+        return precioBase;
     }
 
     function updateCartUI() {
-        let subtotalItems = 0, ahorroTotal = 0;
+        let total = 0;
         const list = document.getElementById("cartItemsList");
         
         list.innerHTML = carrito.map(it => {
             const p = productos.find(x => x.id === it.id);
-            const pBase = esMayorista ? p.precio_may : p.precio;
-            let pFinal = pBase, ahorroIt = 0;
-
-            // Lógica de promos automática (ej: llevando 3 5000)
-            if(!esMayorista && p.promo) {
-                const match = p.promo.match(/llevando\s*(\d+)\s*\$?(\d+)/i);
-                if(match && it.qty >= parseInt(match[1])) {
-                    pFinal = parseInt(match[2]) / parseInt(match[1]);
-                    ahorroIt = (pBase - pFinal) * it.qty;
-                }
-            }
-
-            subtotalItems += pBase * it.qty;
-            ahorroTotal += ahorroIt;
+            const precioUnitarioReal = calcularPrecioFinal(p, it.qty);
+            const subtotal = precioUnitarioReal * it.qty;
+            total += subtotal;
 
             return `
-                <div style="border-bottom:1px solid rgba(255,255,255,0.05); padding:10px 0">
-                    <div style="display:flex; justify-content:space-between">
-                        <small>${p.nombre}</small>
-                        <b>$${(pFinal * it.qty).toFixed(0)}</b>
-                    </div>
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:5px">
-                        <div class="qty-controls">
-                            <button class="qty-btn" onclick="changeQty('${it.id}', -1)">-</button>
-                            <span>${it.qty}</span>
-                            <button class="qty-btn" onclick="changeQty('${it.id}', 1)">+</button>
-                        </div>
-                        <small style="color:var(--danger); cursor:pointer" onclick="removeItem('${it.id}')">Quitar</small>
-                    </div>
-                </div>`;
+            <div class="cart-item">
+                <div style="flex:1">
+                    <div style="font-weight:600; font-size:14px">${p.nombre}</div>
+                    <div style="color:var(--accent); font-weight:800">$${subtotal.toFixed(0)}</div>
+                </div>
+                <div class="qty-box">
+                    <span style="cursor:pointer" onclick="changeQty('${it.id}', -1)">-</span>
+                    <b style="min-width:20px; text-align:center">${it.qty}</b>
+                    <span style="cursor:pointer" onclick="changeQty('${it.id}', 1)">+</span>
+                </div>
+            </div>`;
         }).join("");
 
-        const total = subtotalItems - ahorroTotal;
-        document.getElementById("summaryContent").innerHTML = `
-            <div class="summary-item"><span>Subtotal:</span> <span>$${subtotalItems}</span></div>
-            ${ahorroTotal > 0 ? `<div class="summary-item" style="color:var(--success)"><span>Ahorro:</span> <span>-$${ahorroTotal.toFixed(0)}</span></div>` : ''}
-            <div class="summary-item total-row"><span>TOTAL:</span> <span>$${total.toFixed(0)}</span></div>
+        document.getElementById("cartCount").innerText = carrito.reduce((a, b) => a + b.qty, 0);
+        document.getElementById("cartSummary").innerHTML = `
+            <div style="display:flex; justify-content:space-between; font-size:22px; font-weight:900">
+                <span>TOTAL:</span>
+                <span style="color:var(--accent)">$${total.toFixed(0)}</span>
+            </div>
         `;
-        document.getElementById("cartCount").innerText = carrito.reduce((a,b)=>a+b.qty, 0);
     }
 
-    async function finalizarPedido() {
+    function enviarWhatsApp() {
         if(!carrito.length) return;
-        const met = document.getElementById("deliveryMethod").value;
-        let msg = `*NUEVO PEDIDO MS47*\n------------------\n`;
-        let totalFinal = 0;
-
+        let totalG = 0;
+        let msg = "*PEDIDO DISTRIBUIDORA ELNEN*\n--------------------------\n";
+        
         carrito.forEach(it => {
             const p = productos.find(x => x.id === it.id);
-            let pBase = esMayorista ? p.precio_may : p.precio;
-            let pFinal = pBase;
-            if(!esMayorista && p.promo) {
-                const match = p.promo.match(/llevando\s*(\d+)\s*\$?(\d+)/i);
-                if(match && it.qty >= parseInt(match[1])) pFinal = parseInt(match[2]) / parseInt(match[1]);
-            }
-            msg += `• ${p.nombre} (x${it.qty}) - $${(pFinal*it.qty).toFixed(0)}\n`;
-            totalFinal += (pFinal*it.qty);
+            const pReal = calcularPrecioFinal(p, it.qty);
+            const sub = pReal * it.qty;
+            msg += `• ${p.nombre} (x${it.qty}) -> $${sub.toFixed(0)}\n`;
+            totalG += sub;
         });
-
-        msg += `------------------\n*TOTAL: $${totalFinal.toFixed(0)}*\n`;
-        msg += `📍 MODO: ${met === 'envio' ? 'Envío a domicilio' : 'Retiro en Local'}`;
         
-        await db.collection("ventas").add({ total: totalFinal, detalle: msg, fecha: Date.now() });
+        msg += `--------------------------\n*TOTAL A PAGAR: $${totalG.toFixed(0)}*`;
         window.open(`https://wa.me/5493434508948?text=${encodeURIComponent(msg)}`);
     }
 
-    function addToCart(id) { const ex = carrito.find(c => c.id === id); if(ex) ex.qty++; else carrito.push({id, qty:1}); updateCartUI(); }
-    function changeQty(id, delta) { const it = carrito.find(c => c.id === id); if(it) { it.qty += delta; if(it.qty <= 0) removeItem(id); else updateCartUI(); } }
-    function removeItem(id) { carrito = carrito.filter(c => c.id !== id); updateCartUI(); }
-    function toggleDeliveryForm() { document.getElementById("deliveryForm").style.display = document.getElementById("deliveryMethod").value === "envio" ? "block" : "none"; }
-    function switchAuth(r) { document.getElementById("loginView").style.display = r ? 'none' : 'block'; document.getElementById("regView").style.display = r ? 'block' : 'none'; }
-    function closeAll() { document.querySelectorAll(".drawer").forEach(d => d.classList.remove("active")); document.getElementById("mainOverlay").classList.remove("active"); document.querySelectorAll(".modal").forEach(m => m.style.display="none"); }
-    function abrirModal(id) { closeAll(); document.getElementById(id).style.display = "flex"; }
-    function toggleInfo() { document.getElementById("infoDrawer").classList.toggle("active"); document.getElementById("mainOverlay").classList.toggle("active"); }
-    function toggleCart() { document.getElementById("cartDrawer").classList.toggle("active"); document.getElementById("mainOverlay").classList.toggle("active"); }
-    function toggleTheme() { document.body.classList.toggle("light"); }
+    // Funciones de control
+    function addToCart(id) { 
+        const ex = carrito.find(c => c.id === id); 
+        if(ex) ex.qty++; else carrito.push({id, qty:1}); 
+        updateCartUI(); 
+        if(!document.getElementById("cartDrawer").classList.contains("active")) toggleCart();
+    }
     
-    async function checkLogin() {
-        const u = document.getElementById("userInp").value, p = document.getElementById("passInp").value;
-        const user = usuarios.find(x => x.user === u && x.pass === p);
-        if(user) { localStorage.setItem("ms47_may", "true"); location.reload(); } else alert("Credenciales incorrectas");
+    function changeQty(id, delta) {
+        const it = carrito.find(c => c.id === id);
+        if(it) {
+            it.qty += delta;
+            if(it.qty <= 0) carrito = carrito.filter(c => c.id !== id);
+            updateCartUI();
+        }
     }
+
+    function toggleCart() { document.getElementById("cartDrawer").classList.toggle("active"); document.getElementById("mainOverlay").classList.toggle("active"); }
+    function toggleMenu() { document.getElementById("menuDrawer").classList.toggle("active"); document.getElementById("mainOverlay").classList.toggle("active"); }
+    function closeAll() { document.querySelectorAll(".drawer").forEach(d => d.classList.remove("active")); document.getElementById("mainOverlay").classList.remove("active"); }
+    function toggleTheme() { document.body.classList.toggle("light"); }
     function logout() { localStorage.removeItem("ms47_may"); location.reload(); }
-    function verificarAdmin() { if(prompt("Clave:") === "admin") abrirModal("adminModal"); }
-    async function enviarSolicitud() {
-        const d = { nombre: document.getElementById("regNom").value, tel: document.getElementById("regTel").value, user: document.getElementById("regUser").value, pass: document.getElementById("regPass").value };
-        await db.collection("solicitudes_mayoristas").add(d);
-        alert("Solicitud enviada con éxito."); switchAuth(false);
-    }
+    function verificarAdmin() { if(prompt("Contraseña Admin:") === "admin47") alert("Acceso concedido (Simulado)"); }
 </script>
 </body>
 </html>
