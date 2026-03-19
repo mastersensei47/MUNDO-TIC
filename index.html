@@ -51,7 +51,8 @@
         .products-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 15px; max-width: 1200px; margin: auto; }
         @media (min-width: 768px) { .products-grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; } }
         
-        .product-card { background: var(--card); border-radius: var(--radius); overflow: hidden; border: 1px solid rgba(128,128,128,0.1); transition: 0.3s; display: flex; flex-direction: column; }
+        .product-card { background: var(--card); border-radius: var(--radius); overflow: hidden; border: 1px solid rgba(128,128,128,0.1); transition: 0.3s; display: flex; flex-direction: column; position: relative; }
+        .promo-badge { position: absolute; top: 10px; left: 10px; background: var(--promo); color: #000; font-size: 10px; font-weight: 800; padding: 4px 8px; border-radius: 6px; z-index: 5; }
         .img-box { background: #fff; width: 100%; height: 150px; display: flex; align-items: center; justify-content: center; padding: 10px; box-sizing: border-box; }
         .img-box img { max-width: 100%; max-height: 100%; object-fit: contain; }
         
@@ -60,7 +61,7 @@
         .price-val { font-size: 22px; font-weight: 800; color: var(--accent); }
         .btn-add { background: var(--accent); color: white; border: none; padding: 12px; border-radius: 12px; font-weight: 700; cursor: pointer; margin-top: auto; }
 
-        /* PANALES Y OVERLAY CORREGIDOS */
+        /* ARREGLO DE DRAWERS */
         .drawer { position: fixed; top: 0; width: 85%; max-width: 350px; height: 100%; background: var(--card); transition: 0.4s; z-index: 5000; padding: 25px; box-shadow: 0 0 40px rgba(0,0,0,0.5); display: flex; flex-direction: column; box-sizing: border-box; }
         #infoDrawer { left: -100%; } 
         #infoDrawer.active { left: 0; }
@@ -155,6 +156,7 @@
                 <input id="fPre" type="number" placeholder="Precio Público">
                 <input id="fPreM" type="number" placeholder="Precio Mayor">
             </div>
+            <input id="fPromo" placeholder="Promo (Ej: Llevando 2 $5000)">
             <input id="fCat" placeholder="Categoría (bebida, snack, almacen)">
             <input id="fImg" placeholder="Link Imagen">
             <input id="fStock" type="number" placeholder="Stock">
@@ -209,6 +211,7 @@
 
         cont.innerHTML = filtrados.map(p => `
             <div class="product-card">
+                ${p.promo ? `<div class="promo-badge">${p.promo}</div>` : ''}
                 <div class="img-box"><img src="${p.imagen || 'https://via.placeholder.com/150'}"></div>
                 <div class="info-box">
                     <h4 class="product-title">${p.nombre}</h4>
@@ -226,7 +229,6 @@
         render();
     }
 
-    // CONTROL DE PANELES
     function toggleInfo() { 
         document.getElementById("infoDrawer").classList.toggle("active"); 
         document.getElementById("mainOverlay").classList.toggle("active"); 
@@ -242,7 +244,6 @@
         document.querySelectorAll(".modal").forEach(m => m.style.display = "none");
     }
 
-    // CARRITO
     function addToCart(id) {
         const ex = carrito.find(c => c.id === id);
         if(ex) ex.qty++; else carrito.push({id, qty:1});
@@ -265,7 +266,6 @@
         document.getElementById("cartTotalText").innerText = "Total: $" + total;
     }
 
-    // LOGIN MAYORISTA
     function checkLogin() {
         if(document.getElementById("userInp").value === "elnen" && document.getElementById("passInp").value === "mayorista") {
             localStorage.setItem("neo_may", "true");
@@ -274,7 +274,6 @@
     }
     function logout() { localStorage.removeItem("neo_may"); location.reload(); }
 
-    // ADMIN
     function verificarAdmin() { if(prompt("Clave:") === "admin") abrirModal("adminModal"); }
     function abrirModal(id) { closeAll(); document.getElementById(id).style.display = "flex"; }
     
@@ -283,7 +282,8 @@
         const d = { 
             nombre: document.getElementById("fNom").value, 
             precio: Number(document.getElementById("fPre").value), 
-            precio_may: Number(document.getElementById("fPreM").value), 
+            precio_may: Number(document.getElementById("fPreM").value),
+            promo: document.getElementById("fPromo").value,
             categoria: document.getElementById("fCat").value.toLowerCase(), 
             stock: Number(document.getElementById("fStock").value), 
             imagen: document.getElementById("fImg").value 
@@ -306,6 +306,7 @@
         document.getElementById("fNom").value = p.nombre;
         document.getElementById("fPre").value = p.precio;
         document.getElementById("fPreM").value = p.precio_may;
+        document.getElementById("fPromo").value = p.promo || "";
         document.getElementById("fCat").value = p.categoria || "";
         document.getElementById("fStock").value = p.stock || 0;
         document.getElementById("fImg").value = p.imagen || "";
@@ -316,10 +317,18 @@
     
     function enviarWhatsApp() {
         let msg = "*NUEVO PEDIDO MS47*\n\n";
+        const metodo = document.getElementById("deliveryMethod").value;
+        if(metodo === "envio") {
+            msg += `👤 *Cliente:* ${document.getElementById("envioNombre").value}\n`;
+            msg += `📍 *Dirección:* ${document.getElementById("envioDireccion").value}\n\n`;
+        } else {
+            msg += `🏪 *Retiro en local*\n\n`;
+        }
         carrito.forEach(it => {
             const p = productos.find(x => x.id === it.id);
             msg += `• ${p.nombre} (x${it.qty}) - $${(esMayorista ? p.precio_may : p.precio) * it.qty}\n`;
         });
+        msg += `\n*TOTAL: ${document.getElementById("cartTotalText").innerText}*`;
         window.open(`https://wa.me/5493434508948?text=${encodeURIComponent(msg)}`);
     }
 </script>
