@@ -10,164 +10,152 @@
 
     <style>
         :root {
-            --bg: #0f172a; 
-            --card: #1e293b; 
-            --text: #f1f5f9; 
-            --accent: #3b82f6;
-            --glass: rgba(30, 41, 59, 0.8);
+            --bg: #0f172a; --card: #1e293b; --text: #f1f5f9; --accent: #3b82f6;
+            --success: #10b981; --danger: #ef4444; --glass: rgba(30, 41, 59, 0.85);
             --radius: 18px;
         }
 
-        body { 
-            margin: 0; 
-            font-family: 'Inter', sans-serif; 
-            background: var(--bg); 
-            color: var(--text); 
-            scroll-behavior: smooth;
-        }
+        body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); scroll-behavior: smooth; overflow-x: hidden; }
 
-        /* --- 6. HEADER MEJORADO (Glass Effect) --- */
+        /* --- HEADER MODERNO --- */
         header { 
             display: flex; justify-content: space-between; align-items: center; 
-            padding: 15px 20px; 
-            background: var(--glass); 
-            backdrop-filter: blur(12px);
-            position: sticky; top: 0; z-index: 1000; 
-            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding: 10px 20px; background: var(--glass); backdrop-filter: blur(15px);
+            position: sticky; top: 0; z-index: 1000; border-bottom: 1px solid rgba(255,255,255,0.05);
+            height: 80px; box-sizing: border-box;
         }
-        .header-info { font-size: 12px; color: var(--accent); font-weight: 600; margin-top: 2px; }
+        .header-left { display: flex; align-items: center; gap: 12px; }
+        .header-info { font-size: 11px; color: var(--accent); font-weight: 700; display: block; }
 
-        /* --- 1. HERO SECTION --- */
+        /* --- HERO --- */
         .hero {
-            height: 70vh;
-            background: linear-gradient(rgba(15, 23, 42, 0.6), rgba(15, 23, 42, 0.8)), 
-                        url('https://images.unsplash.com/photo-1604719312566-8912e9227c6a?q=80&w=1500&auto=format&fit=crop');
+            height: 65vh; min-height: 450px;
+            background: linear-gradient(rgba(15,23,42,0.6), rgba(15,23,42,0.8)), url('https://images.unsplash.com/photo-1578916171728-46686eac8d58?q=80&w=1500&auto=format&fit=crop');
             background-size: cover; background-position: center;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
             text-align: center; padding: 20px;
         }
-        .hero h1 { font-size: clamp(2.5rem, 8vw, 4rem); margin: 0; font-weight: 800; text-transform: uppercase; }
-        .hero p { font-size: 1.2rem; opacity: 0.9; margin: 15px 0 30px; max-width: 600px; }
-        .cta-btn { 
-            background: var(--accent); color: white; padding: 18px 40px; 
-            border-radius: 50px; text-decoration: none; font-weight: 800;
-            transition: 0.3s; border: none; cursor: pointer;
-        }
-        .cta-btn:hover { transform: scale(1.05); box-shadow: 0 0 20px rgba(59, 130, 246, 0.5); }
+        .hero h1 { font-size: clamp(2rem, 8vw, 3.5rem); margin: 0; font-weight: 800; }
+        .hero p { font-size: 1.1rem; opacity: 0.9; margin: 15px 0 30px; max-width: 650px; }
 
-        /* --- 2. CATEGORÍAS VISUALES --- */
-        .categories-section { padding: 40px 20px; max-width: 1200px; margin: auto; }
-        .cat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+        /* --- CATEGORÍAS --- */
+        .cat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; padding: 0 20px 40px; max-width: 1200px; margin: auto; }
         .cat-card {
-            background: var(--card); padding: 25px 15px; border-radius: var(--radius);
-            text-align: center; cursor: pointer; border: 1px solid rgba(255,255,255,0.05);
-            transition: 0.3s; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            background: var(--card); padding: 20px; border-radius: var(--radius); text-align: center;
+            cursor: pointer; border: 1px solid rgba(255,255,255,0.05); transition: 0.3s;
         }
-        .cat-card:hover { transform: translateY(-5px); border-color: var(--accent); }
-        .cat-card i { font-size: 2.5rem; display: block; margin-bottom: 10px; }
+        .cat-card:hover { transform: translateY(-5px); background: var(--accent); }
+        .cat-card span { font-size: 30px; display: block; margin-bottom: 8px; }
 
-        /* --- 3. PRODUCT CARDS & 7. MOBILE OPTIMIZATION --- */
-        .products-grid { 
-            display: grid; 
-            grid-template-columns: repeat(2, 1fr); /* 2 columnas en mobile */
-            gap: 15px; padding: 20px; max-width: 1200px; margin: auto;
-        }
-        @media (min-width: 768px) { .products-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); } }
-
+        /* --- PRODUCTOS (2 Columnas en Mobile) --- */
+        .products-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; padding: 20px; max-width: 1200px; margin: auto; }
+        @media (min-width: 1024px) { .products-grid { grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); } }
+        
         .product-card { 
             background: var(--card); border-radius: var(--radius); overflow: hidden; 
-            transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            border: 1px solid rgba(255,255,255,0.05); display: flex; flex-direction: column;
+            border: 1px solid rgba(255,255,255,0.05); transition: 0.4s; display: flex; flex-direction: column;
         }
-        .product-card:hover { transform: scale(1.03); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.4); }
-        
-        .img-container { background: white; height: 160px; display: flex; align-items: center; justify-content: center; padding: 10px; }
-        .img-container img { max-width: 100%; max-height: 100%; object-fit: contain; }
+        .product-card:hover { transform: translateY(-8px); box-shadow: 0 15px 30px rgba(0,0,0,0.4); }
+        .img-box { background: white; height: 160px; display: flex; align-items: center; justify-content: center; padding: 10px; }
+        .img-box img { max-width: 90%; max-height: 90%; object-fit: contain; }
 
-        .info { padding: 15px; flex-grow: 1; display: flex; flex-direction: column; }
-        .p-name { font-size: 14px; font-weight: 600; margin: 0 0 10px; height: 35px; overflow: hidden; }
-        .p-price { font-size: 20px; font-weight: 800; color: var(--accent); margin-top: auto; }
+        .info-box { padding: 15px; flex-grow: 1; display: flex; flex-direction: column; }
+        .p-title { font-size: 14px; font-weight: 600; margin: 0 0 10px; height: 34px; overflow: hidden; }
+        .p-price { font-size: 22px; font-weight: 800; color: var(--accent); margin-top: auto; }
+        .btn-add { background: var(--accent); color: white; border: none; padding: 12px; border-radius: 12px; font-weight: 700; cursor: pointer; margin-top: 12px; width: 100%; }
 
-        /* Botón de añadir (Más grande para mobile) */
-        .add-btn { 
-            width: 100%; padding: 12px; margin-top: 15px; border-radius: 12px;
-            background: var(--accent); color: white; border: none; font-weight: 700; cursor: pointer;
-        }
+        /* --- DRAWERS (Vuelven los paneles laterales) --- */
+        .drawer { position: fixed; top: 0; width: 85%; max-width: 350px; height: 100%; background: var(--card); transition: 0.4s; z-index: 3000; padding: 25px; box-sizing: border-box; box-shadow: 0 0 50px rgba(0,0,0,0.5); }
+        #infoDrawer { left: -100%; } #infoDrawer.active { left: 0; }
+        #cartDrawer { right: -100%; } #cartDrawer.active { right: 0; }
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); display: none; z-index: 2000; }
+        .overlay.active { display: block; }
 
-        /* Utilidades */
-        .search-container { padding: 20px; max-width: 600px; margin: auto; }
-        input[type="text"] { 
-            width: 100%; padding: 15px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.1);
-            background: var(--card); color: white; outline: none; box-sizing: border-box;
-        }
-        .icon-btn { font-size: 24px; cursor: pointer; padding: 8px; }
+        /* --- MODAL ADMIN --- */
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 4000; padding: 15px; }
+        .modal-content { background: var(--card); padding: 25px; border-radius: var(--radius); width: 100%; max-width: 500px; border: 1px solid rgba(255,255,255,0.1); }
+        input { width: 100%; padding: 12px; margin-bottom: 12px; border-radius: 10px; border: 1px solid #334155; background: #0f172a; color: white; box-sizing: border-box; }
 
-        /* Admin/Modals (Manteniendo tus estilos funcionales) */
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 5000; }
-        .modal-content { background: var(--card); padding: 30px; border-radius: var(--radius); width: 90%; max-width: 500px; }
+        .icon-btn { cursor: pointer; font-size: 22px; }
     </style>
 </head>
 <body>
 
 <header>
-    <div style="display: flex; align-items: center; gap: 10px;">
+    <div class="header-left">
         <span class="icon-btn" onclick="toggleInfo()">☰</span>
         <div>
-            <b style="font-size: 18px; letter-spacing: 1px;">ELNEN</b>
-            <div class="header-info">📍 Santa Fe | Envíos disponibles</div>
+            <b style="font-size: 18px;">ELNEN</b>
+            <span class="header-info">📍 Santa Fe | Envíos</span>
         </div>
     </div>
-    <div style="display: flex; gap: 15px; align-items: center;">
+    <div style="display:flex; gap: 20px; align-items: center;">
         <span class="icon-btn" onclick="verificarAdmin()">⚙️</span>
         <div class="icon-btn" onclick="toggleCart()" style="position: relative;">
-            🛒 <small id="cartCount" style="position: absolute; top: 0; right: 0; background: #ef4444; font-size: 10px; padding: 2px 5px; border-radius: 10px;">0</small>
+            🛒 <b id="cartCount" style="position: absolute; -10px; right: -10px; background: var(--danger); font-size: 10px; padding: 2px 6px; border-radius: 10px;">0</b>
         </div>
     </div>
 </header>
 
 <section class="hero">
     <h1>DISTRIBUIDORA ELNEN</h1>
-    <p>Calidad mayorista y minorista directo a tu puerta. El catálogo más completo de Santa Fe.</p>
-    <button class="cta-btn" onclick="document.getElementById('productos-inicio').scrollIntoView()">VER PRODUCTOS</button>
+    <p>Calidad mayorista y minorista al alcance de tu mano. El sistema integral más rápido de Santa Fe.</p>
+    <button class="btn-add" style="width: auto; padding: 15px 40px; border-radius: 30px;" onclick="document.getElementById('buscar').scrollIntoView()">VER PRODUCTOS</button>
 </section>
 
-<section class="categories-section">
-    <h3 style="margin-bottom: 20px; font-weight: 800;">Explorar Categorías</h3>
-    <div class="cat-grid">
-        <div class="cat-card" onclick="setSearch('bebida')">
-            <i>🥤</i> <b>Bebidas</b>
-        </div>
-        <div class="cat-card" onclick="setSearch('snack')">
-            <i>🍿</i> <b>Snacks</b>
-        </div>
-        <div class="cat-card" onclick="setSearch('almacen')">
-            <i>🥫</i> <b>Almacén</b>
-        </div>
-    </div>
-</section>
+<h3 style="padding: 30px 20px 15px; margin: 0; max-width: 1200px; margin: auto;">Explorar Categorías</h3>
+<div class="cat-grid">
+    <div class="cat-card" onclick="setSearch('bebida')"><span>🥤</span><b>Bebidas</b></div>
+    <div class="cat-card" onclick="setSearch('snack')"><span>🍿</span><b>Snacks</b></div>
+    <div class="cat-card" onclick="setSearch('almacen')"><span>🥫</span><b>Almacén</b></div>
+</div>
 
-<div id="productos-inicio" class="search-container">
-    <input type="text" id="searchInput" placeholder="Buscar productos..." onkeyup="render()">
+<div id="buscar" style="padding: 20px; max-width: 600px; margin: auto;">
+    <input type="text" id="searchInput" placeholder="🔍 Buscar producto..." onkeyup="render()">
 </div>
 
 <div class="products-grid" id="productsCont"></div>
 
-<div id="mainOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:2000;" onclick="closeAll()"></div>
+<div class="overlay" id="mainOverlay" onclick="closeAll()"></div>
 
-<div id="adminModal" class="modal">
+<div id="infoDrawer" class="drawer">
+    <div style="display:flex; justify-content:space-between; margin-bottom:30px">
+        <h2 style="margin:0; color:var(--accent)">INFO</h2>
+        <span onclick="toggleInfo()" class="icon-btn">✕</span>
+    </div>
+    <p>📍 <b>Belgrano 7102</b><br>Santa Fe Capital</p>
+    <p>📞 <b>WhatsApp:</b><br>3434508948</p>
+    <div id="userBadge" style="display:none; background:rgba(16,185,129,0.1); padding:10px; border-radius:10px; color:var(--success); font-weight:bold; margin-top:20px;">✓ MODO MAYORISTA ACTIVO</div>
+</div>
+
+<div id="cartDrawer" class="drawer">
+    <div style="display:flex; justify-content:space-between; margin-bottom:30px">
+        <h2 style="margin:0;">MI PEDIDO</h2>
+        <span onclick="toggleCart()" class="icon-btn">✕</span>
+    </div>
+    <div id="cartItemsList" style="max-height: 60vh; overflow-y: auto; margin-bottom: 20px;"></div>
+    <div id="cartTotalText" style="font-weight: 800; font-size: 1.2rem; margin-bottom: 20px; text-align: right;"></div>
+    <button class="btn-add" style="background:#25d366" onclick="enviarWhatsApp()">PEDIR POR WHATSAPP</button>
+</div>
+
+<div class="modal" id="adminModal">
     <div class="modal-content">
-        <h3>Panel Admin</h3>
+        <div style="display:flex; justify-content:space-between; margin-bottom:20px">
+            <h2 style="margin:0">Admin Panel</h2>
+            <span onclick="closeAll()" class="icon-btn">✕</span>
+        </div>
         <input type="hidden" id="editId">
-        <input id="fNom" placeholder="Nombre" style="width:100%; margin-bottom:10px; padding:10px;">
-        <input id="fPre" type="number" placeholder="Precio" style="width:100%; margin-bottom:10px; padding:10px;">
-        <input id="fImg" placeholder="Link Imagen" style="width:100%; margin-bottom:10px; padding:10px;">
-        <button onclick="guardarProducto()" style="width:100%; padding:15px; background:var(--accent); color:white; border:none; border-radius:10px;">GUARDAR</button>
-        <button onclick="closeAll()" style="width:100%; margin-top:10px; background:none; color:white; border:none;">Cerrar</button>
+        <input id="fNom" placeholder="Nombre del Producto">
+        <input id="fPre" type="number" placeholder="Precio Público">
+        <input id="fPreM" type="number" placeholder="Precio Mayorista">
+        <input id="fImg" placeholder="URL de la Imagen">
+        <button class="btn-add" onclick="guardarProducto()">GUARDAR EN FIREBASE</button>
+        <div id="adminProdsList" style="margin-top:20px; max-height:200px; overflow-y:auto; border-top:1px solid #334155; padding-top:10px;"></div>
     </div>
 </div>
 
 <script>
-    // --- Lógica de Firebase (Reemplaza con tus credenciales si no son estas) ---
+    // --- FIREBASE CONFIG ---
     const firebaseConfig = {
         apiKey: "AIzaSyDAqlchDsLHIMMbv6YL2ipggaShXlFqiW8",
         authDomain: "tienda-online-baaf6.firebaseapp.com",
@@ -181,72 +169,99 @@
 
     let productos = [];
     let carrito = [];
+    let esMayorista = localStorage.getItem("neo_may") === "true";
 
-    // Carga de datos
+    // --- ESCUCHA FIREBASE ---
     db.collection("productos").onSnapshot(snap => {
         productos = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         render();
+        renderAdmin();
     });
 
-    // --- FUNCIÓN RENDER MEJORADA VISUALMENTE ---
+    // --- RENDER PRINCIPAL ---
     function render() {
         const query = document.getElementById("searchInput").value.toLowerCase();
         const cont = document.getElementById("productsCont");
-        
         cont.innerHTML = productos.filter(p => p.nombre.toLowerCase().includes(query)).map(p => `
             <div class="product-card">
-                <div class="img-container">
-                    <img src="${p.imagen || 'https://via.placeholder.com/150'}" alt="${p.nombre}">
-                </div>
-                <div class="info">
-                    <h4 class="p-name">${p.nombre}</h4>
-                    <div class="p-price">$${p.precio}</div>
-                    <button class="add-btn" onclick="addToCart('${p.id}')">AÑADIR AL CARRITO</button>
+                <div class="img-box"><img src="${p.imagen || 'https://via.placeholder.com/150'}"></div>
+                <div class="info-box">
+                    <h4 class="p-title">${p.nombre}</h4>
+                    <div class="p-price">$${esMayorista ? p.precio_may : p.precio}</div>
+                    <button class="btn-add" onclick="addToCart('${p.id}')">AÑADIR</button>
                 </div>
             </div>
         `).join("");
     }
 
-    // Funciones auxiliares de UI
-    function setSearch(val) {
-        document.getElementById("searchInput").value = val;
-        render();
-        document.getElementById("productos-inicio").scrollIntoView();
-    }
-
-    // --- MANTENEMOS TUS FUNCIONES ORIGINALES (No tocamos lógica) ---
+    // --- LÓGICA CARRITO ---
     function addToCart(id) {
-        const item = carrito.find(c => c.id === id);
-        if(item) item.qty++; else carrito.push({id, qty:1});
+        const p = carrito.find(c => c.id === id);
+        if(p) p.qty++; else carrito.push({id, qty:1});
+        updateCartUI();
+    }
+
+    function updateCartUI() {
         document.getElementById("cartCount").innerText = carrito.reduce((a, b) => a + b.qty, 0);
-        // Aquí podrías llamar a tu función de actualizar UI de carrito si la tenías
+        const list = document.getElementById("cartItemsList");
+        let total = 0;
+        list.innerHTML = carrito.map(it => {
+            const p = productos.find(x => x.id === it.id);
+            const precio = esMayorista ? p.precio_may : p.precio;
+            total += precio * it.qty;
+            return `<div style="display:flex; justify-content:space-between; margin-bottom:10px; background:rgba(255,255,255,0.05); padding:10px; border-radius:10px;">
+                <span>${p.nombre} (x${it.qty})</span>
+                <b>$${precio * it.qty}</b>
+            </div>`;
+        }).join("");
+        document.getElementById("cartTotalText").innerText = "Total: $" + total;
     }
 
-    function verificarAdmin() {
-        const pass = prompt("Clave de administrador:");
-        if(pass === "admin") document.getElementById("adminModal").style.display = "flex";
+    function enviarWhatsApp() {
+        if(carrito.length === 0) return;
+        let msg = "*PEDIDO ELNEN*\n\n";
+        carrito.forEach(it => {
+            const p = productos.find(x => x.id === it.id);
+            msg += `- ${p.nombre} (x${it.qty})\n`;
+        });
+        window.open(`https://wa.me/5493434508948?text=${encodeURIComponent(msg)}`);
     }
 
-    function closeAll() {
+    // --- UI HELPERS ---
+    function toggleInfo() { document.getElementById("infoDrawer").classList.toggle("active"); document.getElementById("mainOverlay").classList.toggle("active"); }
+    function toggleCart() { document.getElementById("cartDrawer").classList.toggle("active"); document.getElementById("mainOverlay").classList.toggle("active"); }
+    function closeAll() { 
+        document.querySelectorAll(".drawer").forEach(d => d.classList.remove("active"));
+        document.getElementById("mainOverlay").classList.remove("active");
         document.getElementById("adminModal").style.display = "none";
     }
+    function setSearch(v) { document.getElementById("searchInput").value = v; render(); document.getElementById("buscar").scrollIntoView(); }
+    
+    function verificarAdmin() { if(prompt("Pass:") === "admin") document.getElementById("adminModal").style.display = "flex"; }
 
     async function guardarProducto() {
         const id = document.getElementById("editId").value;
         const d = {
             nombre: document.getElementById("fNom").value,
             precio: Number(document.getElementById("fPre").value),
+            precio_may: Number(document.getElementById("fPreM").value),
             imagen: document.getElementById("fImg").value
         };
-        if(id) await db.collection("productos").doc(id).update(d);
-        else await db.collection("productos").add(d);
-        closeAll();
+        id ? await db.collection("productos").doc(id).update(d) : await db.collection("productos").add(d);
+        alert("¡Listo!");
+        document.getElementById("editId").value = "";
     }
 
-    // El resto de tus funciones (toggleCart, toggleInfo, etc) van aquí
-    function toggleCart() { alert("Carrito: " + carrito.length + " items"); }
-    function toggleInfo() { alert("Info: Distribuidora ELNEN - Santa Fe"); }
-</script>
+    function renderAdmin() {
+        document.getElementById("adminProdsList").innerHTML = productos.map(p => `
+            <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:5px;">
+                <span>${p.nombre}</span>
+                <button onclick="deleteP('${p.id}')">🗑️</button>
+            </div>
+        `).join("");
+    }
+    async function deleteP(id) { if(confirm("¿Eliminar?")) await db.collection("productos").doc(id).delete(); }
 
+</script>
 </body>
 </html>
