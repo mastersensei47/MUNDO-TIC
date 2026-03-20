@@ -199,6 +199,13 @@
         .btn-back { background: transparent; color: #94a3b8; border: none; padding: 10px; width: 100%; cursor: pointer; margin-top: 10px; font-weight: 600; }
         .qty-controls { display: flex; align-items: center; gap: 10px; }
         .qty-btn { width: 25px; height: 25px; border-radius: 5px; border: none; background: var(--accent); color: white; cursor: pointer; }
+
+        /* ESTILOS NUEVOS PERFIL */
+        .perfil-section { margin-bottom: 20px; }
+        .perfil-section h3 { font-size: 14px; margin-bottom: 10px; opacity: 0.7; border-left: 3px solid var(--accent); padding-left: 8px; }
+        .map-box { border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); height: 120px; margin-top: 5px; }
+        .soporte-btn { display: flex; align-items: center; justify-content: center; gap: 8px; background: #25d366; color: white; padding: 12px; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 14px; }
+        .perfil-logo { width: 60px; margin: 20px auto; display: block; opacity: 0.5; }
     </style>
 </head>
 <body>
@@ -295,9 +302,32 @@
 <div class="overlay" id="ov" onclick="closeAll()"></div>
 
 <div id="infoDrawer" class="drawer">
-    <h2 style="color:var(--accent);">Mi Perfil</h2>
+    <h2 style="color:var(--accent); margin-bottom:5px;">Mi Perfil</h2>
+    <p style="font-size:12px; margin-bottom:20px; opacity:0.6;">Información y Soporte</p>
+    
     <div id="mayBadge" style="display:none; padding:10px; background:rgba(16,185,129,0.1); border-radius:10px; color:var(--success); font-weight:800; border:1px solid var(--success); margin-bottom:20px;">✓ MAYORISTA ACTIVO</div>
-    <button onclick="logout()" style="background:var(--danger); color:white; border:none; padding:15px; border-radius:12px; cursor:pointer; margin-top:auto;">Cerrar Sesión</button>
+
+    <div class="perfil-section">
+        <h3>DIRECCIÓN</h3>
+        <p style="font-size:13px; margin:5px 0;">Calle Falsa 123, Santa Fe Capital</p>
+        <div class="map-box">
+            <iframe 
+                src="https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d13600.000000000002!2d-60.700000!3d-31.633333!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1ses!2sar!4v1700000000000" 
+                width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy">
+            </iframe>
+        </div>
+    </div>
+
+    <div class="perfil-section">
+        <h3>SOPORTE</h3>
+        <a href="https://wa.me/5493434508948" target="_blank" class="soporte-btn">
+            💬 WhatsApp Soporte
+        </a>
+    </div>
+
+    <img src="logoo.png" class="perfil-logo">
+    
+    <button onclick="logout()" style="background:var(--danger); color:white; border:none; padding:15px; border-radius:12px; cursor:pointer; margin-top:auto; font-weight:700;">Cerrar Sesión</button>
 </div>
 
 <div id="cartDrawer" class="drawer">
