@@ -203,12 +203,13 @@
         .map-box { border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); height: 220px; margin-top: 5px; }
         .soporte-btn { display: flex; align-items: center; justify-content: center; gap: 8px; background: #25d366; color: white; padding: 12px; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 14px; }
         
-        /* CORRECCIÓN: El logo ya no tiene margin-top: auto, ahora se ubica normalmente */
+        /* CORRECCIÓN FINAL LOGO */
         .perfil-logo { 
             width: 140px; 
-            margin: 30px auto 10px; 
+            margin: 10px auto 25px; 
             display: block; 
-            opacity: 0.8;
+            opacity: 0.9;
+            filter: drop-shadow(0 0 5px rgba(59, 130, 246, 0.3));
         }
     </style>
 </head>
@@ -307,6 +308,9 @@
 
 <div id="infoDrawer" class="drawer">
     <h2 style="color:var(--accent); margin-bottom:5px; margin-top: 10px;">Mi Perfil</h2>
+    
+    <img src="logoo.png" class="perfil-logo">
+    
     <p style="font-size:12px; margin-bottom:20px; opacity:0.6;">Información y Soporte</p>
     
     <div id="mayBadge" style="display:none; padding:10px; background:rgba(16,185,129,0.1); border-radius:10px; color:var(--success); font-weight:800; border:1px solid var(--success); margin-bottom:20px;">✓ MAYORISTA ACTIVO</div>
@@ -316,7 +320,7 @@
         <p style="font-size:13px; margin:5px 0;">Calle Falsa 123, Santa Fe Capital</p>
         <div class="map-box">
             <iframe 
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d13586.602521191068!2d-60.71830235336336!3d-31.6311025700735!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x95b045842188295b%3A0x64369e54d8966874!2sSanta%20Fe%20de%20la%20Vera%20Cruz%2C%20Santa%20Fe!5e0!3m2!1ses-419!2sar!4v1711200000000!5m2!1ses-419!2sar" 
+                src="https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d13593.75053424164!2d-60.70613275!3d-31.6356391!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1ses-419!2sar!4v1715637251263!5m2!1ses-419!2sar" 
                 width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy">
             </iframe>
         </div>
@@ -328,8 +332,6 @@
             💬 WhatsApp Soporte
         </a>
     </div>
-
-    <img src="logoo.png" class="perfil-logo">
     
     <button id="logoutBtn" onclick="logout()" style="display:none; background:var(--danger); color:white; border:none; padding:15px; border-radius:12px; cursor:pointer; margin-top:auto; font-weight:700;">Cerrar Sesión</button>
 </div>
@@ -417,7 +419,6 @@
     function updateCartUI() {
         let total = 0, itemsCount = 0;
         const list = document.getElementById("cartItems");
-        
         list.innerHTML = cart.map(it => {
             const p = prods.find(x => x.id === it.id);
             const price = isMay ? p.precio_may : p.precio;
@@ -425,18 +426,14 @@
             if(!isMay && p.promo && p.promo.toLowerCase().includes('x')) {
                 const parts = p.promo.toLowerCase().replace('$', '').split('x');
                 const cant = parseInt(parts[0]), val = parseInt(parts[1]);
-                if(it.qty >= cant) {
-                    sub = (Math.floor(it.qty / cant) * val) + ((it.qty % cant) * price);
-                }
+                if(it.qty >= cant) sub = (Math.floor(it.qty / cant) * val) + ((it.qty % cant) * price);
             }
-            total += sub; 
-            itemsCount += it.qty;
+            total += sub; itemsCount += it.qty;
             return `<div style="padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.05); display:flex; justify-content:space-between;">
                 <div><b>${p.nombre}</b><br><div class="qty-controls">
                 <button class="qty-btn" onclick="modQ('${it.id}',-1)">-</button><span>${it.qty}</span><button class="qty-btn" onclick="modQ('${it.id}',1)">+</button></div></div>
                 <b>$${sub}</b></div>`;
         }).join("");
-        
         document.getElementById("cartTotal").innerText = "Total: $" + total;
         document.getElementById("cartCount").innerText = itemsCount;
     }
@@ -455,8 +452,7 @@
         document.getElementById("fId").value = ""; 
         document.querySelectorAll("#t-prod input").forEach(input => { input.value = ""; });
         const btnSave = document.getElementById("btnSave");
-        btnSave.innerText = "GUARDAR PRODUCTO";
-        btnSave.style.background = "var(--success)";
+        btnSave.innerText = "GUARDAR PRODUCTO"; btnSave.style.background = "var(--success)";
     }
 
     async function saveP() {
@@ -469,8 +465,8 @@
             categoria: document.getElementById("fCat").value.toLowerCase(), 
             imagen: document.getElementById("fImg").value 
         };
-        if(id) { await db.collection("productos").doc(id).update(d); } 
-        else { await db.collection("productos").add(d); }
+        if(id) await db.collection("productos").doc(id).update(d);
+        else await db.collection("productos").add(d);
         limpiarFormP();
     }
 
@@ -484,8 +480,7 @@
         document.getElementById("fCat").value = p.categoria;
         document.getElementById("fImg").value = p.imagen;
         const btn = document.getElementById("btnSave");
-        btn.innerText = "ACTUALIZAR DATOS";
-        btn.style.background = "#3b82f6";
+        btn.innerText = "ACTUALIZAR DATOS"; btn.style.background = "#3b82f6";
     }
 
     function renderAdmP() {
@@ -503,20 +498,13 @@
     }
 
     function renderAdmU() {
-        const pendientes = users.filter(u => !u.activo);
-        const registrados = users.filter(u => u.activo);
-        let html = `<h3 style="color:var(--promo);">⏳ Solicitudes (${pendientes.length})</h3>`;
-        html += pendientes.map(u => `
-            <div class="admin-item">
-                <b>${u.user}</b>
-                <div>
-                    <button onclick="updU('${u.id}', true)">Aprobar</button>
-                    <button onclick="del('usuarios','${u.id}')">Rechazar</button>
-                </div>
-            </div>`).join("");
-        html += `<h3 style="color:var(--success);">✅ Registrados (${registrados.length})</h3>`;
-        html += registrados.map(u => `<div class="admin-item"><b>${u.user}</b><button onclick="del('usuarios','${u.id}')">🗑️</button></div>`).join("");
-        document.getElementById("admListU").innerHTML = html;
+        const p = users.filter(u => !u.activo);
+        const r = users.filter(u => u.activo);
+        let h = `<h3 style="color:var(--promo);">⏳ Solicitudes (${p.length})</h3>`;
+        h += p.map(u => `<div class="admin-item"><b>${u.user}</b><div><button onclick="updU('${u.id}', true)">Aprobar</button><button onclick="del('usuarios','${u.id}')">Rechazar</button></div></div>`).join("");
+        h += `<h3 style="color:var(--success);">✅ Registrados (${r.length})</h3>`;
+        h += r.map(u => `<div class="admin-item"><b>${u.user}</b><button onclick="del('usuarios','${u.id}')">🗑️</button></div>`).join("");
+        document.getElementById("admListU").innerHTML = h;
     }
 
     async function updU(id, s) { await db.collection("usuarios").doc(id).update({ activo: s }); }
@@ -547,15 +535,13 @@
     function setCat(c) { 
         filterCat = c; 
         document.querySelectorAll('.cat-card').forEach(card => card.classList.remove('active'));
-        event.currentTarget.classList.add('active');
-        render(); 
+        event.currentTarget.classList.add('active'); render(); 
     }
     
     function tab(id) {
         document.querySelectorAll('#adminModal [id^="t-"]').forEach(d => d.style.display = 'none');
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById(id).style.display = 'block';
-        event.target.classList.add('active');
+        document.getElementById(id).style.display = 'block'; event.target.classList.add('active');
     }
     
     function openModal(id) { closeAll(); document.getElementById(id).style.display = 'flex'; }
@@ -570,7 +556,6 @@
     function logout() { localStorage.removeItem("ms47_may"); location.reload(); }
     function verificarAdmin() { let p = prompt("Clave:"); if(p==="admin") openModal("adminModal"); }
     async function del(c,i) { if(confirm("Eliminar?")) await db.collection(c).doc(i).delete(); }
-
 </script>
 </body>
 </html>
