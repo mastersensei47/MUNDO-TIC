@@ -506,11 +506,37 @@
         });
 
         // Escuchar Pedidos
-        db.collection("pedidos").orderBy("fecha", "desc").onSnapshot(snap => {
-            orders = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            renderAdmO();
-        });
+function renderAdmO() {
+    const list = document.getElementById("admListO");
+    if(orders.length === 0) {
+        list.innerHTML = `<p style="text-align:center; opacity:0.3; padding:40px;">No hay historial de pedidos.</p>`;
+        return;
     }
+    list.innerHTML = orders.map(o => {
+        // Generamos el HTML de las miniaturas si existen en el pedido
+        const fotosHTML = o.items ? o.items.map(img => 
+            `<img src="${img}" style="width:40px; height:40px; border-radius:8px; object-fit:contain; background:white; border:1px solid rgba(255,255,255,0.1);">`
+        ).join("") : "";
+
+        return `
+            <div class="admin-item" style="flex-direction:column; align-items:flex-start; gap:12px; padding:20px; position:relative;">
+                <div class="flex-between" style="width:100%;">
+                    <div>
+                        <b style="color:var(--accent); font-size:20px;">${o.total}</b>
+                        <div style="font-size:11px; opacity:0.5;">${new Date(o.fecha).toLocaleString()}</div>
+                    </div>
+                    <button class="icon-btn" onclick="del('pedidos','${o.id}')" style="color:var(--danger); background:rgba(239,68,68,0.1);">🗑️</button>
+                </div>
+                
+                <div style="display:flex; gap:8px; flex-wrap:wrap; margin:5px 0;">
+                    ${fotosHTML}
+                </div>
+
+                <div style="font-size:13px; opacity:0.8; background:rgba(0,0,0,0.2); padding:15px; border-radius:15px; width:100%; white-space:pre-wrap; border:1px solid rgba(255,255,255,0.05);">${o.detalle}</div>
+            </div>
+        `;
+    }).join("");
+}
 
     /* --- LOGICA DE TIENDA --- */
     function render() {
@@ -749,24 +775,51 @@
         render();
     }
 
-    async function sendOrder() {
-        if(cart.length === 0) return;
-        let txt = `*NUEVO PEDIDO ELNEN*\n`;
-        if(usuarioLogueado) txt += `*Cliente:* ${usuarioLogueado.user}\n*Dirección:* ${usuarioLogueado.dir}\n`;
-        txt += `------------------\n`;
-        cart.forEach(i => {
-            const p = prods.find(x => x.id === i.id);
-            txt += `• ${p.nombre} x${i.qty}\n`;
-        });
-        txt += `------------------\n*TOTAL: ${document.getElementById("cartTotal").innerText}*`;
-        
-        await db.collection("pedidos").add({
-            detalle: txt, total: document.getElementById("cartTotal").innerText, fecha: Date.now()
-        });
-        
-        window.open(`https://wa.me/5493434508948?text=${encodeURIComponent(txt)}`);
-        cart = []; updateCartUI(); closeAll();
+async function finalizarYEnviar() {
+    if(cart.length === 0) return alert("El carrito está vacío.");
+    
+    let textoPedido = `*📦 NUEVO PEDIDO MS47*\n`;
+    let arrayFotos = []; // Array para capturar las imágenes de los productos
+
+    if(usuarioLogueado) {
+        textoPedido += `*Cliente:* ${usuarioLogueado.user}\n*Local:* ${usuarioLogueado.dir}\n`;
+    } else {
+        textoPedido += `*Cliente:* Minorista / Final\n`;
     }
+    textoPedido += `----------------------------\n`;
+    
+    cart.forEach(item => {
+        const p = prods.find(x => x.id === item.id);
+        if(p) {
+            textoPedido += `• ${p.nombre} [x${item.qty}]\n`;
+            // Capturamos la URL de la imagen si existe
+            if(p.imagen) arrayFotos.push(p.imagen);
+        }
+    });
+    
+    const total = document.getElementById("cartTotal").innerText;
+    textoPedido += `----------------------------\n*TOTAL ESTIMADO: ${total}*`;
+    
+    try {
+        // GUARDADO EN FIREBASE CON ARRAY DE FOTOS
+        await db.collection("pedidos").add({
+            detalle: textoPedido,
+            total: total,
+            items: arrayFotos, 
+            fecha: Date.now()
+        });
+        
+        const nro = "5493434508948";
+        window.open(`https://wa.me/${nro}?text=${encodeURIComponent(textoPedido)}`);
+        
+        cart = [];
+        updateCartUI();
+        closeAll();
+    } catch(e) {
+        console.error("Error al guardar pedido:", e);
+        alert("Hubo un error al procesar el pedido en la base de datos.");
+    }
+}
 
     async function del(col, id) { if(confirm("¿Eliminar?")) await db.collection(col).doc(id).delete(); }
     async function updU(id, stat) { await db.collection("usuarios").doc(id).update({activo: stat}); }
