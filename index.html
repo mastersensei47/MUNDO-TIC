@@ -1,464 +1,244 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MS47 - SISTEMA INTEGRAL ELNEN</title>
-    
-    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
-    <style>
-        /* --- ARQUITECTURA DE DISEÑO MS47 --- */
-        :root {
-            --bg: #0f172a; 
-            --card: #1e293b; 
-            --text: #f1f5f9; 
-            --accent: #3b82f6;
-            --success: #10b981; 
-            --promo: #f59e0b; 
-            --danger: #ef4444;
-            --input-bg: rgba(30, 41, 59, 0.7); 
-            --radius: 18px;
-            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        body.light {
-            --bg: #f8fafc; 
-            --card: #ffffff; 
-            --text: #0f172a; 
-            --accent: #2563eb;
-            --input-bg: #f1f5f9; 
-        }
-
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
-
-        body { 
-            margin:0; 
-            font-family: 'Inter', sans-serif; 
-            background:var(--bg); 
-            color:var(--text); 
-            transition: var(--transition); 
-            overflow-x: hidden; 
-        }
-
-        /* SCROLLBAR */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
-
-        /* HEADER */
-        header { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            padding: 0 25px; 
-            background: var(--card); 
-            position: sticky; 
-            top: 0; 
-            z-index: 1000; 
-            box-shadow: 0 4px 25px rgba(0,0,0,0.3); 
-            height: 85px;
-        }
-
-        .header-left { display: flex; align-items: center; gap: 15px; }
-        .main-logo { height: 55px; width: auto; transition: transform 0.3s; cursor: pointer; }
-        
-        .header-icons { display: flex; gap: 12px; align-items: center; }
-        .icon-btn { 
-            cursor: pointer; 
-            font-size: 22px; 
-            padding: 10px; 
-            border-radius: 50%; 
-            color: var(--text); 
-            transition: var(--transition);
-            border: none;
-            background: transparent;
-        }
-
-        /* HERO */
-        .hero {
-            height: 320px; 
-            background: linear-gradient(rgba(15,23,42,0.7), rgba(15,23,42,0.95)), url('https://images.unsplash.com/photo-1542831371-29b0f74f9713?q=80&w=1470&auto=format&fit=crop');
-            background-size: cover; 
-            background-position: center; 
-            display: flex; 
-            flex-direction: column; 
-            justify-content: center; 
-            align-items: center;
-            text-align: center;
-            padding: 0 20px;
-        }
-
-        /* CATEGORÍAS */
-        .cat-grid { 
-            display: grid; 
-            grid-template-columns: repeat(4, 1fr); 
-            gap: 12px; 
-            padding: 0 20px; 
-            max-width: 900px; 
-            margin: -40px auto 40px; 
-            position: relative; 
-            z-index: 10; 
-        }
-        .cat-card { 
-            background: var(--card); 
-            padding: 22px 10px; 
-            border-radius: 22px; 
-            text-align: center; 
-            cursor: pointer; 
-            border: 1px solid rgba(128,128,128,0.15); 
-            transition: var(--transition); 
-            box-shadow: 0 12px 24px rgba(0,0,0,0.2);
-        }
-        .cat-card.active { background: var(--accent); color: white; transform: translateY(-10px); border-color: transparent; }
-
-        /* PRODUCTOS */
-        .products-grid { 
-            display: grid; 
-            grid-template-columns: repeat(2, 1fr); 
-            gap: 20px; 
-            padding: 20px; 
-            max-width: 1400px; 
-            margin: auto; 
-        }
-        @media (min-width: 768px) { .products-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); } }
-
-        .product-card { 
-            background: var(--card); 
-            border-radius: var(--radius); 
-            overflow: hidden; 
-            position: relative; 
-            display: flex; 
-            flex-direction: column; 
-            border: 1px solid rgba(128,128,128,0.1);
-            transition: var(--transition);
-        }
-        .img-box { background: #fff; height: 200px; display: flex; align-items: center; justify-content: center; padding: 20px; }
-        .img-box img { max-width: 100%; max-height: 100%; object-fit: contain; }
-        
-        .info-box { padding: 22px; flex-grow: 1; }
-        .btn-add { 
-            background: var(--accent); color: white; border: none; padding: 18px; 
-            border-radius: 16px; font-weight: 800; width: 100%; cursor: pointer;
-        }
-
-        /* MODALES Y DRAWERS */
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.94); backdrop-filter: blur(15px); display: none; justify-content: center; align-items: center; z-index: 7000; padding: 20px; }
-        .modal-content { background: var(--card); padding: 40px; border-radius: 35px; width: 100%; max-width: 680px; max-height: 88vh; overflow-y: auto; position: relative; }
-        
-        .drawer { position: fixed; top: 0; width: 90%; max-width: 420px; height: 100%; background: var(--card); transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1); z-index: 6000; padding: 40px; }
-        #infoDrawer { left: -110%; } #infoDrawer.active { left: 0; }
-        #cartDrawer { right: -110%; } #cartDrawer.active { right: 0; }
-        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; z-index: 5500; backdrop-filter: blur(6px); }
-        .overlay.active { display: block; }
-
-        .qty-btn { width: 35px; height: 35px; border-radius: 10px; border: none; background: var(--accent); color: #fff; cursor: pointer; font-weight: bold; }
-    </style>
-</head>
-<body class="dark">
-
-<header>
-    <div class="header-left">
-        <button class="icon-btn" onclick="toggleInfo()">☰</button>
-        <img src="logoo.png" class="main-logo" onclick="location.reload()">
-    </div>
-    <div class="header-icons">
-        <button class="icon-btn" onclick="toggleTheme()">🌓</button>
-        <button class="icon-btn" onclick="openModal('loginModal')">👤</button>
-        <button class="icon-btn" onclick="verificarAdmin()">⚙️</button>
-        <div class="icon-btn" onclick="toggleCart()" style="position:relative">
-            🛒 <b id="cartCount" style="background:var(--danger); font-size:10px; padding:2px 6px; border-radius:10px; position:absolute; top:0; right:0;">0</b>
-        </div>
-    </div>
-</header>
-
-<section class="hero">
-    <h1>DISTRIBUIDORA ELNEN</h1>
-    <p>Calidad mayorista directo a tu comercio</p>
-</section>
-
-<div class="cat-grid" id="catBar">
-    <div class="cat-card active" onclick="setCat('')"><span>🌐</span><b>Todos</b></div>
-    <div class="cat-card" onclick="setCat('bebida')"><span>🥤</span><b>Bebidas</b></div>
-    <div class="cat-card" onclick="setCat('snack')"><span>🍿</span><b>Snacks</b></div>
-    <div class="cat-card" onclick="setCat('almacen')"><span>🥫</span><b>Almacén</b></div>
-</div>
-
-<div style="max-width: 700px; margin: 0 auto 30px; padding: 0 20px;">
-    <input type="text" id="searchInput" class="search-bar" placeholder="Busca marcas o productos..." onkeyup="render()" style="width:100%; padding:20px; border-radius:20px; background:var(--input-bg); border:none; color:#fff;">
-</div>
-
-<div class="products-grid" id="productsCont"></div>
-
-<div class="modal" id="adminModal">
-    <div class="modal-content">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-            <h2>Gestión Maestra</h2>
-            <button onclick="closeAll()" style="background:none; border:none; color:#fff; font-size:24px;">✕</button>
-        </div>
-        
-        <div style="display:flex; gap:10px; margin-bottom:20px;">
-            <button class="btn-add" style="flex:1" onclick="showTab('t-prod')">PRODUCTOS</button>
-            <button class="btn-add" style="flex:1" onclick="showTab('t-user')">CLIENTES</button>
-            <button class="btn-add" style="flex:1" onclick="showTab('t-order')">PEDIDOS</button>
-        </div>
-
-        <div id="t-prod">
-            <div style="background:rgba(255,255,255,0.05); padding:20px; border-radius:20px; margin-bottom:20px;">
-                <input id="fId" type="hidden">
-                <input id="fNom" placeholder="Nombre" style="margin-bottom:10px;">
-                <div style="display:flex; gap:10px;">
-                    <input id="fPre" type="number" placeholder="Precio $">
-                    <input id="fPreM" type="number" placeholder="Mayoreo $">
-                </div>
-                <input id="fCat" placeholder="Categoría" style="margin-top:10px;">
-                <input id="fImg" placeholder="Link Imagen" style="margin-top:10px;">
-                <button class="btn-add" style="background:var(--success); margin-top:10px;" onclick="saveP()">GUARDAR PRODUCTO</button>
-            </div>
-            <div id="admListP"></div>
-        </div>
-
-        <div id="t-user" style="display:none;"><div id="admListU"></div></div>
-        <div id="t-order" style="display:none;"><div id="admListO"></div></div>
-    </div>
-</div>
-
-<div class="modal" id="loginModal">
-    <div class="modal-content" style="max-width:400px; text-align:center;">
-        <h2>Iniciar Sesión</h2>
-        <input id="uInp" placeholder="Usuario" style="margin-bottom:10px; width:100%; padding:15px; border-radius:10px;">
-        <input id="pInp" type="password" placeholder="Contraseña" style="margin-bottom:20px; width:100%; padding:15px; border-radius:10px;">
-        <button class="btn-add" onclick="doLogin()">ENTRAR</button>
-        <p style="margin-top:15px;">¿No tienes cuenta? <span onclick="openModal('regModal')" style="color:var(--accent); cursor:pointer;">Regístrate</span></p>
-    </div>
-</div>
-
-<div class="modal" id="regModal">
-    <div class="modal-content" style="max-width:450px;">
-        <h2>Solicitud de Cliente</h2>
-        <input id="rU" placeholder="Nombre de Usuario" style="margin-bottom:10px;">
-        <input id="rP" type="password" placeholder="Contraseña">
-        <input id="rT" placeholder="WhatsApp (Ej: 3424...)" style="margin-top:10px;">
-        <textarea id="rD" placeholder="Dirección del Comercio" style="margin-top:10px; width:100%; height:80px;"></textarea>
-        <button class="btn-add" style="background:var(--success); margin-top:20px;" onclick="registrarUsuarioEnGoogle()">ENVIAR SOLICITUD</button>
-    </div>
-</div>
-
-<div class="overlay" id="ov" onclick="closeAll()"></div>
-
-<div id="infoDrawer" class="drawer">
-    <h2>Mi Perfil</h2>
-    <div id="perfilContenido">
-        <p><b>Usuario:</b> <span id="p-user">--</span></p>
-        <p><b>Tel:</b> <span id="p-tel">--</span></p>
-        <p><b>Dir:</b> <span id="p-dir">--</span></p>
-        <button class="btn-add" style="background:var(--danger)" onclick="logout()">CERRAR SESIÓN</button>
-    </div>
-</div>
-
-<div id="cartDrawer" class="drawer">
-    <h2>Carrito</h2>
-    <div id="cartItems" style="height:60%; overflow-y:auto;"></div>
-    <div style="margin-top:20px; border-top:1px solid #555; padding-top:10px;">
-        <h3>Total: <span id="cartTotal">$0</span></h3>
-        <button class="btn-add" style="background:#25d366" onclick="finalizarYEnviar()">ENVIAR WHATSAPP 🚀</button>
-    </div>
-</div>
-
 <script>
-    /* --- CONFIGURACIÓN FIREBASE --- */
-    const firebaseConfig = {
-        apiKey: "AIzaSyDAqlchDsLHIMMbv6YL2ipggaShXlFqiW8",
-        authDomain: "tienda-online-baaf6.firebaseapp.com",
-        projectId: "tienda-online-baaf6",
-        storageBucket: "tienda-online-baaf6.firebasestorage.app",
-        messagingSenderId: "121093097347",
-        appId: "1:121093097347:web:ca8ea54b592cb20f5098b6"
-    };
-    
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+/* ---------------- FIREBASE ---------------- */
+const firebaseConfig = {
+    apiKey: "AIzaSyDAqlchDsLHIMMbv6YL2ipggaShXlFqiW8",
+    authDomain: "tienda-online-baaf6.firebaseapp.com",
+    projectId: "tienda-online-baaf6",
+    storageBucket: "tienda-online-baaf6.firebasestorage.app",
+    messagingSenderId: "121093097347",
+    appId: "1:121093097347:web:ca8ea54b592cb20f5098b6"
+};
 
-    let prods = [], cart = [], users = [], orders = [];
-    let isMay = false, usuarioLogueado = null, filterCat = "";
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 
-    function init() {
-        db.collection("productos").onSnapshot(snap => {
-            prods = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+/* ---------------- VARIABLES ---------------- */
+let prods = [];
+let cart = [];
+let users = [];
+let orders = [];
+let isMay = false;
+let usuarioLogueado = null;
+let filterCat = "";
+
+/* ---------------- STORAGE ---------------- */
+function saveCart() {
+    localStorage.setItem("ms47_cart", JSON.stringify(cart));
+}
+function loadCart() {
+    const saved = localStorage.getItem("ms47_cart");
+    if(saved) cart = JSON.parse(saved);
+}
+
+function saveUserSession(user) {
+    localStorage.setItem("ms47_user", JSON.stringify(user));
+}
+function loadUserSession() {
+    const u = localStorage.getItem("ms47_user");
+    if(u) {
+        usuarioLogueado = JSON.parse(u);
+        isMay = true;
+        llenarPerfil(usuarioLogueado);
+    }
+}
+
+/* ---------------- INIT ---------------- */
+function init() {
+
+    db.collection("productos").onSnapshot(snap => {
+        prods = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        render();
+        renderAdmP();
+    });
+
+    db.collection("usuarios").onSnapshot(snap => {
+        users = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        renderAdmU();
+    });
+
+    db.collection("pedidos").orderBy("fecha", "desc").onSnapshot(snap => {
+        orders = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        renderAdmO();
+    });
+
+    loadCart();
+    loadUserSession();
+    updateCartUI();
+}
+
+/* ---------------- RENDER ---------------- */
+function render() {
+    const query = document.getElementById("searchInput").value.toLowerCase();
+    const cont = document.getElementById("productsCont");
+
+    const filtered = prods.filter(p =>
+        p.nombre.toLowerCase().includes(query) &&
+        (filterCat === "" || p.categoria === filterCat)
+    );
+
+    if(filtered.length === 0){
+        cont.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:50px;opacity:0.5;">No hay productos...</div>`;
+        return;
+    }
+
+    cont.innerHTML = filtered.map(p => {
+        const precioActual = isMay ? (p.precio_may || p.precio) : p.precio;
+
+        return `
+        <div class="product-card">
+            ${p.promo ? `<div class="promo-badge">${p.promo}</div>` : ''}
+            <div class="img-box">
+                <img src="${p.imagen || 'https://via.placeholder.com/200'}">
+            </div>
+            <div class="info-box">
+                <div class="prod-title">${p.nombre}</div>
+                <div class="price-val">$${precioActual}</div>
+                <button class="btn-add" onclick="addToCart('${p.id}')">🛒 Agregar</button>
+            </div>
+        </div>
+        `;
+    }).join("");
+}
+
+/* ---------------- CARRITO ---------------- */
+function addToCart(id){
+    const exist = cart.find(i => i.id === id);
+    if(exist) exist.qty++;
+    else cart.push({id, qty:1});
+
+    saveCart();
+    updateCartUI();
+
+    const el = document.getElementById("cartCount");
+    el.style.transform = "scale(1.4)";
+    setTimeout(()=> el.style.transform="scale(1)",200);
+}
+
+function changeQty(id, delta){
+    const item = cart.find(i => i.id === id);
+    if(item){
+        item.qty += delta;
+        if(item.qty <= 0) cart = cart.filter(i => i.id !== id);
+    }
+    saveCart();
+    updateCartUI();
+}
+
+function updateCartUI(){
+    let total = 0, count = 0;
+    const list = document.getElementById("cartItems");
+
+    list.innerHTML = cart.map(item=>{
+        const p = prods.find(x=>x.id===item.id);
+        if(!p) return "";
+
+        const precio = isMay ? (p.precio_may || p.precio) : p.precio;
+        const sub = precio * item.qty;
+        total += sub;
+        count += item.qty;
+
+        return `
+        <div style="display:flex;justify-content:space-between;margin-bottom:15px;">
+            <div>${p.nombre}</div>
+            <div>
+                <button onclick="changeQty('${item.id}',-1)">-</button>
+                ${item.qty}
+                <button onclick="changeQty('${item.id}',1)">+</button>
+            </div>
+        </div>`;
+    }).join("");
+
+    document.getElementById("cartTotal").innerText = "$"+total;
+    document.getElementById("cartCount").innerText = count;
+}
+
+/* ---------------- LOGIN ---------------- */
+function doLogin(){
+    const u = uInp.value.trim();
+    const p = pInp.value.trim();
+
+    if(u==="admin" && p==="admin"){
+        openModal("adminModal");
+        return;
+    }
+
+    const user = users.find(x=>x.user===u && x.pass===p);
+
+    if(user){
+        if(user.activo){
+            isMay = true;
+            usuarioLogueado = user;
+            saveUserSession(user);
+            llenarPerfil(user);
             render();
-            renderAdmP();
-        });
-        db.collection("usuarios").onSnapshot(snap => {
-            users = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            renderAdmU();
-        });
-        db.collection("pedidos").orderBy("fecha", "desc").onSnapshot(snap => {
-            orders = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            renderAdmO();
-        });
+            closeAll();
+            alert("Bienvenido "+user.user);
+        } else alert("Cuenta en revisión");
+    } else alert("Datos incorrectos");
+}
+
+function llenarPerfil(u){
+    perfilContenido.style.display="block";
+    perfilVacio.style.display="none";
+    logoutBtn.style.display="block";
+
+    p_user.innerText = u.user;
+    p_tel.innerText = u.tel;
+    p_dir.innerText = u.dir;
+}
+
+/* ---------------- LOGOUT ---------------- */
+function logout(){
+    if(confirm("Cerrar sesión?")){
+        localStorage.removeItem("ms47_user");
+        location.reload();
+    }
+}
+
+/* ---------------- CATEGORÍAS FIX ---------------- */
+function setCat(c, el){
+    filterCat = c;
+    document.querySelectorAll(".cat-card").forEach(x=>x.classList.remove("active"));
+    if(el) el.classList.add("active");
+    render();
+}
+
+/* ---------------- PEDIDO ---------------- */
+async function finalizarYEnviar(){
+    if(cart.length===0) return alert("Carrito vacío");
+
+    let txt = "*📦 PEDIDO MS47*\n";
+    txt += `📅 ${new Date().toLocaleString()}\n`;
+
+    if(usuarioLogueado){
+        txt += `Cliente: ${usuarioLogueado.user}\n`;
+        txt += `Tel: ${usuarioLogueado.tel}\n`;
+        txt += `Dir: ${usuarioLogueado.dir}\n`;
     }
 
-    function render() {
-        const query = document.getElementById("searchInput").value.toLowerCase();
-        const cont = document.getElementById("productsCont");
-        const filtered = prods.filter(p => p.nombre.toLowerCase().includes(query) && (filterCat === "" || p.categoria === filterCat));
+    txt += "-----------------\n";
 
-        cont.innerHTML = filtered.map(p => {
-            const precio = isMay ? (p.precio_may || p.precio) : p.precio;
-            return `
-                <div class="product-card">
-                    <div class="img-box"><img src="${p.imagen || 'https://via.placeholder.com/200'}"></div>
-                    <div class="info-box">
-                        <div style="font-weight:bold; height:40px;">${p.nombre}</div>
-                        <div style="color:var(--accent); font-size:20px; font-weight:800; margin:10px 0;">$${precio}</div>
-                        <button class="btn-add" onclick="addToCart('${p.id}')">🛒 Agregar</button>
-                    </div>
-                </div>`;
-        }).join("");
-    }
+    cart.forEach(i=>{
+        const p = prods.find(x=>x.id===i.id);
+        if(p) txt += `• ${p.nombre} x${i.qty}\n`;
+    });
 
-    /* --- LÓGICA CARRITO --- */
-    function addToCart(id) {
-        const item = cart.find(i => i.id === id);
-        item ? item.qty++ : cart.push({id, qty:1});
-        updateCartUI();
-    }
+    txt += "-----------------\n";
+    txt += document.getElementById("cartTotal").innerText;
 
-    function updateCartUI() {
-        let total = 0, count = 0;
-        const list = document.getElementById("cartItems");
-        list.innerHTML = cart.map(item => {
-            const p = prods.find(x => x.id === item.id);
-            const precio = isMay ? (p.precio_may || p.precio) : p.precio;
-            total += precio * item.qty; count += item.qty;
-            return `
-                <div style="display:flex; justify-content:space-between; margin-bottom:15px; align-items:center;">
-                    <div style="font-size:12px; width:60%;">${p.nombre}</div>
-                    <div style="display:flex; gap:5px; align-items:center;">
-                        <button class="qty-btn" onclick="changeQty('${item.id}',-1)">-</button>
-                        <b>${item.qty}</b>
-                        <button class="qty-btn" onclick="changeQty('${item.id}',1)">+</button>
-                    </div>
-                </div>`;
-        }).join("");
-        document.getElementById("cartTotal").innerText = "$" + total;
-        document.getElementById("cartCount").innerText = count;
-    }
+    await db.collection("pedidos").add({
+        detalle: txt,
+        total: document.getElementById("cartTotal").innerText,
+        fecha: Date.now()
+    });
 
-    function changeQty(id, delta) {
-        const item = cart.find(i => i.id === id);
-        if(item) {
-            item.qty += delta;
-            if(item.qty <= 0) cart = cart.filter(i => i.id !== id);
-        }
-        updateCartUI();
-    }
+    window.open(`https://wa.me/5493434508948?text=${encodeURIComponent(txt)}`);
 
-    /* --- WHATSAPP & FIREBASE ORDERS --- */
-    async function finalizarYEnviar() {
-        if(cart.length === 0) return alert("Carrito vacío");
-        let txt = "Hola Elnen! Nuevo pedido:%0A";
-        let total = 0;
-        cart.forEach(i => {
-            const p = prods.find(x => x.id === i.id);
-            const precio = isMay ? (p.precio_may || p.precio) : p.precio;
-            txt += `- ${i.qty}x ${p.nombre} ($${precio*i.qty})%0A`;
-            total += precio*i.qty;
-        });
-        txt += `%0ATotal: $${total}%0ACliente: ${usuarioLogueado ? usuarioLogueado.user : 'Invitado'}`;
-        
-        await db.collection("pedidos").add({
-            cliente: usuarioLogueado ? usuarioLogueado.user : "Invitado",
-            resumen: txt.replace(/%0A/g, " "),
-            total: total,
-            fecha: Date.now()
-        });
+    cart=[];
+    saveCart();
+    updateCartUI();
+}
 
-        window.open(`https://wa.me/5493424123456?text=${txt}`);
-    }
-
-    /* --- LOGIN & REGISTRO --- */
-    async function doLogin() {
-        const u = document.getElementById("uInp").value, p = document.getElementById("pInp").value;
-        if(u==="admin" && p==="admin") return openModal("adminModal");
-        const user = users.find(x => x.user === u && x.pass === p);
-        if(user && user.activo) {
-            isMay = true; usuarioLogueado = user;
-            document.getElementById("p-user").innerText = user.user;
-            document.getElementById("p-tel").innerText = user.tel;
-            document.getElementById("p-dir").innerText = user.dir;
-            render(); closeAll(); alert("Bienvenido!");
-        } else alert("Usuario no válido o pendiente de aprobación");
-    }
-
-    async function registrarUsuarioEnGoogle() {
-        const u = document.getElementById("rU").value, p = document.getElementById("rP").value, t = document.getElementById("rT").value, d = document.getElementById("rD").value;
-        await db.collection("usuarios").add({ user: u, pass: p, tel: t, dir: d, activo: false, fecha: Date.now() });
-        alert("Solicitud enviada!"); closeAll();
-    }
-
-    /* --- ADMIN CRUD --- */
-    async function saveP() {
-        const obj = {
-            nombre: document.getElementById("fNom").value,
-            precio: Number(document.getElementById("fPre").value),
-            precio_may: Number(document.getElementById("fPreM").value),
-            categoria: document.getElementById("fCat").value,
-            imagen: document.getElementById("fImg").value
-        };
-        const id = document.getElementById("fId").value;
-        id ? await db.collection("productos").doc(id).update(obj) : await db.collection("productos").add(obj);
-        alert("Guardado!");
-    }
-
-    function renderAdmP() {
-        document.getElementById("admListP").innerHTML = prods.map(p => `
-            <div style="background:#000; padding:10px; margin-bottom:5px; border-radius:10px; display:flex; justify-content:space-between;">
-                <span>${p.nombre}</span>
-                <div>
-                    <button onclick="editP('${p.id}')">✏️</button>
-                    <button onclick="del('productos','${p.id}')">🗑️</button>
-                </div>
-            </div>`).join("");
-    }
-
-    function renderAdmU() {
-        document.getElementById("admListU").innerHTML = users.map(u => `
-            <div style="background:#000; padding:10px; margin-bottom:5px; border-radius:10px;">
-                <span>${u.user} (${u.activo ? '✅' : '⏳'})</span>
-                <button onclick="updU('${u.id}', ${!u.activo})">${u.activo ? 'Desactivar' : 'Aprobar'}</button>
-            </div>`).join("");
-    }
-
-    function renderAdmO() {
-        document.getElementById("admListO").innerHTML = orders.map(o => `
-            <div style="font-size:10px; border-bottom:1px solid #333; padding:10px;">
-                <b>${o.cliente}</b> - $${o.total} <br> ${o.resumen}
-            </div>`).join("");
-    }
-
-    async function del(col, id) { if(confirm("¿Eliminar?")) await db.collection(col).doc(id).delete(); }
-    async function updU(id, st) { await db.collection("usuarios").doc(id).update({activo: st}); }
-    function editP(id) {
-        const p = prods.find(x => x.id === id);
-        document.getElementById("fId").value = p.id;
-        document.getElementById("fNom").value = p.nombre;
-        document.getElementById("fPre").value = p.precio;
-        document.getElementById("fPreM").value = p.precio_may;
-    }
-
-    /* --- UI UTILS --- */
-    function toggleInfo() { document.getElementById("infoDrawer").classList.toggle("active"); document.getElementById("ov").classList.toggle("active"); }
-    function toggleCart() { document.getElementById("cartDrawer").classList.toggle("active"); document.getElementById("ov").classList.toggle("active"); }
-    function closeAll() { document.querySelectorAll('.drawer, .modal, .overlay').forEach(e => { e.classList.remove('active'); e.style.display = 'none'; }); }
-    function openModal(id) { document.getElementById(id).style.display = 'flex'; document.getElementById("ov").classList.add("active"); }
-    function showTab(id) { ['t-prod','t-user','t-order'].forEach(t => document.getElementById(t).style.display = t===id ? 'block' : 'none'); }
-    function setCat(c) { filterCat = c; render(); }
-
-    init();
+/* ---------------- START ---------------- */
+init();
 </script>
-</body>
-</html>
