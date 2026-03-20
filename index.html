@@ -485,33 +485,44 @@
 <div class="overlay" id="ov" onclick="closeAll()"></div>
 
 <div id="infoDrawer" class="drawer">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;">
-        <h2 style="margin:0; color:var(--accent);">Mi Perfil</h2>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <h2 style="margin:0; color:var(--accent); font-size: 26px;">Mi Perfil</h2>
         <span onclick="closeAll()" style="cursor:pointer; font-size:24px; opacity:0.5;">✕</span>
     </div>
 
-    <div id="mayBadge" style="display:none; padding:20px; background:rgba(16,185,129,0.1); border-radius:18px; color:var(--success); font-weight:800; border:1px solid rgba(16,185,129,0.2); margin-bottom:30px; text-align:center;">
-        ✓ PERFIL MAYORISTA ACTIVO
-    </div>
-    
-    <div style="flex-grow:1; overflow-y:auto;">
-        <h4 style="text-transform:uppercase; font-size:11px; letter-spacing:1px; opacity:0.5;">Zonas de Entrega</h4>
-        <p style="font-size:14px; margin-bottom:20px;">Santa Fe Capital, Santo Tomé y zonas aledañas. Repartos programados de Lunes a Sábados.</p>
-        
-        <div style="height:180px; background:#334155; border-radius:20px; margin:25px 0; display:flex; flex-direction:column; align-items:center; justify-content:center; color:white; border:1px solid rgba(255,255,255,0.05); text-align:center; padding:20px;">
-            <span style="font-size:30px; margin-bottom:10px;">📍</span>
-            <b style="font-size:13px;">MAPA DE COBERTURA</b>
-            <p style="font-size:11px; opacity:0.6; margin-top:5px;">Consultá si llegamos a tu domicilio.</p>
+    <div id="perfilContenido" style="display:none;">
+        <div style="background:rgba(255,255,255,0.03); padding:20px; border-radius:20px; border:1px solid rgba(255,255,255,0.05); margin-bottom:20px;">
+            <div style="margin-bottom:15px;">
+                <small style="opacity:0.5; text-transform:uppercase; font-size:10px; font-weight:800;">Nombre de Usuario</small>
+                <div id="p-user" style="font-size:18px; font-weight:700; color:var(--accent);">--</div>
+            </div>
+            <div style="margin-bottom:15px;">
+                <small style="opacity:0.5; text-transform:uppercase; font-size:10px; font-weight:800;">Teléfono de Contacto</small>
+                <div id="p-tel" style="font-size:16px;">--</div>
+            </div>
+            <div>
+                <small style="opacity:0.5; text-transform:uppercase; font-size:10px; font-weight:800;">Dirección del Comercio</small>
+                <div id="p-dir" style="font-size:14px; opacity:0.9; line-height:1.4;">--</div>
+            </div>
         </div>
-
-        <a href="https://wa.me/5493434508948" target="_blank" style="display:flex; align-items:center; justify-content:center; gap:10px; background:#25d366; color:white; text-align:center; padding:18px; border-radius:18px; text-decoration:none; font-weight:700; transition: 0.3s;">
-            <span>💬</span> SOPORTE WHATSAPP
-        </a>
+        
+        <div id="mayBadge" style="padding:10px; background:rgba(16,185,129,0.1); border-radius:12px; color:var(--success); font-weight:800; border:1px solid rgba(16,185,129,0.2); text-align:center; font-size:11px; margin-bottom:20px;">
+            ✓ CUENTA MAYORISTA VERIFICADA
+        </div>
     </div>
 
-    <div style="padding-top:30px; border-top:1px solid rgba(255,255,255,0.05); text-align:center;">
-        <button id="logoutBtn" onclick="logout()" style="display:none; width:100%; background:var(--danger); color:white; border:none; padding:16px; border-radius:16px; font-weight:700; cursor:pointer;">CERRAR SESIÓN</button>
-        <p style="font-size:10px; opacity:0.3; margin-top:20px;">MS47 v4.0 • Desarrollado para Elnen</p>
+    <div id="perfilVacio" style="text-align:center; padding:40px 20px; opacity:0.4;">
+        <p>Iniciá sesión para ver tus datos y precios especiales.</p>
+        <button class="btn-add" onclick="openModal('loginModal')" style="background:var(--card); border:1px solid var(--accent); color:var(--accent);">INGRESAR AHORA</button>
+    </div>
+
+    <div style="flex-grow:1;"></div>
+
+    <div style="padding-top:20px; border-top:1px solid rgba(255,255,255,0.05);">
+        <a href="https://wa.me/5493434508948" target="_blank" style="display:flex; align-items:center; justify-content:center; gap:10px; background:#25d366; color:white; padding:15px; border-radius:14px; text-decoration:none; font-weight:700; margin-bottom:15px;">
+            <span>💬</span> AYUDA WHATSAPP
+        </a>
+        <button id="logoutBtn" onclick="logout()" style="display:none; width:100%; background:var(--danger); color:white; border:none; padding:15px; border-radius:14px; font-weight:700; cursor:pointer;">CERRAR SESIÓN</button>
     </div>
 </div>
 
@@ -906,48 +917,68 @@
     }
 
     /* --- AUTENTICACIÓN Y SEGURIDAD --- */
-    async function doLogin() {
-        const u = document.getElementById("uInp").value.trim();
-        const p = document.getElementById("pInp").value.trim();
-        
-        if(u === "admin" && p === "admin") {
+// Variable global para mantener los datos en la sesión actual
+let usuarioActual = null;
+
+async function doLogin() {
+    const u = document.getElementById("uInp").value.trim();
+    const p = document.getElementById("pInp").value.trim();
+    
+    // Login Maestro (Admin)
+    if(u === "admin" && p === "admin") {
+        closeAll();
+        openModal("adminModal");
+        return;
+    }
+    
+    // Buscar en la colección de usuarios de Firebase
+    const userFound = users.find(x => x.user === u && x.pass === p);
+    
+    if(userFound) {
+        if(userFound.activo) {
+            usuarioActual = userFound; // Guardamos el objeto de Firebase en memoria
+            isMay = true; // Activamos modo mayorista
+            
+            llenarPerfil(userFound); // Inyectamos la data en el HTML
+            render(); // Refrescamos la lista de productos para ver precios mayoristas
+            
+            alert("¡Bienvenido, " + userFound.user + "!");
             closeAll();
-            openModal("adminModal");
-            return;
-        }
-        
-        const userFound = users.find(x => x.user === u && x.pass === p);
-        
-        if(userFound) {
-            if(userFound.activo) {
-                localStorage.setItem("ms47_may", "true");
-                alert("¡Bienvenido, " + userFound.user + "! Precios mayoristas activados.");
-                location.reload();
-            } else {
-                alert("Tu cuenta mayorista está pendiente de aprobación por el administrador.");
-            }
         } else {
-            alert("Usuario o contraseña incorrectos.");
+            alert("Tu cuenta está en revisión por el administrador.");
         }
+    } else {
+        alert("Usuario o contraseña incorrectos.");
     }
+}
 
-    async function regU() {
-        const u = document.getElementById("rU").value.trim();
-        const p = document.getElementById("rP").value.trim();
-        const t = document.getElementById("rT").value.trim();
-        const d = document.getElementById("rD").value.trim();
+// Esta función toma los datos de "Google" (Firebase) y los pone en los divs
+function llenarPerfil(data) {
+    document.getElementById("perfilContenido").style.display = "block";
+    document.getElementById("perfilVacio").style.display = "none";
+    document.getElementById("logoutBtn").style.display = "block";
+    
+    // Mapeo directo de campos de Firestore
+    document.getElementById("p-user").innerText = data.user;
+    document.getElementById("p-tel").innerText = data.tel;
+    document.getElementById("p-dir").innerText = data.dir || "Santa Fe Capital";
+}
+
+function logout() {
+    if(confirm("¿Cerrar sesión?")) {
+        usuarioActual = null;
+        isMay = false;
         
-        if(!u || !p || !t || !d) return alert("Por favor, completa todos los campos.");
-        if(p.length < 4) return alert("La contraseña es muy corta.");
-
-        try {
-            await db.collection("usuarios").add({
-                user: u, pass: p, tel: t, dir: d, activo: false, fechaReg: Date.now()
-            });
-            alert("Solicitud enviada correctamente. Espera a ser habilitado.");
-            closeAll();
-        } catch(e) { alert("Error al enviar solicitud."); }
+        // Resetear UI
+        document.getElementById("perfilContenido").style.display = "none";
+        document.getElementById("perfilVacio").style.display = "block";
+        document.getElementById("logoutBtn").style.display = "none";
+        
+        render(); // Volver a precios normales
+        alert("Sesión cerrada.");
+        closeAll();
     }
+}
 
     function logout() {
         if(confirm("¿Cerrar sesión? Volverás a ver precios minoristas.")) {
