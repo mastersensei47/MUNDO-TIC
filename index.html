@@ -62,33 +62,75 @@
             align-items: center;
             gap: 10px;
         }
-        /* HERO SLIDER */
-        .hero {
-            height: 320px;
-            position: relative;
-            overflow: hidden;
-        }
-        .hero-slide {
-            position: absolute;
-            inset: 0;
-            background-size: cover;
-            background-position: center;
-            transition: opacity 1.2s ease-in-out;
-            opacity: 0;
-        }
-        .hero-slide.active { opacity: 1; }
-        .hero-content {
-            position: relative;
-            z-index: 2;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            padding: 0 20px;
-            background: linear-gradient(rgba(15,23,42,0.7), rgba(15,23,42,0.95));
-        }
+/* HERO SLIDER */
+.hero {
+    /* Altura para celulares: menos alto para que la imagen no se recorte tanto */
+    height: 250px; 
+    position: relative;
+    overflow: hidden;
+    background-color: #0f172a; /* Color de fondo por si la imagen tarda en cargar */
+}
+
+/* Media Query para Tablets y PC */
+@media (min-width: 768px) {
+    .hero {
+        height: 350px; /* Altura ideal para monitores */
+    }
+}
+
+/* Media Query para Pantallas Grandes (Opcional) */
+@media (min-width: 1440px) {
+    .hero {
+        height: 450px; 
+    }
+}
+
+.hero-slide {
+    position: absolute;
+    inset: 0;
+    /* "cover" asegura que la imagen llene el espacio, "center" la mantiene centrada */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    transition: opacity 1.2s ease-in-out;
+    opacity: 0;
+}
+
+.hero-slide.active { 
+    opacity: 1; 
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 0 20px;
+    /* Gradiente sutil para que el texto resalte sobre cualquier imagen */
+    background: linear-gradient(
+        to bottom, 
+        rgba(15, 23, 42, 0.5) 0%, 
+        rgba(15, 23, 42, 0.8) 100%
+    );
+}
+
+/* Mejora para el texto dentro del Hero */
+.hero-content h1 {
+    font-size: 2rem;
+    color: #fff;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    margin-bottom: 10px;
+}
+
+@media (min-width: 768px) {
+    .hero-content h1 {
+        font-size: 3.5rem;
+    }
+}
         /* CATEGORÍAS - SCROLL MEJORADO */
         .cat-scroll {
             display: flex;
