@@ -401,22 +401,6 @@
     <div class="cat-item" onclick="setCat('smartwatch')">⌚ Watch</div>
     <div class="cat-item" onclick="setCat('smartband')">⌚ Band</div>
     <div class="cat-item" onclick="setCat('aro_luz')">💡 Aro</div>
-   
-    <script>
-function setCat(cat) {
-
-    // quitar active de todos
-    document.querySelectorAll('.cat-item').forEach(el => {
-        el.classList.remove('active');
-    });
-
-    // agregar active al clickeado
-    event.currentTarget.classList.add('active');
-
-    // debug (opcional)
-    console.log("Categoría:", cat);
-}
-</script>
 
 </div>
 
@@ -993,6 +977,21 @@ function setCat(cat) {
 
     // ARRANQUE DEL SISTEMA
     init();
+
+        <script>
+function setCat(cat) {
+
+    // quitar active de todos
+    document.querySelectorAll('.cat-item').forEach(el => {
+        el.classList.remove('active');
+    });
+
+    // agregar active al clickeado
+    event.currentTarget.classList.add('active');
+
+    // debug (opcional)
+    console.log("Categoría:", cat);
+}
 </script>
 </body>
 </html>
