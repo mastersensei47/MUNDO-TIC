@@ -62,32 +62,32 @@
             align-items: center;
             gap: 10px;
         }
-/* HERO SLIDER - Optimizado para Diseño Integrado MS47 */
+/* HERO SLIDER - Versión Final para Diseño Integrado MS47 */
 .hero {
-    /* En móvil bajamos un poco la altura para que no se pierdan los costados del diseño */
-    height: 250px; 
+    /* Altura adaptable: más baja en celular para no estirar la imagen */
+    height: 280px; 
     position: relative;
     overflow: hidden;
-    background-color: #0f172a; 
+    background-color: #0f172a; /* Fondo oscuro que combina con tu diseño */
 }
 
 @media (min-width: 768px) {
     .hero {
-        height: 380px; /* Un poco más de aire para el logo de Mundotic */
+        height: 400px; /* Altura para tablets y laptops */
     }
 }
 
 @media (min-width: 1440px) {
     .hero {
-        height: 480px; 
+        height: 500px; /* Altura para monitores grandes */
     }
 }
 
 .hero-slide {
     position: absolute;
     inset: 0;
-    /* "cover" y "center" son clave para que tu logo siempre quede al medio */
-    background-size: cover;
+    /* "contain" hace que la imagen se vea SIEMPRE completa sin cortarse */
+    background-size: contain; 
     background-position: center;
     background-repeat: no-repeat;
     transition: opacity 1.2s ease-in-out;
@@ -108,19 +108,20 @@
     align-items: center;
     text-align: center;
     padding: 0 20px;
-    
-    /* Bajamos la intensidad del gradiente para que tu diseño de Photoshop se vea vibrante */
-    background: linear-gradient(
-        to bottom, 
-        rgba(15, 23, 42, 0.2) 0%, 
-        rgba(15, 23, 42, 0.5) 100%
-    );
+    /* Eliminamos el gradiente oscuro para que brillen tus rayos cian de Photoshop */
+    background: transparent; 
 }
 
-/* Ocultamos el texto del HTML para que no tape tu logo de Photoshop */
+/* Ocultamos los textos del HTML porque ya están integrados en tu imagen */
 .hero-content h1, 
 .hero-content p {
     display: none;
+}
+
+/* Ajuste opcional: si tenés botones dentro del hero, dales un poco de sombra 
+   para que resalten sobre el fondo claro de tu diseño */
+.hero-content .btn {
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
 }
         /* CATEGORÍAS - SCROLL MEJORADO */
         .cat-scroll {
