@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MS47 - SISTEMA INTEGRAL ELNEN</title>
+    <title>MS47-Mundo Tic</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script>
@@ -348,17 +348,73 @@
 </header>
 
 <section class="hero">
-    <h1>DISTRIBUIDORA ELNEN</h1>
-    <p>Calidad mayorista directo a tu comercio</p>
+    <h1>Mundo Tic</h1>
+    <p>Equipamos tu mundo digital</p>
 </section>
 
 <div class="cat-grid" id="catBar">
-    <div class="cat-card active" onclick="setCat('')"><span>🌐</span><b>Todos</b></div>
-    <div class="cat-card" onclick="setCat('bebida')"><span>🥤</span><b>Bebidas</b></div>
-    <div class="cat-card" onclick="setCat('snack')"><span>🍿</span><b>Snacks</b></div>
-    <div class="cat-card" onclick="setCat('almacen')"><span>🥫</span><b>Almacén</b></div>
-</div>
 
+    <div class="cat-card active" onclick="setCat('')">
+        <span>🌐</span><b>Todos</b>
+    </div>
+
+    <div class="cat-card" onclick="setCat('fundas')">
+        <span>📱</span><b>Fundas</b>
+    </div>
+
+    <div class="cat-card" onclick="setCat('cargadores')">
+        <span>🔌</span><b>Cargadores MARCA</b>
+    </div>
+
+    <div class="cat-card" onclick="setCat('bateria')">
+        <span>🔋</span><b>Baterry</b>
+    </div>
+
+    <div class="cat-card" onclick="setCat('cables')">
+        <span>🔗</span><b>Cables MARCA</b>
+    </div>
+
+    <div class="cat-card" onclick="setCat('cabezales')">
+        <span>⚡</span><b>Cabezales Marca</b>
+    </div>
+
+    <div class="cat-card" onclick="setCat('adaptadores')">
+        <span>🔄</span><b>Adaptadores</b>
+    </div>
+
+    <div class="cat-card" onclick="setCat('powerbank')">
+        <span>🔋</span><b>Power Bank</b>
+    </div>
+
+    <div class="cat-card" onclick="setCat('inalambrico')">
+        <span>📡</span><b>Inalámbrico</b>
+    </div>
+
+    <div class="cat-card" onclick="setCat('auricular_vincha')">
+        <span>🎧</span><b>Auricular Vincha</b>
+    </div>
+
+    <div class="cat-card" onclick="setCat('auri_sin_cable')">
+        <span>🎧</span><b>Auri sin Cable</b>
+    </div>
+
+    <div class="cat-card" onclick="setCat('auri_con_cable')">
+        <span>🎧</span><b>Auri con Cable</b>
+    </div>
+
+    <div class="cat-card" onclick="setCat('smartwatch')">
+        <span>⌚</span><b>Smart Watch</b>
+    </div>
+
+    <div class="cat-card" onclick="setCat('smartband')">
+        <span>⌚</span><b>Smart Band</b>
+    </div>
+
+    <div class="cat-card" onclick="setCat('aro_luz')">
+        <span>💡</span><b>Aro de Luz</b>
+    </div>
+
+</div>
 <div class="search-container">
     <input type="text" id="searchInput" class="search-bar" placeholder="Busca marcas o productos..." onkeyup="render()">
 </div>
