@@ -493,21 +493,46 @@
 <!-- OVERLAY -->
 <div class="overlay" id="ov" onclick="closeAll()"></div>
 
-<!-- PANEL LATERAL IZQUIERDO RESTAURADO -->
+<!-- ====================== PANEL LATERAL IZQUIERDO (INFO DRAWER) ====================== -->
 <div id="infoDrawer" class="drawer">
     <div class="flex-between" style="margin-bottom:25px;">
         <h2 style="margin:0; color:var(--accent); font-size:28px;">MS47</h2>
         <span onclick="closeAll()" style="cursor:pointer; font-size:28px; opacity:0.5;">✕</span>
     </div>
 
-    <!-- Información del negocio + Logo -->
+    <!-- Logo y Información del Negocio -->
     <div style="text-align:center; margin-bottom:30px; padding-bottom:25px; border-bottom:1px solid rgba(255,255,255,0.1);">
         <img src="log.png" style="height:85px; width:auto; margin-bottom:15px;" alt="MS47">
         <h2 style="margin:0 0 6px 0; font-size:26px;">Mundo Tic</h2>
         <p style="margin:0; opacity:0.75; font-size:15px; line-height:1.4;">Equipamos tu mundo digital<br>en Santa Fe, Argentina</p>
     </div>
 
-    <!-- Minimapa interactivo -->
+    <!-- Información de Contacto -->
+    <div style="margin-bottom:30px;">
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:15px;">
+            <span style="font-size:22px;">📍</span>
+            <div>
+                <small style="opacity:0.5; font-weight:700;">DIRECCIÓN</small>
+                <div style="font-size:15px;">Av. San Martín 1234, Santa Fe</div>
+            </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:15px;">
+            <span style="font-size:22px;">📞</span>
+            <div>
+                <small style="opacity:0.5; font-weight:700;">TELÉFONO</small>
+                <div style="font-size:15px;">(342) 123-4567</div>
+            </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:12px;">
+            <span style="font-size:22px;">💬</span>
+            <div>
+                <small style="opacity:0.5; font-weight:700;">WHATSAPP</small>
+                <a href="https://wa.me/5493434508948" target="_blank" style="color:var(--accent); text-decoration:none; font-size:15px;">549 343 4508948</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Minimapa Interactivo -->
     <div style="margin-bottom:30px;">
         <label style="font-size:11px; opacity:0.5; font-weight:800; text-transform:uppercase; letter-spacing:1px; display:block; margin-bottom:8px;">📍 Nuestra ubicación</label>
         <iframe 
@@ -520,6 +545,40 @@
             referrerpolicy="no-referrer-when-downgrade">
         </iframe>
     </div>
+
+    <!-- Perfil del usuario (se muestra después del login) -->
+    <div id="perfilContenido" style="display:none;">
+        <div style="background:rgba(255,255,255,0.03); padding:25px; border-radius:25px; border:1px solid rgba(255,255,255,0.05); margin-bottom:25px;">
+            <div style="margin-bottom:20px;">
+                <small style="opacity:0.4; text-transform:uppercase; font-size:10px; font-weight:800; letter-spacing:1px;">Usuario</small>
+                <div id="p-user" style="font-size:20px; font-weight:800; color:var(--accent);">--</div>
+            </div>
+            <div style="margin-bottom:20px;">
+                <small style="opacity:0.4; text-transform:uppercase; font-size:10px; font-weight:800; letter-spacing:1px;">Teléfono</small>
+                <div id="p-tel" style="font-size:16px; font-weight:600;">--</div>
+            </div>
+            <div>
+                <small style="opacity:0.4; text-transform:uppercase; font-size:10px; font-weight:800; letter-spacing:1px;">Dirección / Comercio</small>
+                <div id="p-dir" style="font-size:14px; opacity:0.8; line-height:1.6;">--</div>
+            </div>
+        </div>
+        <div style="padding:15px; background:rgba(16,185,129,0.1); border-radius:16px; color:var(--success); font-weight:800; border:1px solid rgba(16,185,129,0.2); text-align:center; font-size:11px; margin-bottom:30px;">
+            ✓ ESTADO: CLIENTE MAYORISTA ACTIVO
+        </div>
+    </div>
+
+    <!-- Perfil vacío (antes de login) -->
+    <div id="perfilVacio" style="text-align:center; padding:60px 0; opacity:0.4;">
+        <div style="font-size:50px; margin-bottom:20px;">👤</div>
+        <p>Iniciá sesión para ver tu información y precios especiales.</p>
+    </div>
+
+    <div style="flex-grow:1;"></div>
+    <div style="padding-top:20px; border-top:1px solid rgba(255,255,255,0.05);">
+        <button id="logoutBtn" onclick="logout()" style="display:none; width:100%; background:var(--danger); color:white; border:none; padding:18px; border-radius:18px; font-weight:800; cursor:pointer; margin-bottom:15px;">CERRAR SESIÓN</button>
+        <p style="font-size:10px; text-align:center; opacity:0.3; font-weight:700;">MS47 v5.0 • SANTA FE</p>
+    </div>
+</div>
 
     <!-- Contenido del perfil (se muestra después de login) -->
     <div id="perfilContenido" style="display:none;">
