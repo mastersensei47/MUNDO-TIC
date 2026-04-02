@@ -1001,9 +1001,9 @@ function setCat(el, cat) {
         }
     }
 
+
 <script>
-    
-<script>
+
 function verificarAdmin() { 
     const clave = prompt("Ingresá la clave de administración:");
     
@@ -1014,8 +1014,13 @@ function verificarAdmin() {
     }
 }
 
-// ARRANQUE DEL SISTEMA
-init();
+// asegurarse que init exista
+if (typeof init === "function") {
+    init();
+} else {
+    console.error("init() no existe");
+}
+
 </script>
 
 </body>
