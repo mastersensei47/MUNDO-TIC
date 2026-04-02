@@ -62,30 +62,29 @@
             align-items: center;
             gap: 10px;
         }
-/* HERO SLIDER - Configuración Estilo Cuba Importados */
+/* HERO SLIDER - Configuración MS47 */
 .hero {
-    /* Subimos la altura para que la imagen tenga espacio de lucirse */
-    height: 450px; 
+    /* Ajustamos la altura para que tu diseño de 600px de alto se luzca */
+    height: 500px; 
     position: relative;
     width: 100%;
     overflow: hidden;
     background-color: #0f172a;
 }
 
-/* Ajuste para que en el celu no quede un hueco gigante */
+/* En celulares bajamos la altura para que no se vea una franja gigante vacía */
 @media (max-width: 768px) {
     .hero {
-        height: 250px; 
+        height: 300px; 
     }
 }
 
 .hero-slide {
     position: absolute;
     inset: 0;
-    /* CAMBIO CLAVE: Usamos 'cover' para que llene todo el ancho */
-    background-size: cover; 
-    /* Centramos la imagen para que el logo no se mueva de lugar */
-    background-position: center; 
+    /* CAMBIO CLAVE: Usamos 'contain' para asegurar que NO se corte nada */
+    background-size: contain; 
+    background-position: center;
     background-repeat: no-repeat;
     transition: opacity 1.2s ease-in-out;
     opacity: 0;
@@ -99,15 +98,14 @@
     position: relative;
     z-index: 2;
     height: 100%;
-    /* Quitamos cualquier color o gradiente que opaque tu diseño */
-    background: transparent; 
+    background: transparent; /* Sin manchas grises sobre tu diseño */
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
 }
 
-/* Ocultamos los textos del HTML */
+/* Ocultamos los textos sobrantes del HTML */
 .hero-content h1, 
 .hero-content p {
     display: none;
