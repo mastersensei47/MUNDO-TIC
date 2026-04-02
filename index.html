@@ -46,53 +46,7 @@
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
 
-        /* TOAST */
-        #toast {
-            position: fixed;
-            bottom: 25px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: var(--success);
-            color: white;
-            padding: 14px 26px;
-            border-radius: 50px;
-            font-weight: 700;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            z-index: 9000;
-            display: none;
-            align-items: center;
-            gap: 10px;
-        }
-
-        /* HERO */
-        .hero {
-            height: 320px;
-            position: relative;
-            overflow: hidden;
-        }
-        .hero-slide {
-            position: absolute;
-            inset: 0;
-            background-size: cover;
-            background-position: center;
-            transition: opacity 1.2s ease-in-out;
-            opacity: 0;
-        }
-        .hero-slide.active { opacity: 1; }
-        .hero-content {
-            position: relative;
-            z-index: 2;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            padding: 0 20px;
-            background: linear-gradient(rgba(15,23,42,0.75), rgba(15,23,42,0.9));
-        }
-
-        /* CATEGORÍAS - SCROLL MEJORADO PARA PC Y MÓVIL */
+        /* CATEGORÍAS - SCROLL CORREGIDO PARA PC Y MÓVIL */
         .cat-scroll {
             display: flex;
             gap: 10px;
@@ -121,28 +75,119 @@
         .cat-item:hover { background: #334155; }
         .cat-item.active { background: var(--accent); color: white; }
 
-        /* ADMIN - FORMULARIO MEJORADO */
+        /* PANEL ADMIN - FORMULARIO MEJORADO */
         .admin-form-box {
-            background: rgba(255,255,255,0.03);
-            padding: 30px;
+            background:rgba(255,255,255,0.03);
+            padding: 35px;
             border-radius: 30px;
             margin-bottom: 30px;
             border: 1px solid rgba(255,255,255,0.05);
         }
-        .admin-form-box input,
-        .admin-form-box textarea {
-            border-radius: 16px;
-            padding: 18px;
-            font-size: 16px;
+        .admin-form-box .form-group label {
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
         }
         .admin-form-box button {
             border-radius: 16px;
             padding: 18px;
+            font-size: 16px;
             font-weight: 800;
             transition: var(--transition);
         }
 
-        /* PRODUCTOS */
+        /* ADMIN ITEM - IMÁGENES MÁS PEQUEÑAS */
+        .admin-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: rgba(255,255,255,0.03);
+            padding: 18px;
+            border-radius: 20px;
+            margin-bottom: 12px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .admin-item-img {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+            background: #fff;
+            border-radius: 14px;
+            padding: 6px;
+            flex-shrink: 0;
+        }
+
+        /* RESTO DE ESTILOS ORIGINALES (mantengo todo tu diseño) */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 25px;
+            background: var(--card);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 25px rgba(0,0,0,0.3);
+            height: 85px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; }
+        .main-logo { height: 55px; width: auto; transition: transform 0.3s; cursor: pointer; }
+        .main-logo:hover { transform: scale(1.05); }
+       
+        .header-icons { display: flex; gap: 12px; align-items: center; }
+        .icon-btn {
+            cursor: pointer;
+            font-size: 22px;
+            padding: 10px;
+            border-radius: 50%;
+            color: var(--text);
+            transition: var(--transition);
+            position: relative;
+            border: none;
+            background: transparent;
+        }
+        .icon-btn:hover { background: rgba(255,255,255,0.1); transform: translateY(-2px); }
+
+        .hero {
+            height: 320px;
+            background: linear-gradient(rgba(15,23,42,0.7), rgba(15,23,42,0.95)), url('https://images.unsplash.com/photo-1542831371-29b0f74f9713?q=80&w=1470&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 0 20px;
+        }
+        .hero h1 { margin:0; font-size: 2.8rem; font-weight: 800; letter-spacing: -1px; text-shadow: 0 10px 20px rgba(0,0,0,0.5); }
+        .hero p { margin: 10px 0 0; opacity: 0.8; font-size: 1.2rem; }
+
+        .search-container { max-width: 700px; margin: 0 auto 35px; padding: 0 20px; }
+        .search-bar {
+            width: 100%;
+            padding: 20px 28px;
+            border-radius: 20px;
+            border: 1px solid rgba(128,128,128,0.2);
+            background: var(--input-bg);
+            color: inherit;
+            font-size: 17px;
+            outline: none;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            padding: 20px;
+            max-width: 1400px;
+            margin: auto;
+        }
+        @media (min-width: 768px) {
+            .products-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+        }
+
         .product-card {
             background: var(--card);
             border-radius: var(--radius);
@@ -154,6 +199,7 @@
             transition: var(--transition);
         }
         .product-card:hover { transform: translateY(-8px); box-shadow: 0 20px 40px rgba(0,0,0,0.4); }
+
         .promo-badge {
             position: absolute;
             top: 15px;
@@ -185,7 +231,7 @@
         .product-card:hover .img-box img { transform: scale(1.1); }
        
         .info-box { padding: 22px; flex-grow: 1; display: flex; flex-direction: column; }
-        .prod-title { font-weight: 700; font-size: 17px; margin-bottom: 12px; min-height: 48px; line-height: 1.4; }
+        .prod-title { font-weight: 700; font-size: 17px; margin-bottom: 12px; min-height: 45px; line-height: 1.4; }
         .price-val { font-size: 26px; font-weight: 800; color: var(--accent); margin-bottom: 20px; }
        
         .btn-add {
@@ -200,36 +246,8 @@
             transition: var(--transition);
             font-size: 15px;
         }
-
-        /* DRAWERS Y MODALES */
-        .drawer {
-            position: fixed;
-            top: 0;
-            width: 90%;
-            max-width: 420px;
-            height: 100%;
-            background: var(--card);
-            transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-            z-index: 6000;
-            padding: 40px;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 0 0 60px rgba(0,0,0,0.8);
-            overflow-y: auto;
-        }
-        #infoDrawer { left: -110%; }
-        #infoDrawer.active { left: 0; }
-        #cartDrawer { right: -110%; }
-        #cartDrawer.active { right: 0; }
-        .overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.8);
-            display: none;
-            z-index: 5500;
-            backdrop-filter: blur(6px);
-        }
-        .overlay.active { display: block; }
+        .btn-add:hover { filter: brightness(1.1); }
+        .btn-add:active { transform: scale(0.96); }
 
         .modal {
             position: fixed;
@@ -274,6 +292,34 @@
             font-size: 13px;
         }
         .tab-btn.active { background: var(--card); color: var(--accent); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+
+        .drawer {
+            position: fixed;
+            top: 0;
+            width: 90%;
+            max-width: 420px;
+            height: 100%;
+            background: var(--card);
+            transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 6000;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 0 60px rgba(0,0,0,0.8);
+        }
+        #infoDrawer { left: -110%; }
+        #infoDrawer.active { left: 0; }
+        #cartDrawer { right: -110%; }
+        #cartDrawer.active { right: 0; }
+        .overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            z-index: 5500;
+            backdrop-filter: blur(6px);
+        }
+        .overlay.active { display: block; }
 
         .form-group { margin-bottom: 22px; }
         .form-group label {
@@ -322,13 +368,10 @@
 </header>
 
 <section class="hero">
-    <div class="hero-content">
-        <h1>Mundo Tic</h1>
-        <p>Equipamos tu mundo digital</p>
-    </div>
+    <h1>Mundo Tic</h1>
+    <p>Equipamos tu mundo digital</p>
 </section>
 
-<!-- CATEGORÍAS CON SCROLL CORREGIDO PARA PC -->
 <div class="cat-scroll" id="catBar">
     <div class="cat-item active" onclick="setCat(this, '')">🌐 Todos</div>
     <div class="cat-item" onclick="setCat(this, 'fundas')">📱 Fundas</div>
@@ -357,8 +400,8 @@
 <div id="toast">✅ Producto agregado al carrito</div>
 
 <!-- MODAL ZOOM -->
-<div id="imageModal" style="position:fixed; inset:0; background:rgba(0,0,0,0.95); display:none; align-items:center; justify-content:center; z-index:9000;" onclick="if(event.target.id==='imageModal')this.style.display='none';">
-    <img id="modalImg" style="max-width:92%; max-height:92%; object-fit:contain;" src="">
+<div id="imageModal" style="position:fixed;inset:0;background:rgba(0,0,0,0.95);display:none;align-items:center;justify-content:center;z-index:9000;" onclick="if(event.target.id==='imageModal')this.style.display='none';">
+    <img id="modalImg" style="max-width:92%;max-height:92%;object-fit:contain;" src="">
 </div>
 
 <!-- LOGIN MODAL -->
@@ -395,15 +438,12 @@
             <h2 style="margin:0;">Gestión Maestra</h2>
             <button onclick="closeAll()" style="background:none; border:none; color:white; font-size:30px; cursor:pointer;">✕</button>
         </div>
-       
         <div class="admin-tabs">
             <button class="tab-btn active" onclick="tab('t-prod', event)">PRODUCTOS</button>
             <button class="tab-btn" onclick="tab('t-user', event)">CLIENTES</button>
             <button class="tab-btn" onclick="tab('t-order', event)">HISTORIAL</button>
         </div>
-        
         <div id="t-prod">
-            <!-- FORMULARIO MEJORADO -->
             <div class="admin-form-box">
                 <input id="fId" type="hidden">
                 <div class="form-group"><label>Nombre del Producto</label><input id="fNom"></div>
@@ -413,14 +453,12 @@
                 </div>
                 <div class="form-group"><label>Oferta Especial</label><input id="fPro"></div>
                 <div class="form-group"><label>Categoría</label><input id="fCat" placeholder="fundas, cargadores..."></div>
-                <div class="form-group"><label>Stock</label><input id="fStock" type="number" placeholder="Cantidad disponible"></div>
                 <div class="form-group"><label>URL de la Imagen</label><input id="fImg"></div>
                 <button class="btn-add" style="background:var(--success)" onclick="saveP()">GUARDAR PRODUCTO</button>
                 <button class="btn-add" style="background:none; color:white; margin-top:10px; border:1px solid rgba(255,255,255,0.1);" onclick="limpiarP()">Limpiar</button>
             </div>
             <div id="admListP"></div>
         </div>
-        
         <div id="t-user" style="display:none;"><div id="admListU"></div></div>
         <div id="t-order" style="display:none;">
             <button class="btn-add" style="background:var(--danger); margin-bottom:20px;" onclick="vaciarHistorial()">BORRAR TODO EL HISTORIAL</button>
@@ -432,20 +470,17 @@
 <!-- OVERLAY -->
 <div class="overlay" id="ov" onclick="closeAll()"></div>
 
-<!-- PANEL LATERAL IZQUIERDO RESTAURADO Y MEJORADO -->
+<!-- PANEL LATERAL IZQUIERDO RESTAURADO -->
 <div id="infoDrawer" class="drawer">
     <div class="flex-between" style="margin-bottom:25px;">
         <h2 style="margin:0; color:var(--accent); font-size:28px;">MS47</h2>
         <span onclick="closeAll()" style="cursor:pointer; font-size:28px; opacity:0.5;">✕</span>
     </div>
-
-    <!-- Información del negocio -->
     <div style="text-align:center; margin-bottom:30px; padding-bottom:25px; border-bottom:1px solid rgba(255,255,255,0.1);">
         <img src="log.png" style="height:85px; width:auto; margin-bottom:15px;" alt="MS47">
         <h2 style="margin:0 0 6px 0; font-size:26px;">Mundo Tic</h2>
         <p style="margin:0; opacity:0.75; font-size:15px; line-height:1.4;">Equipamos tu mundo digital<br>en Santa Fe, Argentina</p>
     </div>
-
     <div id="perfilContenido" style="display:none;">
         <div style="background:rgba(255,255,255,0.03); padding:25px; border-radius:25px; border:1px solid rgba(255,255,255,0.05); margin-bottom:25px;">
             <div style="margin-bottom:20px;">
@@ -465,12 +500,10 @@
             ✓ ESTADO: CLIENTE MAYORISTA ACTIVO
         </div>
     </div>
-
     <div id="perfilVacio" style="text-align:center; padding:60px 0; opacity:0.4;">
         <div style="font-size:50px; margin-bottom:20px;">👤</div>
         <p>Iniciá sesión para ver tu información y precios especiales.</p>
     </div>
-
     <div style="flex-grow:1;"></div>
     <div style="padding-top:20px; border-top:1px solid rgba(255,255,255,0.05);">
         <button id="logoutBtn" onclick="logout()" style="display:none; width:100%; background:var(--danger); color:white; border:none; padding:18px; border-radius:18px; font-weight:800; cursor:pointer; margin-bottom:15px;">CERRAR SESIÓN</button>
@@ -668,7 +701,7 @@
         }
     }
 
-    // ==================== PANEL ADMIN - PRODUCTOS ====================
+    // ==================== PANEL ADMIN ====================
     function renderAdmP() {
         const list = document.getElementById("admListP");
         list.innerHTML = prods.map(p => `
@@ -686,7 +719,6 @@
             </div>
         `).join("");
     }
-
     function renderAdmU() {
         const list = document.getElementById("admListU");
         const pen = users.filter(u => !u.activo);
@@ -725,7 +757,6 @@
         `).join("");
         list.innerHTML = html;
     }
-
     function renderAdmO() {
         const list = document.getElementById("admListO");
         if (orders.length === 0) {
@@ -764,7 +795,6 @@
         limpiarP();
         alert("Producto guardado correctamente");
     }
-
     function editP(id) {
         const p = prods.find(x => x.id === id);
         if (!p) return;
@@ -776,7 +806,6 @@
         document.getElementById("fCat").value = p.categoria || "";
         document.getElementById("fImg").value = p.imagen || "";
     }
-
     function limpiarP() {
         document.getElementById("fId").value = "";
         ["fNom","fPre","fPreM","fPro","fCat","fImg"].forEach(id => {
@@ -785,9 +814,7 @@
     }
 
     // ==================== FUNCIONES AUXILIARES ====================
-    function toggleTheme() {
-        document.body.classList.toggle("light");
-    }
+    function toggleTheme() { document.body.classList.toggle("light"); }
     function openModal(id) {
         closeAll();
         document.getElementById(id).style.display = "flex";
