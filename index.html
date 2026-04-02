@@ -62,33 +62,31 @@
             align-items: center;
             gap: 10px;
         }
-/* HERO SLIDER */
+/* HERO SLIDER - Optimizado para Diseño Integrado MS47 */
 .hero {
-    /* Altura para celulares: menos alto para que la imagen no se recorte tanto */
+    /* En móvil bajamos un poco la altura para que no se pierdan los costados del diseño */
     height: 250px; 
     position: relative;
     overflow: hidden;
-    background-color: #0f172a; /* Color de fondo por si la imagen tarda en cargar */
+    background-color: #0f172a; 
 }
 
-/* Media Query para Tablets y PC */
 @media (min-width: 768px) {
     .hero {
-        height: 350px; /* Altura ideal para monitores */
+        height: 380px; /* Un poco más de aire para el logo de Mundotic */
     }
 }
 
-/* Media Query para Pantallas Grandes (Opcional) */
 @media (min-width: 1440px) {
     .hero {
-        height: 450px; 
+        height: 480px; 
     }
 }
 
 .hero-slide {
     position: absolute;
     inset: 0;
-    /* "cover" asegura que la imagen llene el espacio, "center" la mantiene centrada */
+    /* "cover" y "center" son clave para que tu logo siempre quede al medio */
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
@@ -110,26 +108,19 @@
     align-items: center;
     text-align: center;
     padding: 0 20px;
-    /* Gradiente sutil para que el texto resalte sobre cualquier imagen */
+    
+    /* Bajamos la intensidad del gradiente para que tu diseño de Photoshop se vea vibrante */
     background: linear-gradient(
         to bottom, 
-        rgba(15, 23, 42, 0.5) 0%, 
-        rgba(15, 23, 42, 0.8) 100%
+        rgba(15, 23, 42, 0.2) 0%, 
+        rgba(15, 23, 42, 0.5) 100%
     );
 }
 
-/* Mejora para el texto dentro del Hero */
-.hero-content h1 {
-    font-size: 2rem;
-    color: #fff;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-    margin-bottom: 10px;
-}
-
-@media (min-width: 768px) {
-    .hero-content h1 {
-        font-size: 3.5rem;
-    }
+/* Ocultamos el texto del HTML para que no tape tu logo de Photoshop */
+.hero-content h1, 
+.hero-content p {
+    display: none;
 }
         /* CATEGORÍAS - SCROLL MEJORADO */
         .cat-scroll {
