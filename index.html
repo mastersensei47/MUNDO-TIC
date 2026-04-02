@@ -351,68 +351,51 @@
     <h1>Mundo Tic</h1>
     <p>Equipamos tu mundo digital</p>
 </section>
+    
+.cat-scroll {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding: 10px;
+    scrollbar-width: none;
+}
 
-<div class="cat-grid" id="catBar">
+.cat-scroll::-webkit-scrollbar {
+    display: none;
+}
 
-    <div class="cat-card active" onclick="setCat('')">
-        <span>🌐</span><b>Todos</b>
-    </div>
+.cat-item {
+    flex: 0 0 auto;
+    padding: 8px 14px;
+    border-radius: 20px;
+    background: #1e293b;
+    font-size: 13px;
+    cursor: pointer;
+    white-space: nowrap;
+}
 
-    <div class="cat-card" onclick="setCat('fundas')">
-        <span>📱</span><b>Fundas</b>
-    </div>
+.cat-item.active {
+    background: #3b82f6;
+}
+<div class="cat-scroll" id="catBar">
 
-    <div class="cat-card" onclick="setCat('cargadores')">
-        <span>🔌</span><b>Cargadores MARCA</b>
-    </div>
+    <div class="cat-item active" onclick="setCat('')">🌐 Todos</div>
+    <div class="cat-item" onclick="setCat('fundas')">📱 Fundas</div>
+    <div class="cat-item" onclick="setCat('cargadores')">🔌 Cargadores</div>
+    <div class="cat-item" onclick="setCat('bateria')">🔋 Battery</div>
+    <div class="cat-item" onclick="setCat('cables')">🔗 Cables</div>
+    <div class="cat-item" onclick="setCat('cabezales')">⚡ Cabezales</div>
+    <div class="cat-item" onclick="setCat('adaptadores')">🔄 Adaptadores</div>
+    <div class="cat-item" onclick="setCat('powerbank')">🔋 Power Bank</div>
+    <div class="cat-item" onclick="setCat('inalambrico')">📡 Inalámbrico</div>
+    <div class="cat-item" onclick="setCat('auricular_vincha')">🎧 Vincha</div>
+    <div class="cat-item" onclick="setCat('auri_sin_cable')">🎧 Sin cable</div>
+    <div class="cat-item" onclick="setCat('auri_con_cable')">🎧 Con cable</div>
+    <div class="cat-item" onclick="setCat('smartwatch')">⌚ Watch</div>
+    <div class="cat-item" onclick="setCat('smartband')">⌚ Band</div>
+    <div class="cat-item" onclick="setCat('aro_luz')">💡 Aro</div>
 
-    <div class="cat-card" onclick="setCat('bateria')">
-        <span>🔋</span><b>Baterry</b>
-    </div>
-
-    <div class="cat-card" onclick="setCat('cables')">
-        <span>🔗</span><b>Cables MARCA</b>
-    </div>
-
-    <div class="cat-card" onclick="setCat('cabezales')">
-        <span>⚡</span><b>Cabezales Marca</b>
-    </div>
-
-    <div class="cat-card" onclick="setCat('adaptadores')">
-        <span>🔄</span><b>Adaptadores</b>
-    </div>
-
-    <div class="cat-card" onclick="setCat('powerbank')">
-        <span>🔋</span><b>Power Bank</b>
-    </div>
-
-    <div class="cat-card" onclick="setCat('inalambrico')">
-        <span>📡</span><b>Inalámbrico</b>
-    </div>
-
-    <div class="cat-card" onclick="setCat('auricular_vincha')">
-        <span>🎧</span><b>Auricular Vincha</b>
-    </div>
-
-    <div class="cat-card" onclick="setCat('auri_sin_cable')">
-        <span>🎧</span><b>Auri sin Cable</b>
-    </div>
-
-    <div class="cat-card" onclick="setCat('auri_con_cable')">
-        <span>🎧</span><b>Auri con Cable</b>
-    </div>
-
-    <div class="cat-card" onclick="setCat('smartwatch')">
-        <span>⌚</span><b>Smart Watch</b>
-    </div>
-
-    <div class="cat-card" onclick="setCat('smartband')">
-        <span>⌚</span><b>Smart Band</b>
-    </div>
-
-    <div class="cat-card" onclick="setCat('aro_luz')">
-        <span>💡</span><b>Aro de Luz</b>
-    </div>
+</div>
 
 </div>
 <div class="search-container">
