@@ -64,7 +64,7 @@
             gap: 10px;
         }
 
-        /* HERO SLIDER DINÁMICO */
+        /* HERO SLIDER */
         .hero {
             height: 320px;
             position: relative;
@@ -89,10 +89,10 @@
             align-items: center;
             text-align: center;
             padding: 0 20px;
-            background: linear-gradient(rgba(15,23,42,0.75), rgba(15,23,42,0.9));
+            background: linear-gradient(rgba(15,23,42,0.7), rgba(15,23,42,0.95));
         }
 
-        /* CATEGORÍAS - SCROLL CORREGIDO PARA PC */
+        /* CATEGORÍAS - SCROLL MEJORADO */
         .cat-scroll {
             display: flex;
             gap: 10px;
@@ -102,7 +102,6 @@
             scroll-behavior: smooth;
             -webkit-overflow-scrolling: touch;
             cursor: grab;
-            user-select: none;
         }
         .cat-scroll::-webkit-scrollbar { display: none; }
         .cat-scroll:active { cursor: grabbing; }
@@ -130,7 +129,7 @@
             border: 1px solid rgba(255,255,255,0.05);
         }
 
-        /* ADMIN ITEM */
+        /* ADMIN ITEM - IMÁGENES PEQUEÑAS */
         .admin-item {
             display: flex;
             align-items: center;
@@ -151,7 +150,48 @@
             flex-shrink: 0;
         }
 
-        /* PRODUCTOS */
+        /* RESTO DE ESTILOS ORIGINALES */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 25px;
+            background: var(--card);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 25px rgba(0,0,0,0.3);
+            height: 85px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; }
+        .main-logo { height: 55px; width: auto; transition: transform 0.3s; cursor: pointer; }
+        .main-logo:hover { transform: scale(1.05); }
+       
+        .header-icons { display: flex; gap: 12px; align-items: center; }
+        .icon-btn {
+            cursor: pointer;
+            font-size: 22px;
+            padding: 10px;
+            border-radius: 50%;
+            color: var(--text);
+            transition: var(--transition);
+            position: relative;
+            border: none;
+            background: transparent;
+        }
+        .icon-btn:hover { background: rgba(255,255,255,0.1); transform: translateY(-2px); }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            padding: 20px;
+            max-width: 1400px;
+            margin: auto;
+        }
+        @media (min-width: 768px) {
+            .products-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+        }
         .product-card {
             background: var(--card);
             border-radius: var(--radius);
@@ -209,8 +249,9 @@
             transition: var(--transition);
             font-size: 15px;
         }
+        .btn-add:hover { filter: brightness(1.1); }
+        .btn-add:active { transform: scale(0.96); }
 
-        /* MODALES Y DRAWERS */
         .modal {
             position: fixed;
             inset: 0;
@@ -422,7 +463,6 @@
                 </div>
                 <div class="form-group"><label>Oferta Especial</label><input id="fPro"></div>
                 <div class="form-group"><label>Categoría</label><input id="fCat" placeholder="fundas, cargadores..."></div>
-                <div class="form-group"><label>Stock</label><input id="fStock" type="number" placeholder="Cantidad disponible"></div>
                 <div class="form-group"><label>URL de la Imagen</label><input id="fImg"></div>
                 <button class="btn-add" style="background:var(--success)" onclick="saveP()">GUARDAR PRODUCTO</button>
                 <button class="btn-add" style="background:none; color:white; margin-top:10px; border:1px solid rgba(255,255,255,0.1);" onclick="limpiarP()">Limpiar</button>
@@ -439,7 +479,7 @@
             <div id="admListO"></div>
         </div>
         
-        <!-- SLIDER HERO - CRUD COMPLETO -->
+        <!-- SLIDER HERO -->
         <div id="t-slider" style="display:none;">
             <div class="admin-form-box">
                 <div class="form-group"><label>URL de la imagen del slider</label><input id="sliderUrl" placeholder="https://..."></div>
@@ -453,7 +493,7 @@
 <!-- OVERLAY -->
 <div class="overlay" id="ov" onclick="closeAll()"></div>
 
-<!-- PANEL IZQUIERDO RESTAURADO -->
+<!-- PANEL LATERAL IZQUIERDO RESTAURADO -->
 <div id="infoDrawer" class="drawer">
     <div class="flex-between" style="margin-bottom:25px;">
         <h2 style="margin:0; color:var(--accent); font-size:28px;">MS47</h2>
@@ -722,7 +762,7 @@
         }
     }
 
-    // ==================== PANEL ADMIN - PRODUCTOS ====================
+    // ==================== PANEL ADMIN ====================
     function renderAdmP() {
         const list = document.getElementById("admListP");
         list.innerHTML = prods.map(p => `
@@ -740,7 +780,6 @@
             </div>
         `).join("");
     }
-
     function renderAdmU() {
         const list = document.getElementById("admListU");
         const pen = users.filter(u => !u.activo);
@@ -779,7 +818,6 @@
         `).join("");
         list.innerHTML = html;
     }
-
     function renderAdmO() {
         const list = document.getElementById("admListO");
         if (orders.length === 0) {
