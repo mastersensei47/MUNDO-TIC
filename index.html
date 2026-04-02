@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>MS47 - Mundo Tic</title>
-   
+  
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script>
-   
+  
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -45,7 +45,6 @@
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
-
         /* TOAST */
         #toast {
             position: fixed;
@@ -63,7 +62,6 @@
             align-items: center;
             gap: 10px;
         }
-
         /* HERO SLIDER */
         .hero {
             height: 320px;
@@ -91,7 +89,6 @@
             padding: 0 20px;
             background: linear-gradient(rgba(15,23,42,0.7), rgba(15,23,42,0.95));
         }
-
         /* CATEGORÍAS - SCROLL MEJORADO */
         .cat-scroll {
             display: flex;
@@ -119,7 +116,6 @@
         }
         .cat-item:hover { background: #334155; }
         .cat-item.active { background: var(--accent); color: white; }
-
         /* ADMIN FORMULARIO MEJORADO */
         .admin-form-box {
             background:rgba(255,255,255,0.03);
@@ -128,7 +124,6 @@
             margin-bottom: 30px;
             border: 1px solid rgba(255,255,255,0.05);
         }
-
         /* ADMIN ITEM - IMÁGENES PEQUEÑAS */
         .admin-item {
             display: flex;
@@ -149,7 +144,6 @@
             padding: 6px;
             flex-shrink: 0;
         }
-
         /* RESTO DE ESTILOS ORIGINALES */
         header {
             display: flex;
@@ -166,7 +160,7 @@
         .header-left { display: flex; align-items: center; gap: 15px; }
         .main-logo { height: 55px; width: auto; transition: transform 0.3s; cursor: pointer; }
         .main-logo:hover { transform: scale(1.05); }
-       
+      
         .header-icons { display: flex; gap: 12px; align-items: center; }
         .icon-btn {
             cursor: pointer;
@@ -180,7 +174,6 @@
             background: transparent;
         }
         .icon-btn:hover { background: rgba(255,255,255,0.1); transform: translateY(-2px); }
-
         .products-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -232,11 +225,11 @@
             transition: 0.5s;
         }
         .product-card:hover .img-box img { transform: scale(1.1); }
-       
+      
         .info-box { padding: 22px; flex-grow: 1; display: flex; flex-direction: column; }
         .prod-title { font-weight: 700; font-size: 17px; margin-bottom: 12px; min-height: 45px; line-height: 1.4; }
         .price-val { font-size: 26px; font-weight: 800; color: var(--accent); margin-bottom: 20px; }
-       
+      
         .btn-add {
             background: var(--accent);
             color: white;
@@ -251,7 +244,6 @@
         }
         .btn-add:hover { filter: brightness(1.1); }
         .btn-add:active { transform: scale(0.96); }
-
         .modal {
             position: fixed;
             inset: 0;
@@ -295,7 +287,6 @@
             font-size: 13px;
         }
         .tab-btn.active { background: var(--card); color: var(--accent); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
-
         .drawer {
             position: fixed;
             top: 0;
@@ -323,7 +314,6 @@
             backdrop-filter: blur(6px);
         }
         .overlay.active { display: block; }
-
         .form-group { margin-bottom: 22px; }
         .form-group label {
             display: block;
@@ -345,7 +335,6 @@
             font-size: 16px;
         }
         input:focus, textarea:focus { border-color: var(--accent); background: rgba(255,255,255,0.05); }
-
         .qty-btn {
             width: 44px; height: 44px; border: none; background: var(--accent);
             color: white; border-radius: 14px; cursor: pointer; font-weight: 800; font-size: 20px;
@@ -354,7 +343,6 @@
     </style>
 </head>
 <body class="dark">
-
 <header>
     <div class="header-left">
         <button class="icon-btn" onclick="toggleInfo()">☰</button>
@@ -369,7 +357,6 @@
         </div>
     </div>
 </header>
-
 <!-- HERO DINÁMICO -->
 <div class="hero" id="heroSlider">
     <div class="hero-content">
@@ -377,7 +364,6 @@
         <p>Equipamos tu mundo digital</p>
     </div>
 </div>
-
 <div class="cat-scroll" id="catBar">
     <div class="cat-item active" onclick="setCat(this, '')">🌐 Todos</div>
     <div class="cat-item" onclick="setCat(this, 'fundas')">📱 Fundas</div>
@@ -395,21 +381,16 @@
     <div class="cat-item" onclick="setCat(this, 'smartband')">⌚ Band</div>
     <div class="cat-item" onclick="setCat(this, 'aro_luz')">💡 Aro</div>
 </div>
-
 <div class="search-container">
     <input type="text" id="searchInput" class="search-bar" placeholder="Busca marcas o productos..." onkeyup="render()">
 </div>
-
 <div class="products-grid" id="productsCont"></div>
-
 <!-- TOAST -->
 <div id="toast">✅ Producto agregado al carrito</div>
-
 <!-- MODAL ZOOM -->
 <div id="imageModal" style="position:fixed;inset:0;background:rgba(0,0,0,0.95);display:none;align-items:center;justify-content:center;z-index:9000;" onclick="if(event.target.id==='imageModal')this.style.display='none';">
     <img id="modalImg" style="max-width:92%;max-height:92%;object-fit:contain;" src="">
 </div>
-
 <!-- LOGIN MODAL -->
 <div class="modal" id="loginModal">
     <div class="modal-content" style="max-width:420px; text-align:center;">
@@ -422,7 +403,6 @@
         <p style="margin-top:30px; font-size:14px;">¿No tenés cuenta? <span onclick="openModal('regModal')" style="color:var(--accent); cursor:pointer; font-weight:800;">Solicitá una acá</span></p>
     </div>
 </div>
-
 <!-- REG MODAL -->
 <div class="modal" id="regModal">
     <div class="modal-content" style="max-width:480px;">
@@ -436,7 +416,6 @@
         <button class="btn-add" style="background:none; color:white; margin-top:10px; opacity:0.6;" onclick="closeAll()">Volver atrás</button>
     </div>
 </div>
-
 <!-- ADMIN MODAL CON TAB SLIDER -->
 <div class="modal" id="adminModal">
     <div class="modal-content">
@@ -444,14 +423,14 @@
             <h2 style="margin:0;">Gestión Maestra</h2>
             <button onclick="closeAll()" style="background:none; border:none; color:white; font-size:30px; cursor:pointer;">✕</button>
         </div>
-       
+      
         <div class="admin-tabs">
             <button class="tab-btn active" onclick="tab('t-prod', event)">PRODUCTOS</button>
             <button class="tab-btn" onclick="tab('t-user', event)">CLIENTES</button>
             <button class="tab-btn" onclick="tab('t-order', event)">HISTORIAL</button>
             <button class="tab-btn" onclick="tab('t-slider', event)">SLIDER HERO</button>
         </div>
-        
+       
         <!-- PRODUCTOS -->
         <div id="t-prod">
             <div class="admin-form-box">
@@ -469,16 +448,16 @@
             </div>
             <div id="admListP"></div>
         </div>
-        
+       
         <!-- CLIENTES -->
         <div id="t-user" style="display:none;"><div id="admListU"></div></div>
-        
+       
         <!-- HISTORIAL -->
         <div id="t-order" style="display:none;">
             <button class="btn-add" style="background:var(--danger); margin-bottom:20px;" onclick="vaciarHistorial()">BORRAR TODO EL HISTORIAL</button>
             <div id="admListO"></div>
         </div>
-        
+       
         <!-- SLIDER HERO -->
         <div id="t-slider" style="display:none;">
             <div class="admin-form-box">
@@ -489,11 +468,10 @@
         </div>
     </div>
 </div>
-
 <!-- OVERLAY -->
 <div class="overlay" id="ov" onclick="closeAll()"></div>
 
-<!-- ====================== PANEL LATERAL IZQUIERDO (INFO DRAWER) ====================== -->
+<!-- ====================== PANEL LATERAL IZQUIERDO CORREGIDO ====================== -->
 <div id="infoDrawer" class="drawer">
     <div class="flex-between" style="margin-bottom:25px;">
         <h2 style="margin:0; color:var(--accent); font-size:28px;">MS47</h2>
@@ -532,21 +510,34 @@
         </div>
     </div>
 
+    <!-- Botones de redes sociales -->
+    <div style="margin-bottom:30px; display:flex; flex-direction:column; gap:12px;">
+        <a href="https://wa.me/5493434508948" target="_blank" style="display:flex; align-items:center; gap:12px; background:#25d366; color:white; padding:14px 20px; border-radius:16px; text-decoration:none; font-weight:700;">
+            <span style="font-size:24px;">📲</span> WhatsApp
+        </a>
+        <a href="https://instagram.com/ms47tic" target="_blank" style="display:flex; align-items:center; gap:12px; background:#e1306c; color:white; padding:14px 20px; border-radius:16px; text-decoration:none; font-weight:700;">
+            <span style="font-size:24px;">📷</span> Instagram
+        </a>
+        <a href="https://facebook.com/ms47tic" target="_blank" style="display:flex; align-items:center; gap:12px; background:#1877f2; color:white; padding:14px 20px; border-radius:16px; text-decoration:none; font-weight:700;">
+            <span style="font-size:24px;">📘</span> Facebook
+        </a>
+    </div>
+
     <!-- Minimapa Interactivo -->
     <div style="margin-bottom:30px;">
         <label style="font-size:11px; opacity:0.5; font-weight:800; text-transform:uppercase; letter-spacing:1px; display:block; margin-bottom:8px;">📍 Nuestra ubicación</label>
-        <iframe 
+        <iframe
             src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3405.123456789!2d-60.70000000000001!3d-31.63333333333333!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x95b5a9c5f0f0f0f1%3A0x8b5a9c5f0f0f0f0f!2sSanta+Fe%2C+Santa+Fe+Province%2C+Argentina!5e0!3m2!1ses!2sar!4v1710000000000"
-            width="100%" 
-            height="220" 
-            style="border-radius:20px; border:none; box-shadow:0 4px 15px rgba(0,0,0,0.3);" 
-            allowfullscreen="" 
-            loading="lazy" 
+            width="100%"
+            height="220"
+            style="border-radius:20px; border:none; box-shadow:0 4px 15px rgba(0,0,0,0.3);"
+            allowfullscreen=""
+            loading="lazy"
             referrerpolicy="no-referrer-when-downgrade">
         </iframe>
     </div>
 
-    <!-- Perfil del usuario (se muestra después del login) -->
+    <!-- Perfil del usuario -->
     <div id="perfilContenido" style="display:none;">
         <div style="background:rgba(255,255,255,0.03); padding:25px; border-radius:25px; border:1px solid rgba(255,255,255,0.05); margin-bottom:25px;">
             <div style="margin-bottom:20px;">
@@ -567,7 +558,7 @@
         </div>
     </div>
 
-    <!-- Perfil vacío (antes de login) -->
+    <!-- Perfil vacío -->
     <div id="perfilVacio" style="text-align:center; padding:60px 0; opacity:0.4;">
         <div style="font-size:50px; margin-bottom:20px;">👤</div>
         <p>Iniciá sesión para ver tu información y precios especiales.</p>
@@ -580,37 +571,19 @@
     </div>
 </div>
 
-    <!-- Contenido del perfil (se muestra después de login) -->
-    <div id="perfilContenido" style="display:none;">
-        <div style="background:rgba(255,255,255,0.03); padding:25px; border-radius:25px; border:1px solid rgba(255,255,255,0.05); margin-bottom:25px;">
-            <div style="margin-bottom:20px;">
-                <small style="opacity:0.4; text-transform:uppercase; font-size:10px; font-weight:800; letter-spacing:1px;">Usuario</small>
-                <div id="p-user" style="font-size:20px; font-weight:800; color:var(--accent);">--</div>
-            </div>
-            <div style="margin-bottom:20px;">
-                <small style="opacity:0.4; text-transform:uppercase; font-size:10px; font-weight:800; letter-spacing:1px;">Teléfono</small>
-                <div id="p-tel" style="font-size:16px; font-weight:600;">--</div>
-            </div>
-            <div>
-                <small style="opacity:0.4; text-transform:uppercase; font-size:10px; font-weight:800; letter-spacing:1px;">Dirección / Comercio</small>
-                <div id="p-dir" style="font-size:14px; opacity:0.8; line-height:1.6;">--</div>
-            </div>
-        </div>
-        <div style="padding:15px; background:rgba(16,185,129,0.1); border-radius:16px; color:var(--success); font-weight:800; border:1px solid rgba(16,185,129,0.2); text-align:center; font-size:11px; margin-bottom:30px;">
-            ✓ ESTADO: CLIENTE MAYORISTA ACTIVO
-        </div>
+<!-- CART DRAWER -->
+<div id="cartDrawer" class="drawer">
+    <div class="flex-between" style="margin-bottom:30px;">
+        <h2 style="margin:0;">Tu Carrito</h2>
+        <span onclick="closeAll()" style="cursor:pointer; font-size:28px; opacity:0.5;">✕</span>
     </div>
-
-    <!-- Perfil vacío (antes de login) -->
-    <div id="perfilVacio" style="text-align:center; padding:60px 0; opacity:0.4;">
-        <div style="font-size:50px; margin-bottom:20px;">👤</div>
-        <p>Iniciá sesión para ver tu información y precios especiales.</p>
-    </div>
-
-    <div style="flex-grow:1;"></div>
-    <div style="padding-top:20px; border-top:1px solid rgba(255,255,255,0.05);">
-        <button id="logoutBtn" onclick="logout()" style="display:none; width:100%; background:var(--danger); color:white; border:none; padding:18px; border-radius:18px; font-weight:800; cursor:pointer; margin-bottom:15px;">CERRAR SESIÓN</button>
-        <p style="font-size:10px; text-align:center; opacity:0.3; font-weight:700;">MS47 v5.0 • SANTA FE</p>
+    <div id="cartItems" style="flex-grow:1; overflow-y:auto; padding-right:5px;"></div>
+    <div style="padding-top:25px; border-top:1px solid rgba(255,255,255,0.1); margin-top:20px;">
+        <div class="flex-between" style="margin-bottom:25px;">
+            <span style="font-size:18px; opacity:0.7;">Total Estimado:</span>
+            <span id="cartTotal" style="font-size:32px; font-weight:800; color:var(--accent);">$0</span>
+        </div>
+        <button class="btn-add" style="background:#25d366; padding:22px; font-size:16px;" onclick="finalizarYEnviar()">ENVIAR PEDIDO POR WHATSAPP 🚀</button>
     </div>
 </div>
 
@@ -624,10 +597,9 @@
         messagingSenderId: "121093097347",
         appId: "1:121093097347:web:ca8ea54b592cb20f5098b6"
     };
-   
+  
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
-
     // ==================== VARIABLES GLOBALES ====================
     let prods = [];
     let cart = [];
@@ -638,7 +610,6 @@
     let usuarioLogueado = null;
     let filterCat = "";
     let favorites = JSON.parse(localStorage.getItem("favorites") || "[]");
-
     // ==================== INICIALIZACIÓN ====================
     function init() {
         db.collection("productos").onSnapshot(snap => {
@@ -660,7 +631,6 @@
             renderAdmSlider();
         });
     }
-
     // ==================== HERO SLIDER ====================
     function renderHeroSlider() {
         const hero = document.getElementById("heroSlider");
@@ -669,7 +639,6 @@
         content.innerHTML = `<h1>Mundo Tic</h1><p>Equipamos tu mundo digital</p>`;
         hero.innerHTML = '';
         hero.appendChild(content);
-
         if (heroImages.length === 0) {
             const defaultSlide = document.createElement('div');
             defaultSlide.className = 'hero-slide active';
@@ -677,7 +646,6 @@
             hero.appendChild(defaultSlide);
             return;
         }
-
         heroImages.forEach((slide, index) => {
             const div = document.createElement('div');
             div.className = 'hero-slide';
@@ -685,19 +653,17 @@
             div.style.backgroundImage = `url('${slide.url}')`;
             hero.appendChild(div);
         });
-
         let current = 0;
         setInterval(() => {
             current = (current + 1) % heroImages.length;
             document.querySelectorAll('.hero-slide').forEach((s, i) => s.classList.toggle('active', i === current));
         }, 5000);
     }
-
     // ==================== RENDER TIENDA ====================
     function render() {
         const query = document.getElementById("searchInput").value.toLowerCase().trim();
         const cont = document.getElementById("productsCont");
-       
+      
         const filtered = prods.filter(p =>
             p.nombre.toLowerCase().includes(query) &&
             (filterCat === "" || p.categoria === filterCat)
@@ -723,7 +689,6 @@
             `;
         }).join("");
     }
-
     // ==================== CARRITO ====================
     function addToCart(id) {
         const exist = cart.find(i => i.id === id);
@@ -767,7 +732,6 @@
         }
         updateCartUI();
     }
-
     // ==================== LOGIN Y PERFIL ====================
     async function doLogin() {
         const u = document.getElementById("uInp").value.trim();
@@ -825,7 +789,6 @@
             console.error(e);
         }
     }
-
     // ==================== PANEL ADMIN ====================
     function renderAdmP() {
         const list = document.getElementById("admListP");
@@ -900,7 +863,6 @@
             </div>
         `).join("");
     }
-
     // ==================== PANEL ADMIN - SLIDER HERO ====================
     function renderAdmSlider() {
         const list = document.getElementById("admListSlider");
@@ -918,7 +880,6 @@
             </div>
         `).join("");
     }
-
     async function addHeroImage() {
         const url = document.getElementById("sliderUrl").value.trim();
         if (!url) return alert("Ingresa una URL válida");
@@ -927,13 +888,11 @@
         document.getElementById("sliderUrl").value = "";
         alert("Imagen agregada al slider");
     }
-
     async function deleteHeroImage(id) {
         if (confirm("¿Eliminar esta imagen del slider?")) {
             await db.collection("hero").doc(id).delete();
         }
     }
-
     // ==================== FUNCIONES AUXILIARES ====================
     function toggleTheme() { document.body.classList.toggle("light"); }
     function openModal(id) {
@@ -1027,7 +986,6 @@
             alert("Clave incorrecta.");
         }
     }
-
     // ==================== INICIO ====================
     window.onload = init;
 </script>
