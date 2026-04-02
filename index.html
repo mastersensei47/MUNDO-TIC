@@ -955,54 +955,53 @@ function setCat(el, cat) {
         const total = document.getElementById("cartTotal").innerText;
         textoPedido += `----------------------------\n*TOTAL ESTIMADO: ${total}*`;
         
-        // Guardar en Historial de Firebase
-        try {
-            await db.collection("pedidos").add({
-                detalle: textoPedido,
-                total: total,
-                fecha: Date.now()
-            });
-            
-            // Redirigir a WhatsApp
-            const nro = "5493434508948";
-            window.open(`https://wa.me/${nro}?text=${encodeURIComponent(textoPedido)}`);
-            
-            cart = [];
-            updateCartUI();
-            closeAll();
-        } catch(e) {
-            alert("Error al procesar el pedido.");
-        }
-    }
-
-    async function del(col, id) { 
-        if(confirm("¿Estás seguro de eliminar este registro?")) {
-            await db.collection(col).doc(id).delete(); 
-        }
-    }
-
-    async function updU(id, stat) { 
-        await db.collection("usuarios").doc(id).update({activo: stat}); 
-    }
-
-    async function vaciarHistorial() {
-        if(confirm("¿Seguro que querés borrar TODO el historial de pedidos?")) {
-            const snap = await db.collection("pedidos").get();
-            const batch = db.batch();
-            snap.forEach(doc => batch.delete(doc.ref));
-            await batch.commit();
-            alert("Historial vaciado.");
-        }
-    }
-
-    function logout() { 
-        if(confirm("¿Cerrar sesión?")) {
-            location.reload(); 
-        }
-    }
-
-
 <script>
+
+// Guardar en Historial de Firebase
+try {
+    await db.collection("pedidos").add({
+        detalle: textoPedido,
+        total: total,
+        fecha: Date.now()
+    });
+    
+    const nro = "5493434508948";
+    window.open(`https://wa.me/${nro}?text=${encodeURIComponent(textoPedido)}`);
+    
+    cart = [];
+    updateCartUI();
+    closeAll();
+
+} catch(e) {
+    alert("Error al procesar el pedido.");
+}
+
+
+async function del(col, id) { 
+    if(confirm("¿Estás seguro de eliminar este registro?")) {
+        await db.collection(col).doc(id).delete(); 
+    }
+}
+
+async function updU(id, stat) { 
+    await db.collection("usuarios").doc(id).update({activo: stat}); 
+}
+
+async function vaciarHistorial() {
+    if(confirm("¿Seguro que querés borrar TODO el historial de pedidos?")) {
+        const snap = await db.collection("pedidos").get();
+        const batch = db.batch();
+        snap.forEach(doc => batch.delete(doc.ref));
+        await batch.commit();
+        alert("Historial vaciado.");
+    }
+}
+
+function logout() { 
+    if(confirm("¿Cerrar sesión?")) {
+        location.reload(); 
+    }
+}
 
 function verificarAdmin() { 
     const clave = prompt("Ingresá la clave de administración:");
@@ -1014,7 +1013,7 @@ function verificarAdmin() {
     }
 }
 
-// asegurarse que init exista
+// iniciar sistema
 if (typeof init === "function") {
     init();
 } else {
