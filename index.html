@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MS47-Mundo Tic</title>
+    <title>MS47 - Mundo Tic</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script>
@@ -11,7 +11,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     <style>
-        /* --- ARQUITECTURA DE DISEÑO MS47 --- */
         :root {
             --bg: #0f172a; 
             --card: #1e293b; 
@@ -33,7 +32,11 @@
             --input-bg: #f1f5f9; 
         }
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+        * { 
+            box-sizing: border-box; 
+            -webkit-tap-highlight-color: transparent; 
+            outline: none; 
+        }
 
         body { 
             margin:0; 
@@ -44,12 +47,10 @@
             overflow-x: hidden; 
         }
 
-        /* SCROLLBAR PERSONALIZADO PARA TODA LA WEB */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
 
-        /* --- HEADER Y NAVEGACIÓN --- */
         header { 
             display: flex; 
             justify-content: space-between; 
@@ -76,15 +77,11 @@
             color: var(--text); 
             transition: var(--transition);
             position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             border: none;
             background: transparent;
         }
         .icon-btn:hover { background: rgba(255,255,255,0.1); transform: translateY(-2px); }
 
-        /* --- HERO SECTION --- */
         .hero {
             height: 320px; 
             background: linear-gradient(rgba(15,23,42,0.7), rgba(15,23,42,0.95)), url('https://images.unsplash.com/photo-1542831371-29b0f74f9713?q=80&w=1470&auto=format&fit=crop');
@@ -101,32 +98,30 @@
         .hero h1 { margin:0; font-size: 2.8rem; font-weight: 800; letter-spacing: -1px; text-shadow: 0 10px 20px rgba(0,0,0,0.5); }
         .hero p { margin: 10px 0 0; opacity: 0.8; font-size: 1.2rem; }
 
-        /* --- CATEGORÍAS --- */
-        .cat-grid { 
-            display: grid; 
-            grid-template-columns: repeat(4, 1fr); 
-            gap: 12px; 
-            padding: 0 20px; 
-            max-width: 900px; 
-            margin: -40px auto 40px; 
-            position: relative; 
-            z-index: 10; 
+        .cat-scroll {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding: 15px 20px;
+            scrollbar-width: none;
         }
-        .cat-card { 
-            background: var(--card); 
-            padding: 22px 10px; 
-            border-radius: 22px; 
-            text-align: center; 
-            cursor: pointer; 
-            border: 1px solid rgba(128,128,128,0.15); 
-            transition: var(--transition); 
-            box-shadow: 0 12px 24px rgba(0,0,0,0.2);
-        }
-        .cat-card.active { background: var(--accent); color: white; transform: translateY(-10px); border-color: transparent; }
-        .cat-card span { display: block; font-size: 26px; margin-bottom: 8px; }
-        .cat-card b { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; font-weight: 800; }
+        .cat-scroll::-webkit-scrollbar { display: none; }
 
-        /* --- BUSCADOR --- */
+        .cat-item {
+            flex: 0 0 auto;
+            padding: 10px 18px;
+            border-radius: 20px;
+            background: #1e293b;
+            font-size: 13.5px;
+            cursor: pointer;
+            white-space: nowrap;
+            color: white;
+            transition: 0.2s;
+            font-weight: 500;
+        }
+        .cat-item:hover { background: #334155; }
+        .cat-item.active { background: var(--accent); color: white; }
+
         .search-container { max-width: 700px; margin: 0 auto 35px; padding: 0 20px; }
         .search-bar { 
             width: 100%; 
@@ -138,11 +133,9 @@
             font-size: 17px;
             outline: none;
             box-shadow: 0 6px 20px rgba(0,0,0,0.15);
-            transition: var(--transition);
         }
         .search-bar:focus { border-color: var(--accent); background: var(--card); box-shadow: 0 8px 25px rgba(59, 130, 246, 0.2); }
 
-        /* --- PRODUCTOS --- */
         .products-grid { 
             display: grid; 
             grid-template-columns: repeat(2, 1fr); 
@@ -150,9 +143,10 @@
             padding: 20px; 
             max-width: 1400px; 
             margin: auto; 
-            min-height: 400px;
         }
-        @media (min-width: 768px) { .products-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); } }
+        @media (min-width: 768px) { 
+            .products-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); } 
+        }
 
         .product-card { 
             background: var(--card); 
@@ -181,8 +175,22 @@
             text-transform: uppercase;
         }
 
-        .img-box { background: #fff; height: 200px; display: flex; align-items: center; justify-content: center; padding: 20px; position: relative; overflow: hidden; }
-        .img-box img { max-width: 100%; max-height: 100%; object-fit: contain; transition: 0.5s; }
+        .img-box { 
+            background: #fff; 
+            height: 200px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            padding: 20px; 
+            position: relative; 
+            overflow: hidden; 
+        }
+        .img-box img { 
+            max-width: 100%; 
+            max-height: 100%; 
+            object-fit: contain; 
+            transition: 0.5s; 
+        }
         .product-card:hover .img-box img { transform: scale(1.1); }
         
         .info-box { padding: 22px; flex-grow: 1; display: flex; flex-direction: column; }
@@ -208,7 +216,6 @@
         .btn-add:hover { filter: brightness(1.1); }
         .btn-add:active { transform: scale(0.96); }
 
-        /* --- MODALES --- */
         .modal { 
             position: fixed; 
             inset: 0; 
@@ -228,12 +235,10 @@
             max-width: 680px; 
             max-height: 88vh; 
             overflow-y: auto; 
-            position: relative;
             border: 1px solid rgba(255,255,255,0.1);
             box-shadow: 0 30px 60px rgba(0,0,0,0.6);
         }
 
-        /* --- ADMIN PANEL --- */
         .admin-tabs { 
             display: flex; 
             gap: 12px; 
@@ -255,29 +260,7 @@
             font-size: 13px;
         }
         .tab-btn.active { background: var(--card); color: var(--accent); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
-        
-        .admin-item { 
-            background: rgba(255,255,255,0.03); 
-            padding: 18px; 
-            border-radius: 22px; 
-            margin-bottom: 18px; 
-            border: 1px solid rgba(255,255,255,0.05); 
-            display: flex;
-            align-items: center;
-            gap: 18px;
-        }
-        .admin-item-img {
-            width: 65px;
-            height: 65px;
-            border-radius: 14px;
-            background: white;
-            object-fit: contain;
-            padding: 8px;
-            flex-shrink: 0;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        }
 
-        /* --- DRAWERS --- */
         .drawer { 
             position: fixed; 
             top: 0; 
@@ -288,7 +271,6 @@
             transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1); 
             z-index: 6000; 
             padding: 40px; 
-            box-sizing: border-box; 
             display: flex; 
             flex-direction: column; 
             box-shadow: 0 0 60px rgba(0,0,0,0.8);
@@ -298,12 +280,27 @@
         #cartDrawer { right: -110%; } 
         #cartDrawer.active { right: 0; }
 
-        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; z-index: 5500; backdrop-filter: blur(6px); }
+        .overlay { 
+            position: fixed; 
+            inset: 0; 
+            background: rgba(0,0,0,0.8); 
+            display: none; 
+            z-index: 5500; 
+            backdrop-filter: blur(6px); 
+        }
         .overlay.active { display: block; }
 
-        /* --- FORMULARIOS --- */
         .form-group { margin-bottom: 22px; }
-        .form-group label { display: block; font-size: 11px; opacity: 0.5; margin-bottom: 8px; margin-left: 5px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
+        .form-group label { 
+            display: block; 
+            font-size: 11px; 
+            opacity: 0.5; 
+            margin-bottom: 8px; 
+            margin-left: 5px; 
+            font-weight: 800; 
+            text-transform: uppercase; 
+            letter-spacing: 1px; 
+        }
         
         input, select, textarea { 
             width: 100%; 
@@ -313,19 +310,14 @@
             background: var(--input-bg); 
             color: white; 
             font-size: 16px;
-            transition: 0.3s;
         }
-        input:focus, textarea:focus { border-color: var(--accent); background: rgba(255,255,255,0.05); outline: none; }
-        
-        textarea { height: 100px; resize: none; font-family: inherit; }
+        input:focus, textarea:focus { border-color: var(--accent); background: rgba(255,255,255,0.05); }
 
         .qty-btn { 
             width: 44px; height: 44px; border: none; background: var(--accent); 
             color: white; border-radius: 14px; cursor: pointer; font-weight: 800; font-size: 20px;
         }
 
-        /* --- UTILS --- */
-        .tag { font-size: 11px; padding: 5px 12px; border-radius: 8px; text-transform: uppercase; font-weight: 900; }
         .flex-between { display: flex; justify-content: space-between; align-items: center; }
         .text-accent { color: var(--accent); }
     </style>
@@ -341,7 +333,7 @@
         <button class="icon-btn" onclick="toggleTheme()">🌓</button>
         <button class="icon-btn" onclick="openModal('loginModal')">👤</button>
         <button class="icon-btn" onclick="verificarAdmin()">⚙️</button>
-        <div class="icon-btn" onclick="toggleCart()" style="cursor:pointer">
+        <div class="icon-btn" onclick="toggleCart()" style="cursor:pointer; position:relative;">
             🛒 <b id="cartCount" style="background:var(--danger); font-size:10px; padding:2px 7px; border-radius:12px; position:absolute; top:2px; right:2px;">0</b>
         </div>
     </div>
@@ -351,57 +343,8 @@
     <h1>Mundo Tic</h1>
     <p>Equipamos tu mundo digital</p>
 </section>
-    
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Categorías</title>
-
-    <style>
-        .cat-scroll {
-            display: flex;
-            gap: 10px;
-            overflow-x: auto;
-            padding: 10px;
-            scrollbar-width: none;
-        }
-
-        .cat-scroll::-webkit-scrollbar {
-            display: none;
-        }
-
-        .cat-item {
-            flex: 0 0 auto;
-            padding: 8px 14px;
-            border-radius: 20px;
-            background: #1e293b;
-            font-size: 13px;
-            cursor: pointer;
-            white-space: nowrap;
-            color: white;
-            transition: 0.2s;
-        }
-
-        .cat-item:hover {
-            background: #334155;
-        }
-
-        .cat-item.active {
-            background: #3b82f6;
-        }
-
-        body {
-            background: #0f172a;
-            font-family: Arial, sans-serif;
-        }
-    </style>
-</head>
-
-<body>
 
 <div class="cat-scroll" id="catBar">
-
     <div class="cat-item active" onclick="setCat(this, '')">🌐 Todos</div>
     <div class="cat-item" onclick="setCat(this, 'fundas')">📱 Fundas</div>
     <div class="cat-item" onclick="setCat(this, 'cargadores')">🔌 Cargadores</div>
@@ -417,32 +360,15 @@
     <div class="cat-item" onclick="setCat(this, 'smartwatch')">⌚ Watch</div>
     <div class="cat-item" onclick="setCat(this, 'smartband')">⌚ Band</div>
     <div class="cat-item" onclick="setCat(this, 'aro_luz')">💡 Aro</div>
-
 </div>
 
-<script>
-function setCat(el, cat) {
-
-    // sacar active de todos
-    document.querySelectorAll('.cat-item').forEach(e => {
-        e.classList.remove('active');
-    });
-
-    // activar el seleccionado
-    el.classList.add('active');
-
-    // (opcional) lógica futura de filtro
-    console.log("Categoría seleccionada:", cat);
-}
-</script>
-
-</div>
 <div class="search-container">
     <input type="text" id="searchInput" class="search-bar" placeholder="Busca marcas o productos..." onkeyup="render()">
 </div>
 
 <div class="products-grid" id="productsCont"></div>
 
+<!-- Modales y Drawers -->
 <div class="modal" id="adminModal">
     <div class="modal-content">
         <div class="flex-between" style="margin-bottom:30px;">
@@ -457,6 +383,7 @@ function setCat(el, cat) {
         </div>
 
         <div id="t-prod">
+            <!-- Formulario de productos -->
             <div style="background:rgba(255,255,255,0.03); padding:30px; border-radius:30px; margin-bottom:30px; border:1px solid rgba(255,255,255,0.05);">
                 <input id="fId" type="hidden">
                 <div class="form-group"><label>Nombre del Producto</label><input id="fNom"></div>
@@ -464,17 +391,16 @@ function setCat(el, cat) {
                     <div class="form-group"><label>Precio Normal ($)</label><input id="fPre" type="number"></div>
                     <div class="form-group"><label>Precio Mayorista ($)</label><input id="fPreM" type="number"></div>
                 </div>
-                <div class="form-group"><label>Oferta Especial (Ej: 3 x $2500)</label><input id="fPro"></div>
-                <div class="form-group"><label>Categoría</label><input id="fCat" placeholder="bebida, snack, almacen..."></div>
+                <div class="form-group"><label>Oferta Especial</label><input id="fPro"></div>
+                <div class="form-group"><label>Categoría</label><input id="fCat" placeholder="fundas, cargadores..."></div>
                 <div class="form-group"><label>URL de la Imagen</label><input id="fImg"></div>
-                <button class="btn-add" style="background:var(--success)" onclick="saveP()">ACTUALIZAR BASE DE DATOS</button>
-                <button class="btn-add" style="background:none; color:white; margin-top:10px; border:1px solid rgba(255,255,255,0.1);" onclick="limpiarP()">Limpiar Formulario</button>
+                <button class="btn-add" style="background:var(--success)" onclick="saveP()">GUARDAR PRODUCTO</button>
+                <button class="btn-add" style="background:none; color:white; margin-top:10px; border:1px solid rgba(255,255,255,0.1);" onclick="limpiarP()">Limpiar</button>
             </div>
             <div id="admListP"></div>
         </div>
 
         <div id="t-user" style="display:none;"><div id="admListU"></div></div>
-        
         <div id="t-order" style="display:none;">
             <button class="btn-add" style="background:var(--danger); margin-bottom:20px;" onclick="vaciarHistorial()">BORRAR TODO EL HISTORIAL</button>
             <div id="admListO"></div>
@@ -568,9 +494,7 @@ function setCat(el, cat) {
 </div>
 
 <script>
-    /* -----------------------------------------------------------
-       CONFIGURACIÓN Y CONEXIÓN CON FIREBASE (GOOGLE)
-    ----------------------------------------------------------- */
+    // ==================== CONFIG FIREBASE ====================
     const firebaseConfig = {
         apiKey: "AIzaSyDAqlchDsLHIMMbv6YL2ipggaShXlFqiW8",
         authDomain: "tienda-online-baaf6.firebaseapp.com",
@@ -583,42 +507,37 @@ function setCat(el, cat) {
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    /* VARIABLES GLOBALES DEL SISTEMA */
-    let prods = [];           // Array de productos
-    let cart = [];            // Array del carrito
-    let users = [];           // Array de usuarios/clientes
-    let orders = [];          // Array de historial
-    let isMay = false;        // Estado mayorista
-    let usuarioLogueado = null; // Datos del usuario actual
-    let filterCat = "";       // Filtro de categoría activo
+    // ==================== VARIABLES GLOBALES ====================
+    let prods = [];
+    let cart = [];
+    let users = [];
+    let orders = [];
+    let isMay = false;
+    let usuarioLogueado = null;
+    let filterCat = "";
 
-    /* INICIALIZACIÓN DE DATOS (REAL-TIME) */
+    // ==================== INICIALIZACIÓN ====================
     function init() {
-        // Escucha de Productos
         db.collection("productos").onSnapshot(snap => {
             prods = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             render();
             renderAdmP();
         });
 
-        // Escucha de Usuarios
         db.collection("usuarios").onSnapshot(snap => {
             users = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             renderAdmU();
         });
 
-        // Escucha de Pedidos
         db.collection("pedidos").orderBy("fecha", "desc").onSnapshot(snap => {
             orders = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             renderAdmO();
         });
     }
 
-    /* -----------------------------------------------------------
-       LÓGICA DE INTERFAZ DE USUARIO (TIENDA)
-    ----------------------------------------------------------- */
+    // ==================== RENDER TIENDA ====================
     function render() {
-        const query = document.getElementById("searchInput").value.toLowerCase();
+        const query = document.getElementById("searchInput").value.toLowerCase().trim();
         const cont = document.getElementById("productsCont");
         
         const filtered = prods.filter(p => 
@@ -626,8 +545,8 @@ function setCat(el, cat) {
             (filterCat === "" || p.categoria === filterCat)
         );
 
-        if(filtered.length === 0) {
-            cont.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:50px; opacity:0.5;">No se encontraron productos...</div>`;
+        if (filtered.length === 0) {
+            cont.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:80px 20px; opacity:0.5;">No se encontraron productos...</div>`;
             return;
         }
 
@@ -637,7 +556,7 @@ function setCat(el, cat) {
                 <div class="product-card">
                     ${p.promo ? `<div class="promo-badge">${p.promo}</div>` : ''}
                     <div class="img-box">
-                        <img src="${p.imagen || 'https://via.placeholder.com/200?text=ELNEN'}" alt="${p.nombre}">
+                        <img src="${p.imagen || 'https://via.placeholder.com/300?text=MS47'}" alt="${p.nombre}">
                     </div>
                     <div class="info-box">
                         <div class="prod-title">${p.nombre}</div>
@@ -649,14 +568,11 @@ function setCat(el, cat) {
         }).join("");
     }
 
-    /* CARRITO DE COMPRAS */
+    // ==================== CARRITO ====================
     function addToCart(id) {
         const exist = cart.find(i => i.id === id);
-        if(exist) {
-            exist.qty++;
-        } else {
-            cart.push({id, qty:1});
-        }
+        if (exist) exist.qty++;
+        else cart.push({id, qty: 1});
         updateCartUI();
     }
 
@@ -664,23 +580,24 @@ function setCat(el, cat) {
         let total = 0;
         let count = 0;
         const list = document.getElementById("cartItems");
-        
+
         list.innerHTML = cart.map(item => {
             const p = prods.find(x => x.id === item.id);
-            if(!p) return "";
+            if (!p) return "";
             const precio = isMay ? (p.precio_may || p.precio) : p.precio;
             const sub = precio * item.qty;
             total += sub;
             count += item.qty;
+
             return `
                 <div style="padding:18px 0; border-bottom:1px solid rgba(255,255,255,0.05); display:flex; justify-content:space-between; align-items:center;">
-                    <div style="flex:1; padding-right:10px;">
+                    <div style="flex:1;">
                         <div style="font-weight:700; font-size:14px; margin-bottom:4px;">${p.nombre}</div>
-                        <div style="color:var(--accent); font-weight:800; font-size:15px;">$${sub}</div>
+                        <div style="color:var(--accent); font-weight:800;">$${sub}</div>
                     </div>
                     <div style="display:flex; align-items:center; gap:12px;">
                         <button class="qty-btn" onclick="changeQty('${item.id}', -1)">-</button>
-                        <b style="min-width:25px; text-align:center; font-size:16px;">${item.qty}</b>
+                        <b style="min-width:25px; text-align:center;">${item.qty}</b>
                         <button class="qty-btn" onclick="changeQty('${item.id}', 1)">+</button>
                     </div>
                 </div>
@@ -693,44 +610,38 @@ function setCat(el, cat) {
 
     function changeQty(id, delta) {
         const item = cart.find(i => i.id === id);
-        if(item) {
+        if (item) {
             item.qty += delta;
-            if(item.qty <= 0) {
-                cart = cart.filter(i => i.id !== id);
-            }
+            if (item.qty <= 0) cart = cart.filter(i => i.id !== id);
         }
         updateCartUI();
     }
 
-    /* -----------------------------------------------------------
-       AUTENTICACIÓN Y GESTIÓN DE CUENTAS
-    ----------------------------------------------------------- */
+    // ==================== LOGIN Y PERFIL ====================
     async function doLogin() {
         const u = document.getElementById("uInp").value.trim();
         const p = document.getElementById("pInp").value.trim();
-        
-        if(!u || !p) return alert("Completá los campos.");
 
-        // Acceso Administrador Directo
-        if(u === "admin" && p === "admin") {
+        if (!u || !p) return alert("Completá usuario y contraseña");
+
+        if (u === "admin" && p === "admin") {
             closeAll();
             openModal("adminModal");
             return;
         }
-        
-        // Búsqueda en Firebase
+
         const userFound = users.find(x => x.user === u && x.pass === p);
-        
-        if(userFound) {
-            if(userFound.activo) {
+
+        if (userFound) {
+            if (userFound.activo) {
                 isMay = true;
                 usuarioLogueado = userFound;
                 llenarPerfil(userFound);
-                render(); // Actualiza precios a mayorista
+                render();
                 alert("¡Bienvenido, " + userFound.user + "!");
                 closeAll();
             } else {
-                alert("Tu cuenta está en proceso de revisión por el administrador.");
+                alert("Tu cuenta está en revisión por el administrador.");
             }
         } else {
             alert("Usuario o contraseña incorrectos.");
@@ -741,24 +652,19 @@ function setCat(el, cat) {
         document.getElementById("perfilContenido").style.display = "block";
         document.getElementById("perfilVacio").style.display = "none";
         document.getElementById("logoutBtn").style.display = "block";
-        
-        // Inyectar datos desde el objeto de Google
+
         document.getElementById("p-user").innerText = data.user;
-        document.getElementById("p-tel").innerText = data.tel;
-        document.getElementById("p-dir").innerText = data.dir || "Dirección no registrada";
+        document.getElementById("p-tel").innerText = data.tel || "--";
+        document.getElementById("p-dir").innerText = data.dir || "Sin dirección registrada";
     }
 
-    // FUNCIÓN DEL BOTÓN VERDE: REGISTRO
     async function registrarUsuarioEnGoogle() {
         const u = document.getElementById("rU").value.trim();
         const p = document.getElementById("rP").value.trim();
         const t = document.getElementById("rT").value.trim();
         const d = document.getElementById("rD").value.trim();
-        
-        if(!u || !p || !t || !d) {
-            alert("Por favor, completá todos los datos para validar tu comercio.");
-            return;
-        }
+
+        if (!u || !p || !t || !d) return alert("Completá todos los campos");
 
         try {
             await db.collection("usuarios").add({
@@ -769,32 +675,29 @@ function setCat(el, cat) {
                 activo: false,
                 fecha: Date.now()
             });
-            alert("✅ Solicitud enviada correctamente. Aguarda a que validemos tu local.");
+            alert("✅ Solicitud enviada correctamente. Esperá la validación.");
             closeAll();
-            // Limpiar campos
             document.querySelectorAll('#regModal input, #regModal textarea').forEach(i => i.value = "");
         } catch(e) {
+            alert("Error al enviar la solicitud.");
             console.error(e);
-            alert("Error al conectar con la base de datos.");
         }
     }
 
-    /* -----------------------------------------------------------
-       PANEL DE ADMINISTRACIÓN (GESTIÓN MAESTRA)
-    ----------------------------------------------------------- */
+    // ==================== PANEL ADMIN ====================
     function renderAdmP() {
         const list = document.getElementById("admListP");
         list.innerHTML = prods.map(p => `
             <div class="admin-item">
                 <img src="${p.imagen || 'https://via.placeholder.com/60'}" class="admin-item-img">
                 <div style="flex:1;">
-                    <b style="display:block; font-size:15px;">${p.nombre}</b>
-                    <small style="opacity:0.6;">Normal: $${p.precio} | May: $${p.precio_may || '--'}</small><br>
-                    <span class="tag" style="background:rgba(255,255,255,0.1); font-size:9px;">${p.categoria}</span>
+                    <b>${p.nombre}</b><br>
+                    <small>Normal: $${p.precio} | May: $${p.precio_may || '--'}</small><br>
+                    <span class="tag" style="background:rgba(255,255,255,0.1);">${p.categoria}</span>
                 </div>
-                <div style="display:flex; gap:8px;">
-                    <button class="icon-btn" onclick="editP('${p.id}')" style="font-size:16px;">✏️</button>
-                    <button class="icon-btn" onclick="del('productos','${p.id}')" style="color:var(--danger); font-size:16px;">🗑️</button>
+                <div>
+                    <button onclick="editP('${p.id}')" style="font-size:18px;">✏️</button>
+                    <button onclick="del('productos','${p.id}')" style="color:var(--danger); font-size:18px;">🗑️</button>
                 </div>
             </div>
         `).join("");
@@ -804,48 +707,49 @@ function setCat(el, cat) {
         const list = document.getElementById("admListU");
         const pen = users.filter(u => !u.activo);
         const act = users.filter(u => u.activo);
-        
-        let html = `<h4 style="margin: 0 0 15px 5px; font-size:12px; opacity:0.5;">SOLICITUDES PENDIENTES (${pen.length})</h4>`;
-        
-        if(pen.length === 0) html += `<p style="font-size:13px; opacity:0.3; margin-bottom:30px; margin-left:10px;">No hay solicitudes nuevas.</p>`;
-        
+
+        let html = `<h4 style="margin:0 0 15px 5px; opacity:0.6;">Solicitudes pendientes (${pen.length})</h4>`;
+        if (pen.length === 0) html += `<p style="opacity:0.4; margin-left:10px;">No hay solicitudes pendientes.</p>`;
+
         html += pen.map(u => `
-            <div class="admin-item" style="border-left: 4px solid var(--promo); background:rgba(245,158,11,0.05);">
+            <div class="admin-item" style="border-left:4px solid var(--promo);">
                 <div style="flex:1;">
-                    <b style="font-size:16px;">${u.user}</b><br>
-                    <small style="display:block; margin:4px 0;">📱 ${u.tel}</small>
-                    <small style="opacity:0.7;">📍 ${u.dir}</small>
+                    <b>${u.user}</b><br>
+                    <small>${u.tel} - ${u.dir || ''}</small>
                 </div>
-                <button class="btn-add" style="background:var(--success); width:auto; padding:10px 20px; font-size:12px;" onclick="updU('${u.id}', true)">APROBAR</button>
+                <button onclick="updU('${u.id}', true)" style="background:var(--success); padding:8px 16px;">Aprobar</button>
             </div>
         `).join("");
 
-        html += `<h4 style="margin: 40px 0 15px 5px; font-size:12px; opacity:0.5;">CLIENTES ACTIVOS (${act.length})</h4>`;
+        html += `<h4 style="margin:40px 0 15px 5px; opacity:0.6;">Clientes activos (${act.length})</h4>`;
         html += act.map(u => `
             <div class="admin-item">
                 <div style="flex:1;">
                     <b>${u.user}</b><br>
-                    <small style="opacity:0.6;">${u.tel} | ${u.dir || 'Sin dirección'}</small>
+                    <small>${u.tel}</small>
                 </div>
-                <button class="icon-btn" onclick="del('usuarios','${u.id}')" style="color:var(--danger)">🗑️</button>
+                <button onclick="del('usuarios','${u.id}')" style="color:var(--danger);">🗑️</button>
             </div>
         `).join("");
+
         list.innerHTML = html;
     }
 
     function renderAdmO() {
         const list = document.getElementById("admListO");
-        if(orders.length === 0) {
-            list.innerHTML = `<p style="text-align:center; opacity:0.3; padding:40px;">No hay historial de pedidos.</p>`;
+        if (orders.length === 0) {
+            list.innerHTML = `<p style="text-align:center; padding:40px; opacity:0.4;">No hay pedidos aún.</p>`;
             return;
         }
         list.innerHTML = orders.map(o => `
-            <div class="admin-item" style="flex-direction:column; align-items:flex-start; gap:10px; padding:20px;">
+            <div class="admin-item" style="flex-direction:column; align-items:flex-start;">
                 <div class="flex-between" style="width:100%;">
-                    <b style="color:var(--accent); font-size:18px;">${o.total}</b>
-                    <small style="opacity:0.5;">${new Date(o.fecha).toLocaleString()}</small>
+                    <b style="color:var(--accent);">${o.total}</b>
+                    <small>${new Date(o.fecha).toLocaleString()}</small>
                 </div>
-                <div style="font-size:13px; opacity:0.8; background:rgba(0,0,0,0.2); padding:10px; border-radius:12px; width:100%; white-space:pre-wrap;">${o.detalle}</div>
+                <div style="font-size:13px; white-space:pre-wrap; background:rgba(0,0,0,0.2); padding:10px; border-radius:10px; margin-top:8px; width:100%;">
+                    ${o.detalle}
+                </div>
             </div>
         `).join("");
     }
@@ -860,163 +764,153 @@ function setCat(el, cat) {
             categoria: document.getElementById("fCat").value.toLowerCase().trim(),
             imagen: document.getElementById("fImg").value.trim()
         };
-        
-        if(!data.nombre || !data.precio) return alert("Mínimo nombre y precio.");
 
-        if(id) {
+        if (!data.nombre || !data.precio) return alert("Nombre y precio son obligatorios");
+
+        if (id) {
             await db.collection("productos").doc(id).update(data);
         } else {
             await db.collection("productos").add(data);
         }
         limpiarP();
-        alert("¡Datos actualizados!");
+        alert("Producto guardado correctamente");
     }
 
     function editP(id) {
         const p = prods.find(x => x.id === id);
-        if(!p) return;
+        if (!p) return;
         document.getElementById("fId").value = p.id;
         document.getElementById("fNom").value = p.nombre;
         document.getElementById("fPre").value = p.precio;
-        document.getElementById("fPreM").value = p.precio_may || 0;
+        document.getElementById("fPreM").value = p.precio_may || "";
         document.getElementById("fPro").value = p.promo || "";
-        document.getElementById("fCat").value = p.categoria;
+        document.getElementById("fCat").value = p.categoria || "";
         document.getElementById("fImg").value = p.imagen || "";
-        // Hacer scroll arriba para ver el formulario
-        document.querySelector('.modal-content').scrollTo({top: 0, behavior: 'smooth'});
     }
 
     function limpiarP() {
         document.getElementById("fId").value = "";
-        ["fNom","fPre","fPreM","fPro","fCat","fImg"].forEach(i => document.getElementById(i).value = "");
+        ["fNom","fPre","fPreM","fPro","fCat","fImg"].forEach(id => {
+            document.getElementById(id).value = "";
+        });
     }
 
-    /* -----------------------------------------------------------
-       FUNCIONES AUXILIARES (HELPERS)
-    ----------------------------------------------------------- */
-    function toggleTheme() { document.body.classList.toggle("light"); }
-    
-    function openModal(id) { 
-        closeAll(); 
-        document.getElementById(id).style.display = "flex"; 
+    // ==================== FUNCIONES AUXILIARES ====================
+    function toggleTheme() {
+        document.body.classList.toggle("light");
     }
-    
+
+    function openModal(id) {
+        closeAll();
+        document.getElementById(id).style.display = "flex";
+    }
+
     function closeAll() {
         document.querySelectorAll(".modal").forEach(m => m.style.display = "none");
         document.querySelectorAll(".drawer").forEach(d => d.classList.remove("active"));
         document.getElementById("ov").classList.remove("active");
     }
 
-    function toggleInfo() { 
-        document.getElementById("infoDrawer").classList.toggle("active"); 
-        document.getElementById("ov").classList.toggle("active"); 
+    function toggleInfo() {
+        document.getElementById("infoDrawer").classList.toggle("active");
+        document.getElementById("ov").classList.toggle("active");
     }
 
-    function toggleCart() { 
-        document.getElementById("cartDrawer").classList.toggle("active"); 
-        document.getElementById("ov").classList.toggle("active"); 
+    function toggleCart() {
+        document.getElementById("cartDrawer").classList.toggle("active");
+        document.getElementById("ov").classList.toggle("active");
+        updateCartUI();
     }
-    
+
     function tab(id, e) {
-        ["t-prod","t-user","t-order"].forEach(t => document.getElementById(t).style.display = "none");
+        document.querySelectorAll("#t-prod, #t-user, #t-order").forEach(el => el.style.display = "none");
         document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
         document.getElementById(id).style.display = "block";
         e.target.classList.add("active");
     }
 
-    function setCat(c) {
-        filterCat = c;
-        document.querySelectorAll(".cat-card").forEach(card => card.classList.remove("active"));
-        event.currentTarget.classList.add("active");
+    function setCat(el, cat) {
+        filterCat = cat;
+        document.querySelectorAll('.cat-item').forEach(item => item.classList.remove('active'));
+        el.classList.add('active');
         render();
     }
 
     async function finalizarYEnviar() {
-        if(cart.length === 0) return alert("El carrito está vacío.");
-        
+        if (cart.length === 0) return alert("El carrito está vacío.");
+
         let textoPedido = `*📦 NUEVO PEDIDO MS47*\n`;
-        if(usuarioLogueado) {
-            textoPedido += `*Cliente:* ${usuarioLogueado.user}\n*Local:* ${usuarioLogueado.dir}\n`;
+        if (usuarioLogueado) {
+            textoPedido += `*Cliente:* ${usuarioLogueado.user}\n*Local:* ${usuarioLogueado.dir || 'Sin dirección'}\n`;
         } else {
-            textoPedido += `*Cliente:* Minorista / Final\n`;
+            textoPedido += `*Cliente:* Minorista\n`;
         }
         textoPedido += `----------------------------\n`;
-        
+
         cart.forEach(item => {
             const p = prods.find(x => x.id === item.id);
-            if(p) {
-                textoPedido += `• ${p.nombre} [x${item.qty}]\n`;
-            }
+            if (p) textoPedido += `• ${p.nombre} [x${item.qty}]\n`;
         });
-        
+
         const total = document.getElementById("cartTotal").innerText;
         textoPedido += `----------------------------\n*TOTAL ESTIMADO: ${total}*`;
-        
-<script>
 
-// Guardar en Historial de Firebase
-try {
-    await db.collection("pedidos").add({
-        detalle: textoPedido,
-        total: total,
-        fecha: Date.now()
-    });
-    
-    const nro = "5493434508948";
-    window.open(`https://wa.me/${nro}?text=${encodeURIComponent(textoPedido)}`);
-    
-    cart = [];
-    updateCartUI();
-    closeAll();
+        try {
+            await db.collection("pedidos").add({
+                detalle: textoPedido,
+                total: total,
+                fecha: Date.now()
+            });
 
-} catch(e) {
-    alert("Error al procesar el pedido.");
-}
+            const nro = "5493434508948";
+            window.open(`https://wa.me/${nro}?text=${encodeURIComponent(textoPedido)}`);
 
-
-async function del(col, id) { 
-    if(confirm("¿Estás seguro de eliminar este registro?")) {
-        await db.collection(col).doc(id).delete(); 
+            cart = [];
+            updateCartUI();
+            closeAll();
+            alert("Pedido enviado por WhatsApp");
+        } catch(e) {
+            console.error(e);
+            alert("Error al guardar el pedido.");
+        }
     }
-}
 
-async function updU(id, stat) { 
-    await db.collection("usuarios").doc(id).update({activo: stat}); 
-}
-
-async function vaciarHistorial() {
-    if(confirm("¿Seguro que querés borrar TODO el historial de pedidos?")) {
-        const snap = await db.collection("pedidos").get();
-        const batch = db.batch();
-        snap.forEach(doc => batch.delete(doc.ref));
-        await batch.commit();
-        alert("Historial vaciado.");
+    async function del(col, id) {
+        if (confirm("¿Eliminar este registro?")) {
+            await db.collection(col).doc(id).delete();
+        }
     }
-}
 
-function logout() { 
-    if(confirm("¿Cerrar sesión?")) {
-        location.reload(); 
+    async function updU(id, stat) {
+        await db.collection("usuarios").doc(id).update({activo: stat});
     }
-}
 
-function verificarAdmin() { 
-    const clave = prompt("Ingresá la clave de administración:");
-    
-    if(clave === "admin") {
-        openModal("adminModal"); 
-    } else if(clave !== null) {
-        alert("Clave incorrecta.");
+    async function vaciarHistorial() {
+        if (confirm("¿Borrar TODO el historial de pedidos?")) {
+            const snap = await db.collection("pedidos").get();
+            const batch = db.batch();
+            snap.forEach(doc => batch.delete(doc.ref));
+            await batch.commit();
+            alert("Historial vaciado.");
+        }
     }
-}
 
-// iniciar sistema
-if (typeof init === "function") {
-    init();
-} else {
-    console.error("init() no existe");
-}
+    function logout() {
+        if (confirm("¿Cerrar sesión?")) location.reload();
+    }
 
+    function verificarAdmin() {
+        const clave = prompt("Ingresa la clave de administración:");
+        if (clave === "admin") {
+            closeAll();
+            openModal("adminModal");
+        } else if (clave !== null) {
+            alert("Clave incorrecta.");
+        }
+    }
+
+    // ==================== INICIO ====================
+    window.onload = init;
 </script>
 
 </body>
