@@ -352,31 +352,38 @@
     <p>Equipamos tu mundo digital</p>
 </section>
     
-.cat-scroll {
-    display: flex;
-    gap: 10px;
-    overflow-x: auto;
-    padding: 10px;
-    scrollbar-width: none;
-}
+<head>
+    <style>
+        .cat-scroll {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding: 10px;
+            scrollbar-width: none;
+        }
 
-.cat-scroll::-webkit-scrollbar {
-    display: none;
-}
+        .cat-scroll::-webkit-scrollbar {
+            display: none;
+        }
 
-.cat-item {
-    flex: 0 0 auto;
-    padding: 8px 14px;
-    border-radius: 20px;
-    background: #1e293b;
-    font-size: 13px;
-    cursor: pointer;
-    white-space: nowrap;
-}
+        .cat-item {
+            flex: 0 0 auto;
+            padding: 8px 14px;
+            border-radius: 20px;
+            background: #1e293b;
+            font-size: 13px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
 
-.cat-item.active {
-    background: #3b82f6;
-}
+        .cat-item.active {
+            background: #3b82f6;
+        }
+    </style>
+</head>
+
+<body>
+
 <div class="cat-scroll" id="catBar">
 
     <div class="cat-item active" onclick="setCat('')">🌐 Todos</div>
@@ -396,6 +403,8 @@
     <div class="cat-item" onclick="setCat('aro_luz')">💡 Aro</div>
 
 </div>
+
+</body>
 
 </div>
 <div class="search-container">
