@@ -352,7 +352,12 @@
     <p>Equipamos tu mundo digital</p>
 </section>
     
+<!DOCTYPE html>
+<html lang="es">
 <head>
+    <meta charset="UTF-8">
+    <title>Categorías</title>
+
     <style>
         .cat-scroll {
             display: flex;
@@ -374,10 +379,21 @@
             font-size: 13px;
             cursor: pointer;
             white-space: nowrap;
+            color: white;
+            transition: 0.2s;
+        }
+
+        .cat-item:hover {
+            background: #334155;
         }
 
         .cat-item.active {
             background: #3b82f6;
+        }
+
+        body {
+            background: #0f172a;
+            font-family: Arial, sans-serif;
         }
     </style>
 </head>
@@ -386,23 +402,42 @@
 
 <div class="cat-scroll" id="catBar">
 
-    <div class="cat-item active" onclick="setCat('')">🌐 Todos</div>
-    <div class="cat-item" onclick="setCat('fundas')">📱 Fundas</div>
-    <div class="cat-item" onclick="setCat('cargadores')">🔌 Cargadores</div>
-    <div class="cat-item" onclick="setCat('bateria')">🔋 Battery</div>
-    <div class="cat-item" onclick="setCat('cables')">🔗 Cables</div>
-    <div class="cat-item" onclick="setCat('cabezales')">⚡ Cabezales</div>
-    <div class="cat-item" onclick="setCat('adaptadores')">🔄 Adaptadores</div>
-    <div class="cat-item" onclick="setCat('powerbank')">🔋 Power Bank</div>
-    <div class="cat-item" onclick="setCat('inalambrico')">📡 Inalámbrico</div>
-    <div class="cat-item" onclick="setCat('auricular_vincha')">🎧 Vincha</div>
-    <div class="cat-item" onclick="setCat('auri_sin_cable')">🎧 Sin cable</div>
-    <div class="cat-item" onclick="setCat('auri_con_cable')">🎧 Con cable</div>
-    <div class="cat-item" onclick="setCat('smartwatch')">⌚ Watch</div>
-    <div class="cat-item" onclick="setCat('smartband')">⌚ Band</div>
-    <div class="cat-item" onclick="setCat('aro_luz')">💡 Aro</div>
+    <div class="cat-item active" onclick="setCat(this, '')">🌐 Todos</div>
+    <div class="cat-item" onclick="setCat(this, 'fundas')">📱 Fundas</div>
+    <div class="cat-item" onclick="setCat(this, 'cargadores')">🔌 Cargadores</div>
+    <div class="cat-item" onclick="setCat(this, 'bateria')">🔋 Battery</div>
+    <div class="cat-item" onclick="setCat(this, 'cables')">🔗 Cables</div>
+    <div class="cat-item" onclick="setCat(this, 'cabezales')">⚡ Cabezales</div>
+    <div class="cat-item" onclick="setCat(this, 'adaptadores')">🔄 Adaptadores</div>
+    <div class="cat-item" onclick="setCat(this, 'powerbank')">🔋 Power Bank</div>
+    <div class="cat-item" onclick="setCat(this, 'inalambrico')">📡 Inalámbrico</div>
+    <div class="cat-item" onclick="setCat(this, 'auricular_vincha')">🎧 Vincha</div>
+    <div class="cat-item" onclick="setCat(this, 'auri_sin_cable')">🎧 Sin cable</div>
+    <div class="cat-item" onclick="setCat(this, 'auri_con_cable')">🎧 Con cable</div>
+    <div class="cat-item" onclick="setCat(this, 'smartwatch')">⌚ Watch</div>
+    <div class="cat-item" onclick="setCat(this, 'smartband')">⌚ Band</div>
+    <div class="cat-item" onclick="setCat(this, 'aro_luz')">💡 Aro</div>
 
 </div>
+
+<script>
+function setCat(el, cat) {
+
+    // sacar active de todos
+    document.querySelectorAll('.cat-item').forEach(e => {
+        e.classList.remove('active');
+    });
+
+    // activar el seleccionado
+    el.classList.add('active');
+
+    // (opcional) lógica futura de filtro
+    console.log("Categoría seleccionada:", cat);
+}
+</script>
+
+</body>
+</html>
 
 </div>
 <div class="search-container">
