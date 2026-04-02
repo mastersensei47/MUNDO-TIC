@@ -62,33 +62,30 @@
             align-items: center;
             gap: 10px;
         }
-/* HERO SLIDER - Versión Final para Diseño Integrado MS47 */
+/* HERO SLIDER - Configuración Estilo Cuba Importados */
 .hero {
-    /* Altura adaptable: más baja en celular para no estirar la imagen */
-    height: 280px; 
+    /* Subimos la altura para que la imagen tenga espacio de lucirse */
+    height: 450px; 
     position: relative;
+    width: 100%;
     overflow: hidden;
-    background-color: #0f172a; /* Fondo oscuro que combina con tu diseño */
+    background-color: #0f172a;
 }
 
-@media (min-width: 768px) {
+/* Ajuste para que en el celu no quede un hueco gigante */
+@media (max-width: 768px) {
     .hero {
-        height: 400px; /* Altura para tablets y laptops */
-    }
-}
-
-@media (min-width: 1440px) {
-    .hero {
-        height: 500px; /* Altura para monitores grandes */
+        height: 250px; 
     }
 }
 
 .hero-slide {
     position: absolute;
     inset: 0;
-    /* "contain" hace que la imagen se vea SIEMPRE completa sin cortarse */
-    background-size: contain; 
-    background-position: center;
+    /* CAMBIO CLAVE: Usamos 'cover' para que llene todo el ancho */
+    background-size: cover; 
+    /* Centramos la imagen para que el logo no se mueva de lugar */
+    background-position: center; 
     background-repeat: no-repeat;
     transition: opacity 1.2s ease-in-out;
     opacity: 0;
@@ -102,26 +99,18 @@
     position: relative;
     z-index: 2;
     height: 100%;
+    /* Quitamos cualquier color o gradiente que opaque tu diseño */
+    background: transparent; 
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    text-align: center;
-    padding: 0 20px;
-    /* Eliminamos el gradiente oscuro para que brillen tus rayos cian de Photoshop */
-    background: transparent; 
 }
 
-/* Ocultamos los textos del HTML porque ya están integrados en tu imagen */
+/* Ocultamos los textos del HTML */
 .hero-content h1, 
 .hero-content p {
     display: none;
-}
-
-/* Ajuste opcional: si tenés botones dentro del hero, dales un poco de sombra 
-   para que resalten sobre el fondo claro de tu diseño */
-.hero-content .btn {
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
 }
         /* CATEGORÍAS - SCROLL MEJORADO */
         .cat-scroll {
