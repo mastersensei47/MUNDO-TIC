@@ -494,16 +494,35 @@
 <div class="overlay" id="ov" onclick="closeAll()"></div>
 
 <!-- PANEL LATERAL IZQUIERDO RESTAURADO -->
+<!-- ====================== PANEL LATERAL IZQUIERDO (INFO DRAWER) ====================== -->
 <div id="infoDrawer" class="drawer">
     <div class="flex-between" style="margin-bottom:25px;">
         <h2 style="margin:0; color:var(--accent); font-size:28px;">MS47</h2>
         <span onclick="closeAll()" style="cursor:pointer; font-size:28px; opacity:0.5;">✕</span>
     </div>
+
+    <!-- Información del negocio + Logo -->
     <div style="text-align:center; margin-bottom:30px; padding-bottom:25px; border-bottom:1px solid rgba(255,255,255,0.1);">
         <img src="log.png" style="height:85px; width:auto; margin-bottom:15px;" alt="MS47">
         <h2 style="margin:0 0 6px 0; font-size:26px;">Mundo Tic</h2>
         <p style="margin:0; opacity:0.75; font-size:15px; line-height:1.4;">Equipamos tu mundo digital<br>en Santa Fe, Argentina</p>
     </div>
+
+    <!-- Minimapa interactivo -->
+    <div style="margin-bottom:30px;">
+        <label style="font-size:11px; opacity:0.5; font-weight:800; text-transform:uppercase; letter-spacing:1px; display:block; margin-bottom:8px;">📍 Nuestra ubicación</label>
+        <iframe 
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3405.123456789!2d-60.70000000000001!3d-31.63333333333333!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x95b5a9c5f0f0f0f1%3A0x8b5a9c5f0f0f0f0f!2sSanta+Fe%2C+Santa+Fe+Province%2C+Argentina!5e0!3m2!1ses!2sar!4v1710000000000"
+            width="100%" 
+            height="220" 
+            style="border-radius:20px; border:none; box-shadow:0 4px 15px rgba(0,0,0,0.3);" 
+            allowfullscreen="" 
+            loading="lazy" 
+            referrerpolicy="no-referrer-when-downgrade">
+        </iframe>
+    </div>
+
+    <!-- Contenido del perfil (se muestra después de login) -->
     <div id="perfilContenido" style="display:none;">
         <div style="background:rgba(255,255,255,0.03); padding:25px; border-radius:25px; border:1px solid rgba(255,255,255,0.05); margin-bottom:25px;">
             <div style="margin-bottom:20px;">
@@ -523,30 +542,17 @@
             ✓ ESTADO: CLIENTE MAYORISTA ACTIVO
         </div>
     </div>
+
+    <!-- Perfil vacío (antes de login) -->
     <div id="perfilVacio" style="text-align:center; padding:60px 0; opacity:0.4;">
         <div style="font-size:50px; margin-bottom:20px;">👤</div>
         <p>Iniciá sesión para ver tu información y precios especiales.</p>
     </div>
+
     <div style="flex-grow:1;"></div>
     <div style="padding-top:20px; border-top:1px solid rgba(255,255,255,0.05);">
         <button id="logoutBtn" onclick="logout()" style="display:none; width:100%; background:var(--danger); color:white; border:none; padding:18px; border-radius:18px; font-weight:800; cursor:pointer; margin-bottom:15px;">CERRAR SESIÓN</button>
         <p style="font-size:10px; text-align:center; opacity:0.3; font-weight:700;">MS47 v5.0 • SANTA FE</p>
-    </div>
-</div>
-
-<!-- CART DRAWER -->
-<div id="cartDrawer" class="drawer">
-    <div class="flex-between" style="margin-bottom:30px;">
-        <h2 style="margin:0;">Tu Carrito</h2>
-        <span onclick="closeAll()" style="cursor:pointer; font-size:28px; opacity:0.5;">✕</span>
-    </div>
-    <div id="cartItems" style="flex-grow:1; overflow-y:auto; padding-right:5px;"></div>
-    <div style="padding-top:25px; border-top:1px solid rgba(255,255,255,0.1); margin-top:20px;">
-        <div class="flex-between" style="margin-bottom:25px;">
-            <span style="font-size:18px; opacity:0.7;">Total Estimado:</span>
-            <span id="cartTotal" style="font-size:32px; font-weight:800; color:var(--accent);">$0</span>
-        </div>
-        <button class="btn-add" style="background:#25d366; padding:22px; font-size:16px;" onclick="finalizarYEnviar()">ENVIAR PEDIDO POR WHATSAPP 🚀</button>
     </div>
 </div>
 
