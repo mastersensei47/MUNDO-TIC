@@ -47,7 +47,6 @@
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
 
-        /* TOAST */
         #toast {
             position: fixed;
             bottom: 25px;
@@ -65,35 +64,30 @@
             gap: 10px;
         }
 
-        /* HERO SLIDER - FULL BLEED COMO EN CUBAIMPORTADOS.COM */
         .hero {
-            height: 560px; /* altura optimizada para que se vea completo y potente */
+            height: 560px;
             position: relative;
-            width: 100vw;          /* ← FULL BLEED: ocupa todo el ancho de la ventana */
-            margin-left: calc(-50vw + 50%); /* fuerza edge-to-edge incluso si hay contenedores */
+            width: 100vw;
+            margin-left: calc(-50vw + 50%);
             left: 50%;
             transform: translateX(-50%);
             overflow: hidden;
             background-color: #0f172a;
         }
         @media (max-width: 768px) {
-            .hero {
-                height: 380px; /* más compacto en celular pero sigue ocupando todo el ancho */
-            }
+            .hero { height: 380px; }
         }
 
         .hero-slide {
             position: absolute;
             inset: 0;
-            background-size: cover;        /* ← CAMBIO CLAVE: cover para que ocupe TODO el largo/ancho como en cubaimportados */
+            background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
             transition: opacity 1.2s ease-in-out;
             opacity: 0;
         }
-        .hero-slide.active {
-            opacity: 1;
-        }
+        .hero-slide.active { opacity: 1; }
 
         .hero-content {
             position: relative;
@@ -105,11 +99,8 @@
             justify-content: center;
             align-items: center;
         }
-        .hero-content h1, .hero-content p {
-            display: none; /* se ocultan porque las imágenes ya son el hero */
-        }
+        .hero-content h1, .hero-content p { display: none; }
 
-        /* CATEGORÍAS */
         .cat-scroll {
             display: flex;
             gap: 10px;
@@ -137,7 +128,6 @@
         .cat-item:hover { background: #334155; }
         .cat-item.active { background: var(--accent); color: white; }
 
-        /* BUSCADOR */
         .search-container {
             max-width: 1400px;
             margin: 0 auto;
@@ -158,35 +148,6 @@
             box-shadow: 0 0 0 3px var(--accent);
         }
 
-        /* ADMIN */
-        .admin-form-box {
-            background: rgba(255,255,255,0.03);
-            padding: 35px;
-            border-radius: 30px;
-            margin-bottom: 30px;
-            border: 1px solid rgba(255,255,255,0.05);
-        }
-        .admin-item {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            background: rgba(255,255,255,0.03);
-            padding: 18px;
-            border-radius: 20px;
-            margin-bottom: 12px;
-            border: 1px solid rgba(255,255,255,0.05);
-        }
-        .admin-item-img {
-            width: 60px;
-            height: 60px;
-            object-fit: contain;
-            background: #fff;
-            border-radius: 14px;
-            padding: 6px;
-            flex-shrink: 0;
-        }
-
-        /* HEADER Y RESTO (sin cambios, solo limpio) */
         header {
             display: flex;
             justify-content: space-between;
@@ -242,8 +203,7 @@
 
         .promo-badge {
             position: absolute;
-            top: 15px;
-            left: 15px;
+            top: 15px; left: 15px;
             background: var(--promo);
             color: #000;
             font-size: 11px;
@@ -259,7 +219,6 @@
             align-items: center;
             justify-content: center;
             padding: 20px;
-            position: relative;
             overflow: hidden;
         }
         .img-box img {
@@ -332,6 +291,33 @@
             font-size: 13px;
         }
         .tab-btn.active { background: var(--card); color: var(--accent); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+
+        .admin-form-box {
+            background: rgba(255,255,255,0.03);
+            padding: 35px;
+            border-radius: 30px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .admin-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: rgba(255,255,255,0.03);
+            padding: 18px;
+            border-radius: 20px;
+            margin-bottom: 12px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .admin-item-img {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+            background: #fff;
+            border-radius: 14px;
+            padding: 6px;
+            flex-shrink: 0;
+        }
 
         .drawer {
             position: fixed;
@@ -408,7 +394,6 @@
     </div>
 </header>
 
-<!-- HERO SLIDER FULL BLEED -->
 <div class="hero" id="heroSlider">
     <div class="hero-content">
         <h1>Mundo Tic</h1>
@@ -440,15 +425,12 @@
 
 <div class="products-grid" id="productsCont"></div>
 
-<!-- TOAST -->
 <div id="toast">✅ Producto agregado al carrito</div>
 
-<!-- MODAL ZOOM -->
 <div id="imageModal" style="position:fixed;inset:0;background:rgba(0,0,0,0.95);display:none;align-items:center;justify-content:center;z-index:9000;" onclick="if(event.target.id==='imageModal')this.style.display='none';">
     <img id="modalImg" style="max-width:92%;max-height:92%;object-fit:contain;" src="">
 </div>
 
-<!-- LOGIN / REG / ADMIN MODALS (sin cambios) -->
 <div class="modal" id="loginModal">
     <div class="modal-content" style="max-width:420px; text-align:center;">
         <h2 style="margin-bottom:10px;">¡Bienvenido de nuevo!</h2>
@@ -474,6 +456,7 @@
     </div>
 </div>
 
+<!-- ====================== PANEL ADMIN (CORREGIDO Y FUNCIONAL) ====================== -->
 <div class="modal" id="adminModal">
     <div class="modal-content">
         <div class="flex-between" style="margin-bottom:30px;">
@@ -501,7 +484,7 @@
                 <div class="form-group"><label>Categoría</label><input id="fCat" placeholder="fundas, cargadores..."></div>
                 <div class="form-group"><label>URL de la Imagen</label><input id="fImg"></div>
                 <button class="btn-add" style="background:var(--success)" onclick="saveP()">GUARDAR PRODUCTO</button>
-                <button class="btn-add" style="background:none; color:white; margin-top:10px; border:1px solid rgba(255,255,255,0.1);" onclick="limpiarP()">Limpiar</button>
+                <button class="btn-add" style="background:none; color:white; margin-top:10px; border:1px solid rgba(255,255,255,0.1);" onclick="limpiarP()">Limpiar campos</button>
             </div>
             <div id="admListP"></div>
         </div>
@@ -528,9 +511,9 @@
 
 <div class="overlay" id="ov" onclick="closeAll()"></div>
 
-<!-- DRAWERS (info y carrito) sin cambios -->
+<!-- DRAWERS (mantenidos iguales) -->
 <div id="infoDrawer" class="drawer" style="overflow-y: auto; padding-bottom: 40px;">
-    <!-- ... (todo el contenido del drawer se mantiene igual) ... -->
+    <!-- ... contenido del drawer sin cambios ... -->
     <div class="flex-between" style="margin-bottom:25px; position: sticky; top: 0; background: var(--card); z-index: 10; padding: 20px 0;">
         <h2 style="margin:0; color:var(--accent); font-size:28px;">MS47</h2>
         <span onclick="closeAll()" style="cursor:pointer; font-size:28px; opacity:0.5;">✕</span>
@@ -554,15 +537,9 @@
         </div>
     </div>
     <div style="margin-bottom:30px; display:flex; flex-direction:column; gap:12px;">
-        <a href="https://wa.me/5493424063266" target="_blank" style="display:flex; align-items:center; gap:12px; background:#25d366; color:white; padding:18px 20px; border-radius:16px; text-decoration:none; font-weight:700; justify-content:center; font-size:17px;">
-            <span style="font-size:28px;">📲</span> CHATEAR POR WHATSAPP
-        </a>
-        <a href="https://www.instagram.com/mundo.tic/" target="_blank" style="display:flex; align-items:center; gap:12px; background:#e1306c; color:white; padding:18px 20px; border-radius:16px; text-decoration:none; font-weight:700; justify-content:center; font-size:17px;">
-            <span style="font-size:28px;">📷</span> INSTAGRAM
-        </a>
-        <a href="https://www.facebook.com/profile.php?id=61587552659399&ref=PROFILE_EDIT_xav_ig_profile_page_web" target="_blank" style="display:flex; align-items:center; gap:12px; background:#1877f2; color:white; padding:18px 20px; border-radius:16px; text-decoration:none; font-weight:700; justify-content:center; font-size:17px;">
-            <span style="font-size:28px;">📘</span> FACEBOOK
-        </a>
+        <a href="https://wa.me/5493424063266" target="_blank" style="display:flex; align-items:center; gap:12px; background:#25d366; color:white; padding:18px 20px; border-radius:16px; text-decoration:none; font-weight:700; justify-content:center; font-size:17px;">📲 CHATEAR POR WHATSAPP</a>
+        <a href="https://www.instagram.com/mundo.tic/" target="_blank" style="display:flex; align-items:center; gap:12px; background:#e1306c; color:white; padding:18px 20px; border-radius:16px; text-decoration:none; font-weight:700; justify-content:center; font-size:17px;">📷 INSTAGRAM</a>
+        <a href="https://www.facebook.com/profile.php?id=61587552659399&ref=PROFILE_EDIT_xav_ig_profile_page_web" target="_blank" style="display:flex; align-items:center; gap:12px; background:#1877f2; color:white; padding:18px 20px; border-radius:16px; text-decoration:none; font-weight:700; justify-content:center; font-size:17px;">📘 FACEBOOK</a>
     </div>
     <div id="perfilContenido" style="display:none;">
         <div style="background:rgba(255,255,255,0.03); padding:25px; border-radius:25px; border:1px solid rgba(255,255,255,0.05); margin-bottom:25px;">
@@ -578,7 +555,7 @@
     </div>
     <div style="padding-top:20px; border-top:1px solid rgba(255,255,255,0.05); margin-top: auto;">
         <button id="logoutBtn" onclick="logout()" style="display:none; width:100%; background:var(--danger); color:white; border:none; padding:18px; border-radius:18px; font-weight:800; cursor:pointer; margin-bottom:15px;">CERRAR SESIÓN</button>
-        <p style="font-size:10px; text-align:center; opacity:0.3; font-weight:700;">MS47 v5.1 • SANTA FE</p>
+        <p style="font-size:10px; text-align:center; opacity:0.3; font-weight:700;">MS47 v5.2 • SANTA FE</p>
     </div>
 </div>
 
@@ -598,7 +575,6 @@
 </div>
 
 <script>
-    // ==================== CONFIG FIREBASE ====================
     const firebaseConfig = {
         apiKey: "AIzaSyDAqlchDsLHIMMbv6YL2ipggaShXlFqiW8",
         authDomain: "tienda-online-baaf6.firebaseapp.com",
@@ -610,7 +586,6 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // ==================== VARIABLES GLOBALES ====================
     let prods = [];
     let cart = [];
     let users = [];
@@ -620,7 +595,6 @@
     let usuarioLogueado = null;
     let filterCat = "";
 
-    // ==================== INICIALIZACIÓN ====================
     function init() {
         db.collection("productos").onSnapshot(snap => {
             prods = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -642,7 +616,6 @@
         });
     }
 
-    // ==================== HERO SLIDER (FULL BLEED + COVER) ====================
     function renderHeroSlider() {
         const hero = document.getElementById("heroSlider");
         let content = hero.querySelector('.hero-content');
@@ -651,7 +624,6 @@
             content.className = 'hero-content';
         }
         content.innerHTML = `<h1>Mundo Tic</h1><p>Equipamos tu mundo digital</p>`;
-        
         hero.innerHTML = '';
         hero.appendChild(content);
 
@@ -678,7 +650,6 @@
         }, 5000);
     }
 
-    // ==================== RENDER TIENDA (CORREGIDO) ====================
     function render() {
         const query = document.getElementById("searchInput").value.toLowerCase().trim();
         const cont = document.getElementById("productsCont");
@@ -710,7 +681,6 @@
         }).join("");
     }
 
-    // ==================== CARRITO ====================
     function addToCart(id) {
         const exist = cart.find(i => i.id === id);
         if (exist) exist.qty++;
@@ -760,7 +730,6 @@
         updateCartUI();
     }
 
-    // ==================== LOGIN ====================
     async function doLogin() {
         const u = document.getElementById("uInp").value.trim();
         const p = document.getElementById("pInp").value.trim();
@@ -806,9 +775,7 @@
         if (!u || !p || !t || !d) return alert("Completá todos los campos");
 
         try {
-            await db.collection("usuarios").add({
-                user: u, pass: p, tel: t, dir: d, activo: false, fecha: Date.now()
-            });
+            await db.collection("usuarios").add({ user: u, pass: p, tel: t, dir: d, activo: false, fecha: Date.now() });
             alert("✅ Solicitud enviada correctamente. Esperá la validación.");
             closeAll();
             document.querySelectorAll('#regModal input, #regModal textarea').forEach(i => i.value = "");
@@ -818,23 +785,25 @@
         }
     }
 
-    // ==================== ADMIN - PRODUCTOS (FUNCIONES QUE FALTABAN) ====================
+    // ====================== ADMIN - PRODUCTOS (AHORA FUNCIONA 100%) ======================
     function renderAdmP() {
         const list = document.getElementById("admListP");
-        list.innerHTML = prods.map(p => `
-            <div class="admin-item">
-                <img src="${p.imagen || 'https://via.placeholder.com/70'}" class="admin-item-img" alt="${p.nombre}">
-                <div style="flex:1;">
-                    <b>${p.nombre}</b><br>
-                    <small>Normal: $${p.precio} | May: $${p.precio_may || '--'}</small><br>
-                    <span style="background:#334155; color:white; padding:2px 8px; border-radius:9999px; font-size:11px;">${p.categoria}</span>
+        list.innerHTML = prods.length === 0 
+            ? `<p style="text-align:center; padding:40px; opacity:0.4;">Aún no hay productos. Agrega uno arriba.</p>`
+            : prods.map(p => `
+                <div class="admin-item">
+                    <img src="${p.imagen || 'https://via.placeholder.com/70'}" class="admin-item-img" alt="${p.nombre}">
+                    <div style="flex:1;">
+                        <b>${p.nombre}</b><br>
+                        <small>Normal: $${p.precio} | May: $${p.precio_may || '--'}</small><br>
+                        <span style="background:#334155; color:white; padding:2px 8px; border-radius:9999px; font-size:11px;">${p.categoria}</span>
+                    </div>
+                    <div>
+                        <button onclick="editP('${p.id}')" style="font-size:18px; margin-right:8px;">✏️</button>
+                        <button onclick="del('productos','${p.id}')" style="color:var(--danger); font-size:18px;">🗑️</button>
+                    </div>
                 </div>
-                <div>
-                    <button onclick="editP('${p.id}')" style="font-size:18px;">✏️</button>
-                    <button onclick="del('productos','${p.id}')" style="color:var(--danger); font-size:18px;">🗑️</button>
-                </div>
-            </div>
-        `).join("");
+            `).join("");
     }
 
     async function saveP() {
@@ -851,13 +820,20 @@
             imagen: document.getElementById("fImg").value.trim()
         };
 
-        if (id) {
-            await db.collection("productos").doc(id).update(data);
-        } else {
-            await db.collection("productos").add(data);
+        try {
+            if (id) {
+                await db.collection("productos").doc(id).update(data);
+            } else {
+                await db.collection("productos").add(data);
+            }
+            limpiarP();
+            renderAdmP();        // ← actualización inmediata
+            render();            // ← también actualiza la tienda
+            alert("✅ Producto guardado correctamente");
+        } catch(e) {
+            alert("Error al guardar el producto");
+            console.error(e);
         }
-        limpiarP();
-        alert("✅ Producto guardado correctamente");
     }
 
     function limpiarP() {
@@ -873,6 +849,7 @@
     function editP(id) {
         const p = prods.find(x => x.id === id);
         if (!p) return;
+
         document.getElementById("fId").value = id;
         document.getElementById("fNom").value = p.nombre || "";
         document.getElementById("fPre").value = p.precio || "";
@@ -880,10 +857,16 @@
         document.getElementById("fPro").value = p.promo || "";
         document.getElementById("fCat").value = p.categoria || "";
         document.getElementById("fImg").value = p.imagen || "";
-        tab('t-prod', {target: document.querySelector('.tab-btn')}); // ir a pestaña productos
+
+        // Cambiar a pestaña PRODUCTOS correctamente
+        document.querySelectorAll("#t-prod, #t-user, #t-order, #t-slider").forEach(el => el.style.display = "none");
+        document.getElementById("t-prod").style.display = "block";
+        document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+        const prodBtn = Array.from(document.querySelectorAll(".tab-btn")).find(btn => btn.textContent.includes("PRODUCTOS"));
+        if (prodBtn) prodBtn.classList.add("active");
     }
 
-    // ==================== ADMIN - OTROS RENDERS (CORREGIDOS) ====================
+    // ====================== ADMIN - CLIENTES, HISTORIAL, SLIDER ======================
     function renderAdmU() {
         const list = document.getElementById("admListU");
         const pen = users.filter(u => !u.activo);
@@ -972,7 +955,7 @@
         }
     }
 
-    // ==================== FUNCIONES AUXILIARES ====================
+    // ====================== FUNCIONES AUXILIARES ======================
     function toggleTheme() { document.body.classList.toggle("light"); }
     function openModal(id) {
         closeAll();
@@ -996,7 +979,7 @@
         document.querySelectorAll("#t-prod, #t-user, #t-order, #t-slider").forEach(el => el.style.display = "none");
         document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
         document.getElementById(id).style.display = "block";
-        e.target.classList.add("active");
+        if (e && e.target) e.target.classList.add("active");
     }
     function setCat(el, cat) {
         filterCat = cat;
@@ -1007,11 +990,8 @@
     async function finalizarYEnviar() {
         if (cart.length === 0) return alert("El carrito está vacío.");
         let textoPedido = `*📦 NUEVO PEDIDO MS47*\n`;
-        if (usuarioLogueado) {
-            textoPedido += `*Cliente:* ${usuarioLogueado.user}\n*Local:* ${usuarioLogueado.dir || 'Sin dirección'}\n`;
-        } else {
-            textoPedido += `*Cliente:* Minorista\n`;
-        }
+        if (usuarioLogueado) textoPedido += `*Cliente:* ${usuarioLogueado.user}\n*Local:* ${usuarioLogueado.dir || 'Sin dirección'}\n`;
+        else textoPedido += `*Cliente:* Minorista\n`;
         textoPedido += `----------------------------\n`;
         cart.forEach(item => {
             const p = prods.find(x => x.id === item.id);
@@ -1021,11 +1001,7 @@
         textoPedido += `----------------------------\n*TOTAL ESTIMADO: ${total}*`;
 
         try {
-            await db.collection("pedidos").add({
-                detalle: textoPedido,
-                total: total,
-                fecha: Date.now()
-            });
+            await db.collection("pedidos").add({ detalle: textoPedido, total: total, fecha: Date.now() });
             const nro = "5493424063266";
             window.open(`https://wa.me/${nro}?text=${encodeURIComponent(textoPedido)}`);
             cart = [];
@@ -1067,7 +1043,6 @@
         }
     }
 
-    // ==================== INICIO ====================
     window.onload = init;
 </script>
 </body>
