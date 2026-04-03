@@ -43,31 +43,10 @@
             transition: var(--transition);
             overflow-x: hidden;
         }
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
 
-        /* TOAST */
-        #toast {
-            position: fixed;
-            bottom: 25px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: var(--success);
-            color: white;
-            padding: 14px 26px;
-            border-radius: 50px;
-            font-weight: 700;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            z-index: 9000;
-            display: none;
-            align-items: center;
-            gap: 10px;
-        }
-
-        /* HERO SLIDER - FULL BLEED */
+        /* HERO - EXACTO COMO CUBAIMPORTADOS */
         .hero {
-            height: 560px;
+            height: 500px; /* ← Igual que CubaImportados */
             position: relative;
             width: 100vw;
             margin-left: calc(-50vw + 50%);
@@ -77,19 +56,22 @@
             background-color: #0f172a;
         }
         @media (max-width: 768px) {
-            .hero { height: 380px; }
+            .hero {
+                height: 340px; /* más compacto en celular como Cuba */
+            }
         }
         .hero-slide {
             position: absolute;
             inset: 0;
-            background-size: cover;
+            background-size: cover; /* ← clave para que quede como Cuba */
             background-position: center;
             background-repeat: no-repeat;
             transition: opacity 1.2s ease-in-out;
             opacity: 0;
         }
-        .hero-slide.active { opacity: 1; }
-
+        .hero-slide.active {
+            opacity: 1;
+        }
         .hero-content {
             position: relative;
             z-index: 2;
@@ -100,55 +82,11 @@
             justify-content: center;
             align-items: center;
         }
-        .hero-content h1, .hero-content p { display: none; }
+        .hero-content h1, .hero-content p {
+            display: none;
+        }
 
-        /* CATEGORÍAS */
-        .cat-scroll {
-            display: flex;
-            gap: 10px;
-            overflow-x: auto;
-            padding: 15px 20px;
-            scrollbar-width: none;
-            scroll-behavior: smooth;
-            -webkit-overflow-scrolling: touch;
-            cursor: grab;
-        }
-        .cat-scroll::-webkit-scrollbar { display: none; }
-        .cat-scroll:active { cursor: grabbing; }
-        .cat-item {
-            flex: 0 0 auto;
-            padding: 10px 18px;
-            border-radius: 20px;
-            background: #1e293b;
-            font-size: 13.5px;
-            cursor: pointer;
-            white-space: nowrap;
-            color: white;
-            transition: 0.2s;
-            font-weight: 500;
-        }
-        .cat-item:hover { background: #334155; }
-        .cat-item.active { background: var(--accent); color: white; }
-
-        /* BUSCADOR */
-        .search-container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 0 20px 20px;
-        }
-        .search-bar {
-            width: 100%;
-            padding: 18px 25px;
-            font-size: 16px;
-            border: none;
-            border-radius: 9999px;
-            background: var(--input-bg);
-            color: var(--text);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        }
-        .search-bar:focus { outline: none; box-shadow: 0 0 0 3px var(--accent); }
-
-        /* HEADER */
+        /* RESTO DE ESTILOS */
         header {
             display: flex;
             justify-content: space-between;
@@ -172,13 +110,54 @@
             border-radius: 50%;
             color: var(--text);
             transition: var(--transition);
-            position: relative;
             border: none;
             background: transparent;
         }
         .icon-btn:hover { background: rgba(255,255,255,0.1); transform: translateY(-2px); }
 
-        /* PRODUCTOS */
+        .cat-scroll {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding: 15px 20px;
+            scrollbar-width: none;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+            cursor: grab;
+        }
+        .cat-scroll::-webkit-scrollbar { display: none; }
+        .cat-item {
+            flex: 0 0 auto;
+            padding: 10px 18px;
+            border-radius: 20px;
+            background: #1e293b;
+            font-size: 13.5px;
+            cursor: pointer;
+            white-space: nowrap;
+            color: white;
+            transition: 0.2s;
+            font-weight: 500;
+        }
+        .cat-item:hover { background: #334155; }
+        .cat-item.active { background: var(--accent); color: white; }
+
+        .search-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px 20px;
+        }
+        .search-bar {
+            width: 100%;
+            padding: 18px 25px;
+            font-size: 16px;
+            border: none;
+            border-radius: 9999px;
+            background: var(--input-bg);
+            color: var(--text);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .search-bar:focus { box-shadow: 0 0 0 3px var(--accent); }
+
         .products-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -190,6 +169,7 @@
         @media (min-width: 768px) {
             .products-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
         }
+
         .product-card {
             background: var(--card);
             border-radius: var(--radius);
@@ -197,10 +177,10 @@
             position: relative;
             display: flex;
             flex-direction: column;
-            border: 1px solid rgba(128,128,128,0.1);
             transition: var(--transition);
         }
         .product-card:hover { transform: translateY(-8px); box-shadow: 0 20px 40px rgba(0,0,0,0.4); }
+
         .promo-badge {
             position: absolute;
             top: 15px; left: 15px;
@@ -219,7 +199,6 @@
             align-items: center;
             justify-content: center;
             padding: 20px;
-            position: relative;
             overflow: hidden;
         }
         .img-box img {
@@ -229,9 +208,11 @@
             transition: 0.5s;
         }
         .product-card:hover .img-box img { transform: scale(1.1); }
+
         .info-box { padding: 22px; flex-grow: 1; display: flex; flex-direction: column; }
         .prod-title { font-weight: 700; font-size: 17px; margin-bottom: 12px; min-height: 45px; line-height: 1.4; }
         .price-val { font-size: 26px; font-weight: 800; color: var(--accent); margin-bottom: 20px; }
+
         .btn-add {
             background: var(--accent);
             color: white;
@@ -245,9 +226,8 @@
             font-size: 15px;
         }
         .btn-add:hover { filter: brightness(1.1); }
-        .btn-add:active { transform: scale(0.96); }
 
-        /* MODALES */
+        /* MODALES Y ADMIN - MÁS ESTÉTICO Y RESPONSIVO */
         .modal {
             position: fixed;
             inset: 0;
@@ -261,43 +241,41 @@
         }
         .modal-content {
             background: var(--card);
-            padding: 45px;
+            padding: 30px 25px;
             border-radius: 35px;
             width: 100%;
             max-width: 680px;
-            max-height: 88vh;
+            max-height: 92vh;
             overflow-y: auto;
-            border: 1px solid rgba(255,255,255,0.1);
-            box-shadow: 0 30px 60px rgba(0,0,0,0.6);
         }
         .admin-tabs {
             display: flex;
-            gap: 12px;
-            margin-bottom: 30px;
+            gap: 8px;
+            margin-bottom: 25px;
             background: rgba(0,0,0,0.2);
-            padding: 8px;
+            padding: 6px;
             border-radius: 18px;
+            flex-wrap: wrap;
         }
         .tab-btn {
             flex: 1;
-            padding: 14px;
+            padding: 14px 12px;
             border-radius: 14px;
             background: transparent;
             color: #94a3b8;
             border: none;
             cursor: pointer;
             font-weight: 700;
-            transition: 0.3s;
             font-size: 13px;
+            text-align: center;
         }
-        .tab-btn.active { background: var(--card); color: var(--accent); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        .tab-btn.active { background: var(--card); color: var(--accent); }
 
-        /* ADMIN */
         .admin-form-box {
             background: rgba(255,255,255,0.03);
-            padding: 35px;
+            padding: 30px;
             border-radius: 30px;
-            margin-bottom: 30px;
+            margin-bottom: 25px;
             border: 1px solid rgba(255,255,255,0.05);
         }
         .admin-item {
@@ -320,7 +298,24 @@
             flex-shrink: 0;
         }
 
-        /* DRAWERS */
+        /* TOAST */
+        #toast {
+            position: fixed;
+            bottom: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--success);
+            color: white;
+            padding: 14px 26px;
+            border-radius: 50px;
+            font-weight: 700;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            z-index: 9000;
+            display: none;
+            align-items: center;
+            gap: 10px;
+        }
+
         .drawer {
             position: fixed;
             top: 0;
@@ -339,6 +334,7 @@
         #infoDrawer.active { left: 0; }
         #cartDrawer { right: -110%; }
         #cartDrawer.active { right: 0; }
+
         .overlay {
             position: fixed;
             inset: 0;
@@ -395,7 +391,7 @@
     </div>
 </header>
 
-<!-- HERO SLIDER -->
+<!-- HERO SLIDER - ESTILO CUBAIMPORTADOS -->
 <div class="hero" id="heroSlider">
     <div class="hero-content">
         <h1>Mundo Tic</h1>
@@ -427,18 +423,18 @@
     <input type="text" id="searchInput" class="search-bar" placeholder="Busca marcas o productos..." onkeyup="render()">
 </div>
 
-<!-- GRID DE PRODUCTOS -->
+<!-- PRODUCTOS -->
 <div class="products-grid" id="productsCont"></div>
 
 <!-- TOAST -->
 <div id="toast">✅ Producto agregado al carrito</div>
 
-<!-- MODAL ZOOM IMAGEN -->
+<!-- MODAL ZOOM -->
 <div id="imageModal" style="position:fixed;inset:0;background:rgba(0,0,0,0.95);display:none;align-items:center;justify-content:center;z-index:9000;" onclick="if(event.target.id==='imageModal')this.style.display='none';">
     <img id="modalImg" style="max-width:92%;max-height:92%;object-fit:contain;" src="">
 </div>
 
-<!-- LOGIN MODAL -->
+<!-- LOGIN -->
 <div class="modal" id="loginModal">
     <div class="modal-content" style="max-width:420px; text-align:center;">
         <h2 style="margin-bottom:10px;">¡Bienvenido de nuevo!</h2>
@@ -451,7 +447,7 @@
     </div>
 </div>
 
-<!-- REGISTRO MODAL -->
+<!-- REGISTRO -->
 <div class="modal" id="regModal">
     <div class="modal-content" style="max-width:480px;">
         <h2 style="text-align:center; margin-bottom:5px;">Nueva Solicitud</h2>
@@ -465,7 +461,7 @@
     </div>
 </div>
 
-<!-- ADMIN MODAL - COMPLETO Y CORREGIDO -->
+<!-- ADMIN MODAL - MÁS ESTÉTICO Y SIN PRECIO MAYORISTA -->
 <div class="modal" id="adminModal">
     <div class="modal-content">
         <div class="flex-between" style="margin-bottom:30px;">
@@ -480,15 +476,12 @@
             <button class="tab-btn" onclick="tab('t-slider', event)">SLIDER HERO</button>
         </div>
 
-        <!-- PESTAÑA PRODUCTOS -->
+        <!-- PRODUCTOS - SIN PRECIO MAYORISTA -->
         <div id="t-prod">
             <div class="admin-form-box">
                 <input id="fId" type="hidden">
                 <div class="form-group"><label>Nombre del Producto</label><input id="fNom"></div>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
-                    <div class="form-group"><label>Precio Normal ($)</label><input id="fPre" type="number"></div>
-                    <div class="form-group"><label>Precio Mayorista ($)</label><input id="fPreM" type="number"></div>
-                </div>
+                <div class="form-group"><label>Precio Normal ($)</label><input id="fPre" type="number"></div>
                 <div class="form-group"><label>Oferta Especial</label><input id="fPro"></div>
                 <div class="form-group"><label>Categoría</label><input id="fCat" placeholder="fundas, cargadores..."></div>
                 <div class="form-group"><label>URL de la Imagen</label><input id="fImg"></div>
@@ -498,16 +491,16 @@
             <div id="admListP"></div>
         </div>
 
-        <!-- PESTAÑA CLIENTES -->
+        <!-- CLIENTES -->
         <div id="t-user" style="display:none;"><div id="admListU"></div></div>
 
-        <!-- PESTAÑA HISTORIAL -->
+        <!-- HISTORIAL -->
         <div id="t-order" style="display:none;">
             <button class="btn-add" style="background:var(--danger); margin-bottom:20px;" onclick="vaciarHistorial()">BORRAR TODO EL HISTORIAL</button>
             <div id="admListO"></div>
         </div>
 
-        <!-- PESTAÑA SLIDER -->
+        <!-- SLIDER HERO -->
         <div id="t-slider" style="display:none;">
             <div class="admin-form-box">
                 <div class="form-group"><label>URL de la imagen del slider</label><input id="sliderUrl" placeholder="https://..."></div>
@@ -518,7 +511,6 @@
     </div>
 </div>
 
-<!-- OVERLAY -->
 <div class="overlay" id="ov" onclick="closeAll()"></div>
 
 <!-- DRAWER INFO -->
@@ -564,11 +556,11 @@
     </div>
     <div style="padding-top:20px; border-top:1px solid rgba(255,255,255,0.05); margin-top: auto;">
         <button id="logoutBtn" onclick="logout()" style="display:none; width:100%; background:var(--danger); color:white; border:none; padding:18px; border-radius:18px; font-weight:800; cursor:pointer; margin-bottom:15px;">CERRAR SESIÓN</button>
-        <p style="font-size:10px; text-align:center; opacity:0.3; font-weight:700;">MS47 v5.3 • SANTA FE</p>
+        <p style="font-size:10px; text-align:center; opacity:0.3; font-weight:700;">MS47 v5.4 • SANTA FE</p>
     </div>
 </div>
 
-<!-- DRAWER CARRITO -->
+<!-- CARRITO -->
 <div id="cartDrawer" class="drawer">
     <div class="flex-between" style="margin-bottom:30px;">
         <h2 style="margin:0;">Tu Carrito</h2>
@@ -585,7 +577,7 @@
 </div>
 
 <script>
-    // ==================== CONFIG FIREBASE ====================
+    // ==================== FIREBASE ====================
     const firebaseConfig = {
         apiKey: "AIzaSyDAqlchDsLHIMMbv6YL2ipggaShXlFqiW8",
         authDomain: "tienda-online-baaf6.firebaseapp.com",
@@ -597,7 +589,6 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // ==================== VARIABLES GLOBALES ====================
     let prods = [];
     let cart = [];
     let users = [];
@@ -607,7 +598,6 @@
     let usuarioLogueado = null;
     let filterCat = "";
 
-    // ==================== INICIALIZACIÓN ====================
     function init() {
         db.collection("productos").onSnapshot(snap => {
             prods = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -629,7 +619,6 @@
         });
     }
 
-    // ==================== HERO SLIDER ====================
     function renderHeroSlider() {
         const hero = document.getElementById("heroSlider");
         let content = hero.querySelector('.hero-content');
@@ -664,7 +653,6 @@
         }, 5000);
     }
 
-    // ==================== RENDER TIENDA ====================
     function render() {
         const query = document.getElementById("searchInput").value.toLowerCase().trim();
         const cont = document.getElementById("productsCont");
@@ -696,7 +684,6 @@
         }).join("");
     }
 
-    // ==================== CARRITO ====================
     function addToCart(id) {
         const exist = cart.find(i => i.id === id);
         if (exist) exist.qty++;
@@ -746,7 +733,6 @@
         updateCartUI();
     }
 
-    // ==================== LOGIN ====================
     async function doLogin() {
         const u = document.getElementById("uInp").value.trim();
         const p = document.getElementById("pInp").value.trim();
@@ -802,7 +788,6 @@
         }
     }
 
-    // ==================== ADMIN - PRODUCTOS (CORREGIDO) ====================
     function renderAdmP() {
         const list = document.getElementById("admListP");
         list.innerHTML = prods.length === 0 
@@ -812,7 +797,7 @@
                     <img src="${p.imagen || 'https://via.placeholder.com/70'}" class="admin-item-img" alt="${p.nombre}">
                     <div style="flex:1;">
                         <b>${p.nombre}</b><br>
-                        <small>Normal: $${p.precio} | May: $${p.precio_may || '--'}</small><br>
+                        <small>Precio: $${p.precio} ${p.promo ? '| ' + p.promo : ''}</small><br>
                         <span style="background:#334155; color:white; padding:2px 8px; border-radius:9999px; font-size:11px;">${p.categoria}</span>
                     </div>
                     <div>
@@ -831,7 +816,6 @@
         const data = {
             nombre: nom,
             precio: parseFloat(document.getElementById("fPre").value) || 0,
-            precio_may: parseFloat(document.getElementById("fPreM").value) || 0,
             promo: document.getElementById("fPro").value.trim(),
             categoria: document.getElementById("fCat").value.trim().toLowerCase(),
             imagen: document.getElementById("fImg").value.trim()
@@ -857,7 +841,6 @@
         document.getElementById("fId").value = "";
         document.getElementById("fNom").value = "";
         document.getElementById("fPre").value = "";
-        document.getElementById("fPreM").value = "";
         document.getElementById("fPro").value = "";
         document.getElementById("fCat").value = "";
         document.getElementById("fImg").value = "";
@@ -869,7 +852,6 @@
         document.getElementById("fId").value = id;
         document.getElementById("fNom").value = p.nombre || "";
         document.getElementById("fPre").value = p.precio || "";
-        document.getElementById("fPreM").value = p.precio_may || "";
         document.getElementById("fPro").value = p.promo || "";
         document.getElementById("fCat").value = p.categoria || "";
         document.getElementById("fImg").value = p.imagen || "";
@@ -881,7 +863,6 @@
         if (prodBtn) prodBtn.classList.add("active");
     }
 
-    // ==================== ADMIN - CLIENTES ====================
     function renderAdmU() {
         const list = document.getElementById("admListU");
         const pen = users.filter(u => !u.activo);
@@ -921,7 +902,6 @@
         list.innerHTML = html;
     }
 
-    // ==================== ADMIN - HISTORIAL ====================
     function renderAdmO() {
         const list = document.getElementById("admListO");
         if (orders.length === 0) {
@@ -941,7 +921,6 @@
         `).join("");
     }
 
-    // ==================== ADMIN - SLIDER ====================
     function renderAdmSlider() {
         const list = document.getElementById("admListSlider");
         if (heroImages.length === 0) {
@@ -972,7 +951,6 @@
         }
     }
 
-    // ==================== FUNCIONES AUXILIARES ====================
     function toggleTheme() { document.body.classList.toggle("light"); }
     function openModal(id) {
         closeAll();
@@ -1021,11 +999,7 @@
         textoPedido += `----------------------------\n*TOTAL ESTIMADO: ${total}*`;
 
         try {
-            await db.collection("pedidos").add({
-                detalle: textoPedido,
-                total: total,
-                fecha: Date.now()
-            });
+            await db.collection("pedidos").add({ detalle: textoPedido, total: total, fecha: Date.now() });
             const nro = "5493424063266";
             window.open(`https://wa.me/${nro}?text=${encodeURIComponent(textoPedido)}`);
             cart = [];
@@ -1067,7 +1041,6 @@
         }
     }
 
-    // ==================== INICIO ====================
     window.onload = init;
 </script>
 </body>
