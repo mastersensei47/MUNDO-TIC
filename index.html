@@ -4,11 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>MS47 - Mundo Tic</title>
-  
+
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script>
-  
+
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
     <style>
         :root {
             --bg: #0f172a;
@@ -35,16 +36,17 @@
             outline: none;
         }
         body {
-            margin:0;
+            margin: 0;
             font-family: 'Inter', sans-serif;
-            background:var(--bg);
-            color:var(--text);
+            background: var(--bg);
+            color: var(--text);
             transition: var(--transition);
             overflow-x: hidden;
         }
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+
         /* TOAST */
         #toast {
             position: fixed;
@@ -62,55 +64,52 @@
             align-items: center;
             gap: 10px;
         }
-/* HERO SLIDER - Configuración MS47 */
-.hero {
-    /* Ajustamos la altura para que tu diseño de 600px de alto se luzca */
-    height: 500px; 
-    position: relative;
-    width: 100%;
-    overflow: hidden;
-    background-color: #0f172a;
-}
 
-/* En celulares bajamos la altura para que no se vea una franja gigante vacía */
-@media (max-width: 768px) {
-    .hero {
-        height: 300px; 
-    }
-}
+        /* HERO SLIDER - FULL BLEED COMO EN CUBAIMPORTADOS.COM */
+        .hero {
+            height: 560px; /* altura optimizada para que se vea completo y potente */
+            position: relative;
+            width: 100vw;          /* ← FULL BLEED: ocupa todo el ancho de la ventana */
+            margin-left: calc(-50vw + 50%); /* fuerza edge-to-edge incluso si hay contenedores */
+            left: 50%;
+            transform: translateX(-50%);
+            overflow: hidden;
+            background-color: #0f172a;
+        }
+        @media (max-width: 768px) {
+            .hero {
+                height: 380px; /* más compacto en celular pero sigue ocupando todo el ancho */
+            }
+        }
 
-.hero-slide {
-    position: absolute;
-    inset: 0;
-    /* CAMBIO CLAVE: Usamos 'contain' para asegurar que NO se corte nada */
-    background-size: contain; 
-    background-position: center;
-    background-repeat: no-repeat;
-    transition: opacity 1.2s ease-in-out;
-    opacity: 0;
-}
+        .hero-slide {
+            position: absolute;
+            inset: 0;
+            background-size: cover;        /* ← CAMBIO CLAVE: cover para que ocupe TODO el largo/ancho como en cubaimportados */
+            background-position: center;
+            background-repeat: no-repeat;
+            transition: opacity 1.2s ease-in-out;
+            opacity: 0;
+        }
+        .hero-slide.active {
+            opacity: 1;
+        }
 
-.hero-slide.active { 
-    opacity: 1; 
-}
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            height: 100%;
+            background: transparent;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .hero-content h1, .hero-content p {
+            display: none; /* se ocultan porque las imágenes ya son el hero */
+        }
 
-.hero-content {
-    position: relative;
-    z-index: 2;
-    height: 100%;
-    background: transparent; /* Sin manchas grises sobre tu diseño */
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-}
-
-/* Ocultamos los textos sobrantes del HTML */
-.hero-content h1, 
-.hero-content p {
-    display: none;
-}
-        /* CATEGORÍAS - SCROLL MEJORADO */
+        /* CATEGORÍAS */
         .cat-scroll {
             display: flex;
             gap: 10px;
@@ -137,15 +136,36 @@
         }
         .cat-item:hover { background: #334155; }
         .cat-item.active { background: var(--accent); color: white; }
-        /* ADMIN FORMULARIO MEJORADO */
+
+        /* BUSCADOR */
+        .search-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px 20px;
+        }
+        .search-bar {
+            width: 100%;
+            padding: 18px 25px;
+            font-size: 16px;
+            border: none;
+            border-radius: 9999px;
+            background: var(--input-bg);
+            color: var(--text);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .search-bar:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px var(--accent);
+        }
+
+        /* ADMIN */
         .admin-form-box {
-            background:rgba(255,255,255,0.03);
+            background: rgba(255,255,255,0.03);
             padding: 35px;
             border-radius: 30px;
             margin-bottom: 30px;
             border: 1px solid rgba(255,255,255,0.05);
         }
-        /* ADMIN ITEM - IMÁGENES PEQUEÑAS */
         .admin-item {
             display: flex;
             align-items: center;
@@ -165,7 +185,8 @@
             padding: 6px;
             flex-shrink: 0;
         }
-        /* RESTO DE ESTILOS ORIGINALES */
+
+        /* HEADER Y RESTO (sin cambios, solo limpio) */
         header {
             display: flex;
             justify-content: space-between;
@@ -181,7 +202,6 @@
         .header-left { display: flex; align-items: center; gap: 15px; }
         .main-logo { height: 55px; width: auto; transition: transform 0.3s; cursor: pointer; }
         .main-logo:hover { transform: scale(1.05); }
-      
         .header-icons { display: flex; gap: 12px; align-items: center; }
         .icon-btn {
             cursor: pointer;
@@ -195,6 +215,7 @@
             background: transparent;
         }
         .icon-btn:hover { background: rgba(255,255,255,0.1); transform: translateY(-2px); }
+
         .products-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -206,6 +227,7 @@
         @media (min-width: 768px) {
             .products-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
         }
+
         .product-card {
             background: var(--card);
             border-radius: var(--radius);
@@ -217,6 +239,7 @@
             transition: var(--transition);
         }
         .product-card:hover { transform: translateY(-8px); box-shadow: 0 20px 40px rgba(0,0,0,0.4); }
+
         .promo-badge {
             position: absolute;
             top: 15px;
@@ -246,11 +269,11 @@
             transition: 0.5s;
         }
         .product-card:hover .img-box img { transform: scale(1.1); }
-      
+
         .info-box { padding: 22px; flex-grow: 1; display: flex; flex-direction: column; }
         .prod-title { font-weight: 700; font-size: 17px; margin-bottom: 12px; min-height: 45px; line-height: 1.4; }
         .price-val { font-size: 26px; font-weight: 800; color: var(--accent); margin-bottom: 20px; }
-      
+
         .btn-add {
             background: var(--accent);
             color: white;
@@ -265,6 +288,7 @@
         }
         .btn-add:hover { filter: brightness(1.1); }
         .btn-add:active { transform: scale(0.96); }
+
         .modal {
             position: fixed;
             inset: 0;
@@ -308,6 +332,7 @@
             font-size: 13px;
         }
         .tab-btn.active { background: var(--card); color: var(--accent); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+
         .drawer {
             position: fixed;
             top: 0;
@@ -326,6 +351,7 @@
         #infoDrawer.active { left: 0; }
         #cartDrawer { right: -110%; }
         #cartDrawer.active { right: 0; }
+
         .overlay {
             position: fixed;
             inset: 0;
@@ -335,6 +361,7 @@
             backdrop-filter: blur(6px);
         }
         .overlay.active { display: block; }
+
         .form-group { margin-bottom: 22px; }
         .form-group label {
             display: block;
@@ -356,6 +383,7 @@
             font-size: 16px;
         }
         input:focus, textarea:focus { border-color: var(--accent); background: rgba(255,255,255,0.05); }
+
         .qty-btn {
             width: 44px; height: 44px; border: none; background: var(--accent);
             color: white; border-radius: 14px; cursor: pointer; font-weight: 800; font-size: 20px;
@@ -364,6 +392,7 @@
     </style>
 </head>
 <body class="dark">
+
 <header>
     <div class="header-left">
         <button class="icon-btn" onclick="toggleInfo()">☰</button>
@@ -378,13 +407,15 @@
         </div>
     </div>
 </header>
-<!-- HERO DINÁMICO -->
+
+<!-- HERO SLIDER FULL BLEED -->
 <div class="hero" id="heroSlider">
     <div class="hero-content">
         <h1>Mundo Tic</h1>
         <p>Equipamos tu mundo digital</p>
     </div>
 </div>
+
 <div class="cat-scroll" id="catBar">
     <div class="cat-item active" onclick="setCat(this, '')">🌐 Todos</div>
     <div class="cat-item" onclick="setCat(this, 'fundas')">📱 Fundas</div>
@@ -402,17 +433,22 @@
     <div class="cat-item" onclick="setCat(this, 'smartband')">⌚ Band</div>
     <div class="cat-item" onclick="setCat(this, 'aro_luz')">💡 Aro</div>
 </div>
+
 <div class="search-container">
     <input type="text" id="searchInput" class="search-bar" placeholder="Busca marcas o productos..." onkeyup="render()">
 </div>
+
 <div class="products-grid" id="productsCont"></div>
+
 <!-- TOAST -->
 <div id="toast">✅ Producto agregado al carrito</div>
+
 <!-- MODAL ZOOM -->
 <div id="imageModal" style="position:fixed;inset:0;background:rgba(0,0,0,0.95);display:none;align-items:center;justify-content:center;z-index:9000;" onclick="if(event.target.id==='imageModal')this.style.display='none';">
     <img id="modalImg" style="max-width:92%;max-height:92%;object-fit:contain;" src="">
 </div>
-<!-- LOGIN MODAL -->
+
+<!-- LOGIN / REG / ADMIN MODALS (sin cambios) -->
 <div class="modal" id="loginModal">
     <div class="modal-content" style="max-width:420px; text-align:center;">
         <h2 style="margin-bottom:10px;">¡Bienvenido de nuevo!</h2>
@@ -424,7 +460,7 @@
         <p style="margin-top:30px; font-size:14px;">¿No tenés cuenta? <span onclick="openModal('regModal')" style="color:var(--accent); cursor:pointer; font-weight:800;">Solicitá una acá</span></p>
     </div>
 </div>
-<!-- REG MODAL -->
+
 <div class="modal" id="regModal">
     <div class="modal-content" style="max-width:480px;">
         <h2 style="text-align:center; margin-bottom:5px;">Nueva Solicitud</h2>
@@ -437,21 +473,21 @@
         <button class="btn-add" style="background:none; color:white; margin-top:10px; opacity:0.6;" onclick="closeAll()">Volver atrás</button>
     </div>
 </div>
-<!-- ADMIN MODAL CON TAB SLIDER -->
+
 <div class="modal" id="adminModal">
     <div class="modal-content">
         <div class="flex-between" style="margin-bottom:30px;">
             <h2 style="margin:0;">Gestión Maestra</h2>
             <button onclick="closeAll()" style="background:none; border:none; color:white; font-size:30px; cursor:pointer;">✕</button>
         </div>
-      
+
         <div class="admin-tabs">
             <button class="tab-btn active" onclick="tab('t-prod', event)">PRODUCTOS</button>
             <button class="tab-btn" onclick="tab('t-user', event)">CLIENTES</button>
             <button class="tab-btn" onclick="tab('t-order', event)">HISTORIAL</button>
             <button class="tab-btn" onclick="tab('t-slider', event)">SLIDER HERO</button>
         </div>
-       
+
         <!-- PRODUCTOS -->
         <div id="t-prod">
             <div class="admin-form-box">
@@ -469,16 +505,16 @@
             </div>
             <div id="admListP"></div>
         </div>
-       
+
         <!-- CLIENTES -->
         <div id="t-user" style="display:none;"><div id="admListU"></div></div>
-       
+
         <!-- HISTORIAL -->
         <div id="t-order" style="display:none;">
             <button class="btn-add" style="background:var(--danger); margin-bottom:20px;" onclick="vaciarHistorial()">BORRAR TODO EL HISTORIAL</button>
             <div id="admListO"></div>
         </div>
-       
+
         <!-- SLIDER HERO -->
         <div id="t-slider" style="display:none;">
             <div class="admin-form-box">
@@ -489,38 +525,25 @@
         </div>
     </div>
 </div>
-<!-- OVERLAY -->
+
 <div class="overlay" id="ov" onclick="closeAll()"></div>
 
-<!-- ====================== PANEL LATERAL IZQUIERDO (INFO DRAWER) ====================== -->
+<!-- DRAWERS (info y carrito) sin cambios -->
 <div id="infoDrawer" class="drawer" style="overflow-y: auto; padding-bottom: 40px;">
+    <!-- ... (todo el contenido del drawer se mantiene igual) ... -->
     <div class="flex-between" style="margin-bottom:25px; position: sticky; top: 0; background: var(--card); z-index: 10; padding: 20px 0;">
         <h2 style="margin:0; color:var(--accent); font-size:28px;">MS47</h2>
         <span onclick="closeAll()" style="cursor:pointer; font-size:28px; opacity:0.5;">✕</span>
     </div>
-
-    <!-- Logo más grande + Información del Negocio -->
     <div style="text-align:center; margin-bottom:30px; padding-bottom:25px; border-bottom:1px solid rgba(255,255,255,0.1);">
         <img src="log.png" style="height:120px; width:auto; margin-bottom:15px;" alt="MS47">
         <h2 style="margin:0 0 6px 0; font-size:26px;">Mundo Tic</h2>
         <p style="margin:0; opacity:0.75; font-size:15px; line-height:1.4;">Equipamos tu mundo digital<br>en Santa Fe, Argentina</p>
     </div>
-
-    <!-- Minimapa Interactivo (ARRIBA) -->
     <div style="margin-bottom:30px;">
         <label style="font-size:11px; opacity:0.5; font-weight:800; text-transform:uppercase; letter-spacing:1px; display:block; margin-bottom:8px;">📍 Nuestra ubicación</label>
-        <iframe 
-            src="https://www.google.com/maps/embed?pb=!4v1775166766805!6m8!1m7!1sUNvillbDlFtQX-QCWfM6Qg!2m2!1d-31.60307134083026!2d-60.68883673305861!3f321.1365989960637!4f-9.386863229755448!5f1.0897090201782524"
-            width="100%" 
-            height="220" 
-            style="border-radius:20px; border:none; box-shadow:0 4px 15px rgba(0,0,0,0.3);" 
-            allowfullscreen="" 
-            loading="lazy" 
-            referrerpolicy="no-referrer-when-downgrade">
-        </iframe>
+        <iframe src="https://www.google.com/maps/embed?pb=!4v1775166766805!6m8!1m7!1sUNvillbDlFtQX-QCWfM6Qg!2m2!1d-31.60307134083026!2d-60.68883673305861!3f321.1365989960637!4f-9.386863229755448!5f1.0897090201782524" width="100%" height="220" style="border-radius:20px; border:none; box-shadow:0 4px 15px rgba(0,0,0,0.3);" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
     </div>
-
-    <!-- Solo Dirección (teléfono eliminado) -->
     <div style="margin-bottom:30px;">
         <div style="display:flex; align-items:center; gap:12px;">
             <span style="font-size:22px;">📍</span>
@@ -530,58 +553,35 @@
             </div>
         </div>
     </div>
-
-    <!-- Botones de redes sociales -->
     <div style="margin-bottom:30px; display:flex; flex-direction:column; gap:12px;">
         <a href="https://wa.me/5493424063266" target="_blank" style="display:flex; align-items:center; gap:12px; background:#25d366; color:white; padding:18px 20px; border-radius:16px; text-decoration:none; font-weight:700; justify-content:center; font-size:17px;">
-            <span style="font-size:28px;">📲</span> 
-            CHATEAR POR WHATSAPP
+            <span style="font-size:28px;">📲</span> CHATEAR POR WHATSAPP
         </a>
         <a href="https://www.instagram.com/mundo.tic/" target="_blank" style="display:flex; align-items:center; gap:12px; background:#e1306c; color:white; padding:18px 20px; border-radius:16px; text-decoration:none; font-weight:700; justify-content:center; font-size:17px;">
-            <span style="font-size:28px;">📷</span> 
-            INSTAGRAM
+            <span style="font-size:28px;">📷</span> INSTAGRAM
         </a>
         <a href="https://www.facebook.com/profile.php?id=61587552659399&ref=PROFILE_EDIT_xav_ig_profile_page_web" target="_blank" style="display:flex; align-items:center; gap:12px; background:#1877f2; color:white; padding:18px 20px; border-radius:16px; text-decoration:none; font-weight:700; justify-content:center; font-size:17px;">
-            <span style="font-size:28px;">📘</span> 
-            FACEBOOK
+            <span style="font-size:28px;">📘</span> FACEBOOK
         </a>
     </div>
-
-    <!-- Perfil del usuario -->
     <div id="perfilContenido" style="display:none;">
         <div style="background:rgba(255,255,255,0.03); padding:25px; border-radius:25px; border:1px solid rgba(255,255,255,0.05); margin-bottom:25px;">
-            <div style="margin-bottom:20px;">
-                <small style="opacity:0.4; text-transform:uppercase; font-size:10px; font-weight:800; letter-spacing:1px;">Usuario</small>
-                <div id="p-user" style="font-size:20px; font-weight:800; color:var(--accent);">--</div>
-            </div>
-            <div style="margin-bottom:20px;">
-                <small style="opacity:0.4; text-transform:uppercase; font-size:10px; font-weight:800; letter-spacing:1px;">Teléfono</small>
-                <div id="p-tel" style="font-size:16px; font-weight:600;">--</div>
-            </div>
-            <div>
-                <small style="opacity:0.4; text-transform:uppercase; font-size:10px; font-weight:800; letter-spacing:1px;">Dirección / Comercio</small>
-                <div id="p-dir" style="font-size:14px; opacity:0.8; line-height:1.6;">--</div>
-            </div>
+            <div style="margin-bottom:20px;"><small style="opacity:0.4; text-transform:uppercase; font-size:10px; font-weight:800; letter-spacing:1px;">Usuario</small><div id="p-user" style="font-size:20px; font-weight:800; color:var(--accent);">--</div></div>
+            <div style="margin-bottom:20px;"><small style="opacity:0.4; text-transform:uppercase; font-size:10px; font-weight:800; letter-spacing:1px;">Teléfono</small><div id="p-tel" style="font-size:16px; font-weight:600;">--</div></div>
+            <div><small style="opacity:0.4; text-transform:uppercase; font-size:10px; font-weight:800; letter-spacing:1px;">Dirección / Comercio</small><div id="p-dir" style="font-size:14px; opacity:0.8; line-height:1.6;">--</div></div>
         </div>
-        <div style="padding:15px; background:rgba(16,185,129,0.1); border-radius:16px; color:var(--success); font-weight:800; border:1px solid rgba(16,185,129,0.2); text-align:center; font-size:11px; margin-bottom:30px;">
-            ✓ ESTADO: CLIENTE MAYORISTA ACTIVO
-        </div>
+        <div style="padding:15px; background:rgba(16,185,129,0.1); border-radius:16px; color:var(--success); font-weight:800; border:1px solid rgba(16,185,129,0.2); text-align:center; font-size:11px; margin-bottom:30px;">✓ ESTADO: CLIENTE MAYORISTA ACTIVO</div>
     </div>
-
-    <!-- Perfil vacío -->
     <div id="perfilVacio" style="text-align:center; padding:60px 0; opacity:0.4;">
         <div style="font-size:50px; margin-bottom:20px;">👤</div>
         <p>Iniciá sesión para ver tu información y precios especiales.</p>
     </div>
-
     <div style="padding-top:20px; border-top:1px solid rgba(255,255,255,0.05); margin-top: auto;">
         <button id="logoutBtn" onclick="logout()" style="display:none; width:100%; background:var(--danger); color:white; border:none; padding:18px; border-radius:18px; font-weight:800; cursor:pointer; margin-bottom:15px;">CERRAR SESIÓN</button>
-        <p style="font-size:10px; text-align:center; opacity:0.3; font-weight:700;">MS47 v5.0 • SANTA FE</p>
+        <p style="font-size:10px; text-align:center; opacity:0.3; font-weight:700;">MS47 v5.1 • SANTA FE</p>
     </div>
 </div>
 
-
-<!-- CART DRAWER -->
 <div id="cartDrawer" class="drawer">
     <div class="flex-between" style="margin-bottom:30px;">
         <h2 style="margin:0;">Tu Carrito</h2>
@@ -607,9 +607,9 @@
         messagingSenderId: "121093097347",
         appId: "1:121093097347:web:ca8ea54b592cb20f5098b6"
     };
-  
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
+
     // ==================== VARIABLES GLOBALES ====================
     let prods = [];
     let cart = [];
@@ -619,7 +619,7 @@
     let isMay = false;
     let usuarioLogueado = null;
     let filterCat = "";
-    let favorites = JSON.parse(localStorage.getItem("favorites") || "[]");
+
     // ==================== INICIALIZACIÓN ====================
     function init() {
         db.collection("productos").onSnapshot(snap => {
@@ -641,14 +641,20 @@
             renderAdmSlider();
         });
     }
-    // ==================== HERO SLIDER ====================
+
+    // ==================== HERO SLIDER (FULL BLEED + COVER) ====================
     function renderHeroSlider() {
         const hero = document.getElementById("heroSlider");
-        const content = hero.querySelector('.hero-content') || document.createElement('div');
-        content.className = 'hero-content';
+        let content = hero.querySelector('.hero-content');
+        if (!content) {
+            content = document.createElement('div');
+            content.className = 'hero-content';
+        }
         content.innerHTML = `<h1>Mundo Tic</h1><p>Equipamos tu mundo digital</p>`;
+        
         hero.innerHTML = '';
         hero.appendChild(content);
+
         if (heroImages.length === 0) {
             const defaultSlide = document.createElement('div');
             defaultSlide.className = 'hero-slide active';
@@ -656,6 +662,7 @@
             hero.appendChild(defaultSlide);
             return;
         }
+
         heroImages.forEach((slide, index) => {
             const div = document.createElement('div');
             div.className = 'hero-slide';
@@ -663,25 +670,29 @@
             div.style.backgroundImage = `url('${slide.url}')`;
             hero.appendChild(div);
         });
+
         let current = 0;
         setInterval(() => {
             current = (current + 1) % heroImages.length;
             document.querySelectorAll('.hero-slide').forEach((s, i) => s.classList.toggle('active', i === current));
         }, 5000);
     }
-    // ==================== RENDER TIENDA ====================
+
+    // ==================== RENDER TIENDA (CORREGIDO) ====================
     function render() {
         const query = document.getElementById("searchInput").value.toLowerCase().trim();
         const cont = document.getElementById("productsCont");
-      
+
         const filtered = prods.filter(p =>
             p.nombre.toLowerCase().includes(query) &&
             (filterCat === "" || p.categoria === filterCat)
         );
+
         if (filtered.length === 0) {
             cont.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:80px 20px; opacity:0.5;">No se encontraron productos...</div>`;
             return;
         }
+
         cont.innerHTML = filtered.map(p => {
             const precioActual = isMay ? (p.precio_may || p.precio) : p.precio;
             return `
@@ -695,16 +706,22 @@
                         <div class="price-val">$${precioActual}</div>
                         <button class="btn-add" onclick="addToCart('${p.id}')">🛒 Agregar</button>
                     </div>
-                </div>
-            `;
+                </div>`;
         }).join("");
     }
+
     // ==================== CARRITO ====================
     function addToCart(id) {
         const exist = cart.find(i => i.id === id);
         if (exist) exist.qty++;
         else cart.push({id, qty: 1});
         updateCartUI();
+        showToast();
+    }
+    function showToast() {
+        const toast = document.getElementById("toast");
+        toast.style.display = "flex";
+        setTimeout(() => toast.style.display = "none", 2200);
     }
     function updateCartUI() {
         let total = 0;
@@ -728,9 +745,9 @@
                         <b style="min-width:25px; text-align:center;">${item.qty}</b>
                         <button class="qty-btn" onclick="changeQty('${item.id}', 1)">+</button>
                     </div>
-                </div>
-            `;
+                </div>`;
         }).join("");
+
         document.getElementById("cartTotal").innerText = "$" + total;
         document.getElementById("cartCount").innerText = count;
     }
@@ -742,16 +759,19 @@
         }
         updateCartUI();
     }
-    // ==================== LOGIN Y PERFIL ====================
+
+    // ==================== LOGIN ====================
     async function doLogin() {
         const u = document.getElementById("uInp").value.trim();
         const p = document.getElementById("pInp").value.trim();
         if (!u || !p) return alert("Completá usuario y contraseña");
+
         if (u === "admin" && p === "admin") {
             closeAll();
             openModal("adminModal");
             return;
         }
+
         const userFound = users.find(x => x.user === u && x.pass === p);
         if (userFound) {
             if (userFound.activo) {
@@ -768,6 +788,7 @@
             alert("Usuario o contraseña incorrectos.");
         }
     }
+
     function llenarPerfil(data) {
         document.getElementById("perfilContenido").style.display = "block";
         document.getElementById("perfilVacio").style.display = "none";
@@ -776,20 +797,17 @@
         document.getElementById("p-tel").innerText = data.tel || "--";
         document.getElementById("p-dir").innerText = data.dir || "Sin dirección registrada";
     }
+
     async function registrarUsuarioEnGoogle() {
         const u = document.getElementById("rU").value.trim();
         const p = document.getElementById("rP").value.trim();
         const t = document.getElementById("rT").value.trim();
         const d = document.getElementById("rD").value.trim();
         if (!u || !p || !t || !d) return alert("Completá todos los campos");
+
         try {
             await db.collection("usuarios").add({
-                user: u,
-                pass: p,
-                tel: t,
-                dir: d,
-                activo: false,
-                fecha: Date.now()
+                user: u, pass: p, tel: t, dir: d, activo: false, fecha: Date.now()
             });
             alert("✅ Solicitud enviada correctamente. Esperá la validación.");
             closeAll();
@@ -799,7 +817,8 @@
             console.error(e);
         }
     }
-    // ==================== PANEL ADMIN ====================
+
+    // ==================== ADMIN - PRODUCTOS (FUNCIONES QUE FALTABAN) ====================
     function renderAdmP() {
         const list = document.getElementById("admListP");
         list.innerHTML = prods.map(p => `
@@ -808,7 +827,7 @@
                 <div style="flex:1;">
                     <b>${p.nombre}</b><br>
                     <small>Normal: $${p.precio} | May: $${p.precio_may || '--'}</small><br>
-                    <span class="tag">${p.categoria}</span>
+                    <span style="background:#334155; color:white; padding:2px 8px; border-radius:9999px; font-size:11px;">${p.categoria}</span>
                 </div>
                 <div>
                     <button onclick="editP('${p.id}')" style="font-size:18px;">✏️</button>
@@ -817,6 +836,54 @@
             </div>
         `).join("");
     }
+
+    async function saveP() {
+        const id = document.getElementById("fId").value;
+        const nom = document.getElementById("fNom").value.trim();
+        if (!nom) return alert("El nombre del producto es obligatorio");
+
+        const data = {
+            nombre: nom,
+            precio: parseFloat(document.getElementById("fPre").value) || 0,
+            precio_may: parseFloat(document.getElementById("fPreM").value) || 0,
+            promo: document.getElementById("fPro").value.trim(),
+            categoria: document.getElementById("fCat").value.trim().toLowerCase(),
+            imagen: document.getElementById("fImg").value.trim()
+        };
+
+        if (id) {
+            await db.collection("productos").doc(id).update(data);
+        } else {
+            await db.collection("productos").add(data);
+        }
+        limpiarP();
+        alert("✅ Producto guardado correctamente");
+    }
+
+    function limpiarP() {
+        document.getElementById("fId").value = "";
+        document.getElementById("fNom").value = "";
+        document.getElementById("fPre").value = "";
+        document.getElementById("fPreM").value = "";
+        document.getElementById("fPro").value = "";
+        document.getElementById("fCat").value = "";
+        document.getElementById("fImg").value = "";
+    }
+
+    function editP(id) {
+        const p = prods.find(x => x.id === id);
+        if (!p) return;
+        document.getElementById("fId").value = id;
+        document.getElementById("fNom").value = p.nombre || "";
+        document.getElementById("fPre").value = p.precio || "";
+        document.getElementById("fPreM").value = p.precio_may || "";
+        document.getElementById("fPro").value = p.promo || "";
+        document.getElementById("fCat").value = p.categoria || "";
+        document.getElementById("fImg").value = p.imagen || "";
+        tab('t-prod', {target: document.querySelector('.tab-btn')}); // ir a pestaña productos
+    }
+
+    // ==================== ADMIN - OTROS RENDERS (CORREGIDOS) ====================
     function renderAdmU() {
         const list = document.getElementById("admListU");
         const pen = users.filter(u => !u.activo);
@@ -828,7 +895,7 @@
                 <div style="width:100%;">
                     <b style="font-size:17px;">${u.user}</b>
                     <div style="display:flex; gap:12px; margin-top:8px;">
-                        <span class="status-badge status-inactive">EN REVISIÓN</span>
+                        <span style="background:#f59e0b; color:#000; padding:2px 10px; border-radius:9999px; font-size:11px; font-weight:700;">EN REVISIÓN</span>
                         <small>${new Date(u.fecha).toLocaleDateString('es-ES')}</small>
                     </div>
                 </div>
@@ -847,7 +914,7 @@
                     📱 <strong>${u.tel}</strong><br>
                     📍 ${u.dir || 'Sin dirección'}
                     <div style="margin-top:8px;">
-                        <span class="status-badge status-active">ACTIVO</span>
+                        <span style="background:#10b981; color:white; padding:2px 10px; border-radius:9999px; font-size:11px; font-weight:700;">ACTIVO</span>
                     </div>
                 </div>
                 <button onclick="del('usuarios','${u.id}')" style="color:var(--danger); font-size:22px; align-self:center;">🗑️</button>
@@ -855,6 +922,7 @@
         `).join("");
         list.innerHTML = html;
     }
+
     function renderAdmO() {
         const list = document.getElementById("admListO");
         if (orders.length === 0) {
@@ -873,7 +941,7 @@
             </div>
         `).join("");
     }
-    // ==================== PANEL ADMIN - SLIDER HERO ====================
+
     function renderAdmSlider() {
         const list = document.getElementById("admListSlider");
         if (heroImages.length === 0) {
@@ -883,13 +951,12 @@
         list.innerHTML = heroImages.map(h => `
             <div class="admin-item">
                 <img src="${h.url}" class="admin-item-img" alt="slide">
-                <div style="flex:1;">
-                    <b>Imagen ${h.order + 1}</b>
-                </div>
+                <div style="flex:1;"><b>Imagen ${h.order + 1}</b></div>
                 <button onclick="deleteHeroImage('${h.id}')" style="color:var(--danger); font-size:18px;">🗑️</button>
             </div>
         `).join("");
     }
+
     async function addHeroImage() {
         const url = document.getElementById("sliderUrl").value.trim();
         if (!url) return alert("Ingresa una URL válida");
@@ -898,11 +965,13 @@
         document.getElementById("sliderUrl").value = "";
         alert("Imagen agregada al slider");
     }
+
     async function deleteHeroImage(id) {
         if (confirm("¿Eliminar esta imagen del slider?")) {
             await db.collection("hero").doc(id).delete();
         }
     }
+
     // ==================== FUNCIONES AUXILIARES ====================
     function toggleTheme() { document.body.classList.toggle("light"); }
     function openModal(id) {
@@ -950,6 +1019,7 @@
         });
         const total = document.getElementById("cartTotal").innerText;
         textoPedido += `----------------------------\n*TOTAL ESTIMADO: ${total}*`;
+
         try {
             await db.collection("pedidos").add({
                 detalle: textoPedido,
@@ -996,6 +1066,7 @@
             alert("Clave incorrecta.");
         }
     }
+
     // ==================== INICIO ====================
     window.onload = init;
 </script>
