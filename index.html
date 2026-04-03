@@ -47,6 +47,7 @@
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
 
+        /* TOAST */
         #toast {
             position: fixed;
             bottom: 25px;
@@ -64,6 +65,7 @@
             gap: 10px;
         }
 
+        /* HERO SLIDER - FULL BLEED */
         .hero {
             height: 560px;
             position: relative;
@@ -77,7 +79,6 @@
         @media (max-width: 768px) {
             .hero { height: 380px; }
         }
-
         .hero-slide {
             position: absolute;
             inset: 0;
@@ -101,6 +102,7 @@
         }
         .hero-content h1, .hero-content p { display: none; }
 
+        /* CATEGORÍAS */
         .cat-scroll {
             display: flex;
             gap: 10px;
@@ -128,6 +130,7 @@
         .cat-item:hover { background: #334155; }
         .cat-item.active { background: var(--accent); color: white; }
 
+        /* BUSCADOR */
         .search-container {
             max-width: 1400px;
             margin: 0 auto;
@@ -143,11 +146,9 @@
             color: var(--text);
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
-        .search-bar:focus {
-            outline: none;
-            box-shadow: 0 0 0 3px var(--accent);
-        }
+        .search-bar:focus { outline: none; box-shadow: 0 0 0 3px var(--accent); }
 
+        /* HEADER */
         header {
             display: flex;
             justify-content: space-between;
@@ -177,6 +178,7 @@
         }
         .icon-btn:hover { background: rgba(255,255,255,0.1); transform: translateY(-2px); }
 
+        /* PRODUCTOS */
         .products-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -188,7 +190,6 @@
         @media (min-width: 768px) {
             .products-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
         }
-
         .product-card {
             background: var(--card);
             border-radius: var(--radius);
@@ -200,7 +201,6 @@
             transition: var(--transition);
         }
         .product-card:hover { transform: translateY(-8px); box-shadow: 0 20px 40px rgba(0,0,0,0.4); }
-
         .promo-badge {
             position: absolute;
             top: 15px; left: 15px;
@@ -219,6 +219,7 @@
             align-items: center;
             justify-content: center;
             padding: 20px;
+            position: relative;
             overflow: hidden;
         }
         .img-box img {
@@ -228,11 +229,9 @@
             transition: 0.5s;
         }
         .product-card:hover .img-box img { transform: scale(1.1); }
-
         .info-box { padding: 22px; flex-grow: 1; display: flex; flex-direction: column; }
         .prod-title { font-weight: 700; font-size: 17px; margin-bottom: 12px; min-height: 45px; line-height: 1.4; }
         .price-val { font-size: 26px; font-weight: 800; color: var(--accent); margin-bottom: 20px; }
-
         .btn-add {
             background: var(--accent);
             color: white;
@@ -248,6 +247,7 @@
         .btn-add:hover { filter: brightness(1.1); }
         .btn-add:active { transform: scale(0.96); }
 
+        /* MODALES */
         .modal {
             position: fixed;
             inset: 0;
@@ -292,6 +292,7 @@
         }
         .tab-btn.active { background: var(--card); color: var(--accent); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
 
+        /* ADMIN */
         .admin-form-box {
             background: rgba(255,255,255,0.03);
             padding: 35px;
@@ -319,6 +320,7 @@
             flex-shrink: 0;
         }
 
+        /* DRAWERS */
         .drawer {
             position: fixed;
             top: 0;
@@ -337,7 +339,6 @@
         #infoDrawer.active { left: 0; }
         #cartDrawer { right: -110%; }
         #cartDrawer.active { right: 0; }
-
         .overlay {
             position: fixed;
             inset: 0;
@@ -394,6 +395,7 @@
     </div>
 </header>
 
+<!-- HERO SLIDER -->
 <div class="hero" id="heroSlider">
     <div class="hero-content">
         <h1>Mundo Tic</h1>
@@ -401,6 +403,7 @@
     </div>
 </div>
 
+<!-- CATEGORÍAS -->
 <div class="cat-scroll" id="catBar">
     <div class="cat-item active" onclick="setCat(this, '')">🌐 Todos</div>
     <div class="cat-item" onclick="setCat(this, 'fundas')">📱 Fundas</div>
@@ -419,18 +422,23 @@
     <div class="cat-item" onclick="setCat(this, 'aro_luz')">💡 Aro</div>
 </div>
 
+<!-- BUSCADOR -->
 <div class="search-container">
     <input type="text" id="searchInput" class="search-bar" placeholder="Busca marcas o productos..." onkeyup="render()">
 </div>
 
+<!-- GRID DE PRODUCTOS -->
 <div class="products-grid" id="productsCont"></div>
 
+<!-- TOAST -->
 <div id="toast">✅ Producto agregado al carrito</div>
 
+<!-- MODAL ZOOM IMAGEN -->
 <div id="imageModal" style="position:fixed;inset:0;background:rgba(0,0,0,0.95);display:none;align-items:center;justify-content:center;z-index:9000;" onclick="if(event.target.id==='imageModal')this.style.display='none';">
     <img id="modalImg" style="max-width:92%;max-height:92%;object-fit:contain;" src="">
 </div>
 
+<!-- LOGIN MODAL -->
 <div class="modal" id="loginModal">
     <div class="modal-content" style="max-width:420px; text-align:center;">
         <h2 style="margin-bottom:10px;">¡Bienvenido de nuevo!</h2>
@@ -443,6 +451,7 @@
     </div>
 </div>
 
+<!-- REGISTRO MODAL -->
 <div class="modal" id="regModal">
     <div class="modal-content" style="max-width:480px;">
         <h2 style="text-align:center; margin-bottom:5px;">Nueva Solicitud</h2>
@@ -456,7 +465,7 @@
     </div>
 </div>
 
-<!-- ====================== PANEL ADMIN (CORREGIDO Y FUNCIONAL) ====================== -->
+<!-- ADMIN MODAL - COMPLETO Y CORREGIDO -->
 <div class="modal" id="adminModal">
     <div class="modal-content">
         <div class="flex-between" style="margin-bottom:30px;">
@@ -471,7 +480,7 @@
             <button class="tab-btn" onclick="tab('t-slider', event)">SLIDER HERO</button>
         </div>
 
-        <!-- PRODUCTOS -->
+        <!-- PESTAÑA PRODUCTOS -->
         <div id="t-prod">
             <div class="admin-form-box">
                 <input id="fId" type="hidden">
@@ -489,16 +498,16 @@
             <div id="admListP"></div>
         </div>
 
-        <!-- CLIENTES -->
+        <!-- PESTAÑA CLIENTES -->
         <div id="t-user" style="display:none;"><div id="admListU"></div></div>
 
-        <!-- HISTORIAL -->
+        <!-- PESTAÑA HISTORIAL -->
         <div id="t-order" style="display:none;">
             <button class="btn-add" style="background:var(--danger); margin-bottom:20px;" onclick="vaciarHistorial()">BORRAR TODO EL HISTORIAL</button>
             <div id="admListO"></div>
         </div>
 
-        <!-- SLIDER HERO -->
+        <!-- PESTAÑA SLIDER -->
         <div id="t-slider" style="display:none;">
             <div class="admin-form-box">
                 <div class="form-group"><label>URL de la imagen del slider</label><input id="sliderUrl" placeholder="https://..."></div>
@@ -509,11 +518,11 @@
     </div>
 </div>
 
+<!-- OVERLAY -->
 <div class="overlay" id="ov" onclick="closeAll()"></div>
 
-<!-- DRAWERS (mantenidos iguales) -->
+<!-- DRAWER INFO -->
 <div id="infoDrawer" class="drawer" style="overflow-y: auto; padding-bottom: 40px;">
-    <!-- ... contenido del drawer sin cambios ... -->
     <div class="flex-between" style="margin-bottom:25px; position: sticky; top: 0; background: var(--card); z-index: 10; padding: 20px 0;">
         <h2 style="margin:0; color:var(--accent); font-size:28px;">MS47</h2>
         <span onclick="closeAll()" style="cursor:pointer; font-size:28px; opacity:0.5;">✕</span>
@@ -555,10 +564,11 @@
     </div>
     <div style="padding-top:20px; border-top:1px solid rgba(255,255,255,0.05); margin-top: auto;">
         <button id="logoutBtn" onclick="logout()" style="display:none; width:100%; background:var(--danger); color:white; border:none; padding:18px; border-radius:18px; font-weight:800; cursor:pointer; margin-bottom:15px;">CERRAR SESIÓN</button>
-        <p style="font-size:10px; text-align:center; opacity:0.3; font-weight:700;">MS47 v5.2 • SANTA FE</p>
+        <p style="font-size:10px; text-align:center; opacity:0.3; font-weight:700;">MS47 v5.3 • SANTA FE</p>
     </div>
 </div>
 
+<!-- DRAWER CARRITO -->
 <div id="cartDrawer" class="drawer">
     <div class="flex-between" style="margin-bottom:30px;">
         <h2 style="margin:0;">Tu Carrito</h2>
@@ -575,6 +585,7 @@
 </div>
 
 <script>
+    // ==================== CONFIG FIREBASE ====================
     const firebaseConfig = {
         apiKey: "AIzaSyDAqlchDsLHIMMbv6YL2ipggaShXlFqiW8",
         authDomain: "tienda-online-baaf6.firebaseapp.com",
@@ -586,6 +597,7 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
+    // ==================== VARIABLES GLOBALES ====================
     let prods = [];
     let cart = [];
     let users = [];
@@ -595,6 +607,7 @@
     let usuarioLogueado = null;
     let filterCat = "";
 
+    // ==================== INICIALIZACIÓN ====================
     function init() {
         db.collection("productos").onSnapshot(snap => {
             prods = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -616,6 +629,7 @@
         });
     }
 
+    // ==================== HERO SLIDER ====================
     function renderHeroSlider() {
         const hero = document.getElementById("heroSlider");
         let content = hero.querySelector('.hero-content');
@@ -650,6 +664,7 @@
         }, 5000);
     }
 
+    // ==================== RENDER TIENDA ====================
     function render() {
         const query = document.getElementById("searchInput").value.toLowerCase().trim();
         const cont = document.getElementById("productsCont");
@@ -681,6 +696,7 @@
         }).join("");
     }
 
+    // ==================== CARRITO ====================
     function addToCart(id) {
         const exist = cart.find(i => i.id === id);
         if (exist) exist.qty++;
@@ -730,6 +746,7 @@
         updateCartUI();
     }
 
+    // ==================== LOGIN ====================
     async function doLogin() {
         const u = document.getElementById("uInp").value.trim();
         const p = document.getElementById("pInp").value.trim();
@@ -785,7 +802,7 @@
         }
     }
 
-    // ====================== ADMIN - PRODUCTOS (AHORA FUNCIONA 100%) ======================
+    // ==================== ADMIN - PRODUCTOS (CORREGIDO) ====================
     function renderAdmP() {
         const list = document.getElementById("admListP");
         list.innerHTML = prods.length === 0 
@@ -827,12 +844,12 @@
                 await db.collection("productos").add(data);
             }
             limpiarP();
-            renderAdmP();        // ← actualización inmediata
-            render();            // ← también actualiza la tienda
+            renderAdmP();
+            render();
             alert("✅ Producto guardado correctamente");
-        } catch(e) {
-            alert("Error al guardar el producto");
-            console.error(e);
+        } catch (e) {
+            console.error("Error Firebase:", e);
+            alert("❌ Error al guardar el producto\n\n" + (e.message || e));
         }
     }
 
@@ -849,7 +866,6 @@
     function editP(id) {
         const p = prods.find(x => x.id === id);
         if (!p) return;
-
         document.getElementById("fId").value = id;
         document.getElementById("fNom").value = p.nombre || "";
         document.getElementById("fPre").value = p.precio || "";
@@ -858,7 +874,6 @@
         document.getElementById("fCat").value = p.categoria || "";
         document.getElementById("fImg").value = p.imagen || "";
 
-        // Cambiar a pestaña PRODUCTOS correctamente
         document.querySelectorAll("#t-prod, #t-user, #t-order, #t-slider").forEach(el => el.style.display = "none");
         document.getElementById("t-prod").style.display = "block";
         document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
@@ -866,7 +881,7 @@
         if (prodBtn) prodBtn.classList.add("active");
     }
 
-    // ====================== ADMIN - CLIENTES, HISTORIAL, SLIDER ======================
+    // ==================== ADMIN - CLIENTES ====================
     function renderAdmU() {
         const list = document.getElementById("admListU");
         const pen = users.filter(u => !u.activo);
@@ -906,6 +921,7 @@
         list.innerHTML = html;
     }
 
+    // ==================== ADMIN - HISTORIAL ====================
     function renderAdmO() {
         const list = document.getElementById("admListO");
         if (orders.length === 0) {
@@ -925,6 +941,7 @@
         `).join("");
     }
 
+    // ==================== ADMIN - SLIDER ====================
     function renderAdmSlider() {
         const list = document.getElementById("admListSlider");
         if (heroImages.length === 0) {
@@ -955,7 +972,7 @@
         }
     }
 
-    // ====================== FUNCIONES AUXILIARES ======================
+    // ==================== FUNCIONES AUXILIARES ====================
     function toggleTheme() { document.body.classList.toggle("light"); }
     function openModal(id) {
         closeAll();
@@ -990,8 +1007,11 @@
     async function finalizarYEnviar() {
         if (cart.length === 0) return alert("El carrito está vacío.");
         let textoPedido = `*📦 NUEVO PEDIDO MS47*\n`;
-        if (usuarioLogueado) textoPedido += `*Cliente:* ${usuarioLogueado.user}\n*Local:* ${usuarioLogueado.dir || 'Sin dirección'}\n`;
-        else textoPedido += `*Cliente:* Minorista\n`;
+        if (usuarioLogueado) {
+            textoPedido += `*Cliente:* ${usuarioLogueado.user}\n*Local:* ${usuarioLogueado.dir || 'Sin dirección'}\n`;
+        } else {
+            textoPedido += `*Cliente:* Minorista\n`;
+        }
         textoPedido += `----------------------------\n`;
         cart.forEach(item => {
             const p = prods.find(x => x.id === item.id);
@@ -1001,7 +1021,11 @@
         textoPedido += `----------------------------\n*TOTAL ESTIMADO: ${total}*`;
 
         try {
-            await db.collection("pedidos").add({ detalle: textoPedido, total: total, fecha: Date.now() });
+            await db.collection("pedidos").add({
+                detalle: textoPedido,
+                total: total,
+                fecha: Date.now()
+            });
             const nro = "5493424063266";
             window.open(`https://wa.me/${nro}?text=${encodeURIComponent(textoPedido)}`);
             cart = [];
@@ -1043,6 +1067,7 @@
         }
     }
 
+    // ==================== INICIO ====================
     window.onload = init;
 </script>
 </body>
