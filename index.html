@@ -1,15 +1,15 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" translate="no">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="google" content="notranslate">
     <title>MS47 - Mundo Tic</title>
-
+    
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script>
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
     <style>
         :root {
             --bg: #0f172a;
@@ -42,11 +42,43 @@
             color: var(--text);
             transition: var(--transition);
             overflow-x: hidden;
+            translate: none !important;
         }
-
-        /* HERO - EXACTO COMO CUBAIMPORTADOS */
+        .flex-between { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            background: var(--card);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 25px rgba(0,0,0,0.3);
+            height: 68px;
+        }
+        .header-left { display: flex; align-items: center; gap: 12px; }
+        .main-logo { height: 48px; width: auto; transition: transform 0.3s; cursor: pointer; }
+        .main-logo:hover { transform: scale(1.05); }
+        .header-icons { display: flex; gap: 10px; align-items: center; }
+        .icon-btn {
+            cursor: pointer;
+            font-size: 23px;
+            padding: 8px;
+            border-radius: 50%;
+            color: var(--text);
+            transition: var(--transition);
+            border: none;
+            background: transparent;
+        }
+        .icon-btn:hover { background: rgba(255,255,255,0.1); transform: translateY(-2px); }
+        
         .hero {
-            height: 500px; /* ← Igual que CubaImportados */
+            height: 420px;
             position: relative;
             width: 100vw;
             margin-left: calc(-50vw + 50%);
@@ -56,22 +88,19 @@
             background-color: #0f172a;
         }
         @media (max-width: 768px) {
-            .hero {
-                height: 340px; /* más compacto en celular como Cuba */
-            }
+            .hero { height: 280px; }
+            header { height: 62px; }
         }
         .hero-slide {
             position: absolute;
             inset: 0;
-            background-size: cover; /* ← clave para que quede como Cuba */
+            background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
             transition: opacity 1.2s ease-in-out;
             opacity: 0;
         }
-        .hero-slide.active {
-            opacity: 1;
-        }
+        .hero-slide.active { opacity: 1; }
         .hero-content {
             position: relative;
             z-index: 2;
@@ -82,44 +111,13 @@
             justify-content: center;
             align-items: center;
         }
-        .hero-content h1, .hero-content p {
-            display: none;
-        }
-
-        /* RESTO DE ESTILOS */
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 25px;
-            background: var(--card);
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            box-shadow: 0 4px 25px rgba(0,0,0,0.3);
-            height: 85px;
-        }
-        .header-left { display: flex; align-items: center; gap: 15px; }
-        .main-logo { height: 55px; width: auto; transition: transform 0.3s; cursor: pointer; }
-        .main-logo:hover { transform: scale(1.05); }
-        .header-icons { display: flex; gap: 12px; align-items: center; }
-        .icon-btn {
-            cursor: pointer;
-            font-size: 22px;
-            padding: 10px;
-            border-radius: 50%;
-            color: var(--text);
-            transition: var(--transition);
-            border: none;
-            background: transparent;
-        }
-        .icon-btn:hover { background: rgba(255,255,255,0.1); transform: translateY(-2px); }
+        .hero-content h1, .hero-content p { display: none; }
 
         .cat-scroll {
             display: flex;
             gap: 10px;
             overflow-x: auto;
-            padding: 15px 20px;
+            padding: 14px 20px;
             scrollbar-width: none;
             scroll-behavior: smooth;
             -webkit-overflow-scrolling: touch;
@@ -128,7 +126,7 @@
         .cat-scroll::-webkit-scrollbar { display: none; }
         .cat-item {
             flex: 0 0 auto;
-            padding: 10px 18px;
+            padding: 9px 18px;
             border-radius: 20px;
             background: #1e293b;
             font-size: 13.5px;
@@ -140,11 +138,10 @@
         }
         .cat-item:hover { background: #334155; }
         .cat-item.active { background: var(--accent); color: white; }
-
         .search-container {
             max-width: 1400px;
             margin: 0 auto;
-            padding: 0 20px 20px;
+            padding: 0 20px 15px;
         }
         .search-bar {
             width: 100%;
@@ -157,7 +154,6 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
         .search-bar:focus { box-shadow: 0 0 0 3px var(--accent); }
-
         .products-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -169,7 +165,6 @@
         @media (min-width: 768px) {
             .products-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
         }
-
         .product-card {
             background: var(--card);
             border-radius: var(--radius);
@@ -178,9 +173,9 @@
             display: flex;
             flex-direction: column;
             transition: var(--transition);
+            cursor: pointer;
         }
         .product-card:hover { transform: translateY(-8px); box-shadow: 0 20px 40px rgba(0,0,0,0.4); }
-
         .promo-badge {
             position: absolute;
             top: 15px; left: 15px;
@@ -194,25 +189,30 @@
         }
         .img-box {
             background: #fff;
-            height: 200px;
+            height: 225px;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 20px;
+            padding: 15px;
             overflow: hidden;
+            position: relative;
         }
         .img-box img {
             max-width: 100%;
             max-height: 100%;
             object-fit: contain;
-            transition: 0.5s;
+            transition: opacity 0.6s ease-in-out;
         }
-        .product-card:hover .img-box img { transform: scale(1.1); }
-
+        .product-card:hover .img-box img { transform: scale(1.08); }
         .info-box { padding: 22px; flex-grow: 1; display: flex; flex-direction: column; }
-        .prod-title { font-weight: 700; font-size: 17px; margin-bottom: 12px; min-height: 45px; line-height: 1.4; }
-        .price-val { font-size: 26px; font-weight: 800; color: var(--accent); margin-bottom: 20px; }
-
+        .prod-title { font-weight: 700; font-size: 17px; margin-bottom: 8px; min-height: 45px; line-height: 1.4; }
+        .price-val { font-size: 26px; font-weight: 800; color: var(--accent); margin-bottom: 12px; }
+        .stock-info {
+            font-size: 13px;
+            color: var(--success);
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
         .btn-add {
             background: var(--accent);
             color: white;
@@ -227,7 +227,120 @@
         }
         .btn-add:hover { filter: brightness(1.1); }
 
-        /* MODALES Y ADMIN - MÁS ESTÉTICO Y RESPONSIVO */
+        /* MODAL DETALLE */
+        body.modal-open { overflow: hidden; }
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.94);
+            backdrop-filter: blur(15px);
+            display: none;
+            justify-content: center;
+            align-items: flex-start;
+            z-index: 7000;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .modal-contenido {
+            display: flex;
+            margin: 40px auto;
+            max-width: 1100px;
+            width: 95%;
+            border-radius: 24px;
+            overflow: hidden;
+            background: var(--card);
+            position: relative;
+        }
+        @media (max-width: 768px) {
+            .modal-contenido { flex-direction: column; margin: 20px auto; }
+        }
+        .detalle-imagenes { flex: 1; padding: 20px; }
+        .detalle-info { flex: 1; padding: 20px; }
+        .detalle-imagenes img { width: 100%; height: auto; margin-bottom: 10px; border-radius: 10px; }
+        .detail-main-img {
+            max-width: 100%;
+            max-height: 480px;
+            object-fit: contain;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            transition: opacity 0.4s ease;
+            background: #fff;
+        }
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 32px;
+            color: var(--text);
+            background: none;
+            border: none;
+            cursor: pointer;
+            z-index: 10000;
+            line-height: 1;
+        }
+        .thumbnails {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+            padding: 10px 0;
+        }
+        .thumb {
+            width: 72px;
+            height: 72px;
+            border: 3px solid transparent;
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #fff;
+        }
+        .thumb img { width: 100%; height: 100%; object-fit: contain; }
+        .thumb.active { border-color: var(--accent); transform: scale(1.08); }
+        .detail-title { font-size: 28px; font-weight: 700; line-height: 1.3; margin-bottom: 8px; }
+        .detail-price { font-size: 34px; font-weight: 800; color: var(--accent); margin-bottom: 12px; }
+        .detail-stock {
+            font-size: 15px;
+            background: rgba(16,185,129,0.15);
+            color: var(--success);
+            padding: 6px 14px;
+            border-radius: 9999px;
+            width: fit-content;
+            margin-bottom: 25px;
+        }
+        .detail-qty { display: flex; align-items: center; gap: 15px; margin-bottom: 30px; }
+        .qty-btn {
+            width: 48px; height: 48px; border: none; background: var(--accent);
+            color: white; border-radius: 14px; cursor: pointer; font-weight: 800; font-size: 24px;
+        }
+        .detail-btn { margin-bottom: 30px; }
+        .detail-sections details {
+            margin-bottom: 12px;
+            border-radius: 16px;
+            overflow: hidden;
+            background: rgba(255,255,255,0.03);
+        }
+        .detail-sections summary {
+            padding: 18px 22px;
+            font-weight: 700;
+            font-size: 17px;
+            cursor: pointer;
+            list-style: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .detail-sections summary::-webkit-details-marker { display: none; }
+        .detail-sections summary:after { content: "▼"; font-size: 14px; transition: 0.3s; }
+        .detail-sections details[open] summary:after { transform: rotate(180deg); }
+        .detail-sections .detail-content {
+            padding: 0 22px 22px;
+            line-height: 1.7;
+            font-size: 15.5px;
+            color: #e2e8f0;
+        }
+        
+        /* OTROS MODALES Y COMPONENTES */
         .modal {
             position: fixed;
             inset: 0;
@@ -238,15 +351,13 @@
             align-items: center;
             z-index: 7000;
             padding: 20px;
+            overflow: hidden;
         }
         .modal-content {
             background: var(--card);
-            padding: 30px 25px;
-            border-radius: 35px;
-            width: 100%;
-            max-width: 680px;
-            max-height: 92vh;
-            overflow-y: auto;
+            padding: 0;
+            border-radius: 24px;
+            overflow: hidden;
         }
         .admin-tabs {
             display: flex;
@@ -270,7 +381,6 @@
             text-align: center;
         }
         .tab-btn.active { background: var(--card); color: var(--accent); }
-
         .admin-form-box {
             background: rgba(255,255,255,0.03);
             padding: 30px;
@@ -297,8 +407,6 @@
             padding: 6px;
             flex-shrink: 0;
         }
-
-        /* TOAST */
         #toast {
             position: fixed;
             bottom: 25px;
@@ -315,7 +423,6 @@
             align-items: center;
             gap: 10px;
         }
-
         .drawer {
             position: fixed;
             top: 0;
@@ -325,16 +432,26 @@
             background: var(--card);
             transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 6000;
-            padding: 40px;
+            padding: 0;
             display: flex;
             flex-direction: column;
             box-shadow: 0 0 60px rgba(0,0,0,0.8);
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: thin;
         }
         #infoDrawer { left: -110%; }
         #infoDrawer.active { left: 0; }
         #cartDrawer { right: -110%; }
         #cartDrawer.active { right: 0; }
-
+        .drawer-header {
+            position: sticky;
+            top: 0;
+            background: var(--card);
+            z-index: 10;
+            padding: 25px 25px 20px 25px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
         .overlay {
             position: fixed;
             inset: 0;
@@ -344,7 +461,6 @@
             backdrop-filter: blur(6px);
         }
         .overlay.active { display: block; }
-
         .form-group { margin-bottom: 22px; }
         .form-group label {
             display: block;
@@ -366,12 +482,7 @@
             font-size: 16px;
         }
         input:focus, textarea:focus { border-color: var(--accent); background: rgba(255,255,255,0.05); }
-
-        .qty-btn {
-            width: 44px; height: 44px; border: none; background: var(--accent);
-            color: white; border-radius: 14px; cursor: pointer; font-weight: 800; font-size: 20px;
-        }
-        .flex-between { display: flex; justify-content: space-between; align-items: center; }
+        body.no-scroll { overflow: hidden; height: 100vh; }
     </style>
 </head>
 <body class="dark">
@@ -391,7 +502,6 @@
     </div>
 </header>
 
-<!-- HERO SLIDER - ESTILO CUBAIMPORTADOS -->
 <div class="hero" id="heroSlider">
     <div class="hero-content">
         <h1>Mundo Tic</h1>
@@ -399,7 +509,6 @@
     </div>
 </div>
 
-<!-- CATEGORÍAS -->
 <div class="cat-scroll" id="catBar">
     <div class="cat-item active" onclick="setCat(this, '')">🌐 Todos</div>
     <div class="cat-item" onclick="setCat(this, 'fundas')">📱 Fundas</div>
@@ -418,25 +527,113 @@
     <div class="cat-item" onclick="setCat(this, 'aro_luz')">💡 Aro</div>
 </div>
 
-<!-- BUSCADOR -->
 <div class="search-container">
     <input type="text" id="searchInput" class="search-bar" placeholder="Busca marcas o productos..." onkeyup="render()">
 </div>
 
-<!-- PRODUCTOS -->
 <div class="products-grid" id="productsCont"></div>
 
-<!-- TOAST -->
 <div id="toast">✅ Producto agregado al carrito</div>
-
-<!-- MODAL ZOOM -->
 <div id="imageModal" style="position:fixed;inset:0;background:rgba(0,0,0,0.95);display:none;align-items:center;justify-content:center;z-index:9000;" onclick="if(event.target.id==='imageModal')this.style.display='none';">
     <img id="modalImg" style="max-width:92%;max-height:92%;object-fit:contain;" src="">
 </div>
 
-<!-- LOGIN -->
+<div class="modal-overlay" id="productDetailModal" onclick="if(event.target.id==='productDetailModal')closeProductDetail()">
+    <div class="modal-contenido">
+        <button class="modal-close" onclick="closeProductDetail()">✕</button>
+        
+        <div class="detalle-imagenes">
+            <img id="detailImg" class="detail-main-img" alt="">
+            <div id="thumbnails" class="thumbnails"></div>
+        </div>
+        
+        <div class="detalle-info">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <div>
+                    <h1 id="detailTitle" class="detail-title"></h1>
+                </div>
+            </div>
+            <div id="detailPrice" class="detail-price"></div>
+            <div id="detailStock" class="detail-stock"></div>
+            <div class="detail-qty">
+                <span style="font-weight:700; font-size:16px;">Cantidad:</span>
+                <button onclick="changeDetailQty(-1)" class="qty-btn">−</button>
+                <input id="detailQtyInput" type="number" value="1" min="1" style="width:80px;text-align:center;font-size:22px;font-weight:700;border:none;background:transparent;">
+                <button onclick="changeDetailQty(1)" class="qty-btn">+</button>
+            </div>
+            <button onclick="addCurrentToCart()" class="btn-add detail-btn">🛒 Agregar al carrito</button>
+            <div class="detail-sections">
+                <details open>
+                    <summary>Descripción</summary>
+                    <div id="detailDesc" class="detail-content"></div>
+                </details>
+                <details>
+                    <summary>Características</summary>
+                    <div id="detailCaract" class="detail-content"></div>
+                </details>
+                <details>
+                    <summary>Ficha del producto</summary>
+                    <div id="detailFicha" class="detail-content"></div>
+                </details>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="adminModal" style="align-items: flex-start; overflow-y: auto;">
+    <div class="modal-content" style="margin: 40px auto; width: 100%; max-width: 900px; padding: 30px; overflow: visible;">
+        <div class="flex-between" style="margin-bottom:30px;">
+            <h2 style="margin:0;">Gestión Maestra</h2>
+            <button onclick="closeAll()" style="background:none; border:none; color:white; font-size:30px; cursor:pointer;">✕</button>
+        </div>
+        <div class="admin-tabs">
+            <button class="tab-btn active" onclick="tab('t-prod', event)">PRODUCTOS</button>
+            <button class="tab-btn" onclick="tab('t-user', event)">CLIENTES</button>
+            <button class="tab-btn" onclick="tab('t-order', event)">HISTORIAL</button>
+            <button class="tab-btn" onclick="tab('t-slider', event)">SLIDER HERO</button>
+        </div>
+        
+        <div id="t-prod">
+            <div class="admin-form-box">
+                <input id="fId" type="hidden">
+                <div class="form-group"><label>Nombre del Producto</label><input id="fNom"></div>
+                <div class="form-group"><label>Precio Normal ($)</label><input id="fPre" type="number"></div>
+                <div class="form-group"><label>Precio Mayorista ($)</label><input id="fPreMay" type="number"></div>
+                <div class="form-group"><label>Stock disponible</label><input id="fStock" type="number" min="0" value="10"></div>
+                <div class="form-group"><label>Oferta Especial</label><input id="fPro"></div>
+                <div class="form-group"><label>Categoría</label><input id="fCat" placeholder="fundas, cargadores..."></div>
+                <div class="form-group">
+                    <label>Imágenes (una URL por línea)</label>
+                    <textarea id="fImagenes" rows="5" placeholder="https://url1.jpg&#10;https://url2.jpg"></textarea>
+                </div>
+                <div class="form-group"><label>Descripción</label><textarea id="fDesc" rows="5"></textarea></div>
+                <div class="form-group"><label>Características</label><textarea id="fCaract" rows="5"></textarea></div>
+                <div class="form-group"><label>Ficha técnica</label><textarea id="fFicha" rows="5"></textarea></div>
+                <button class="btn-add" style="background:var(--success)" onclick="saveP()">GUARDAR PRODUCTO</button>
+                <button class="btn-add" style="background:none; color:white; margin-top:10px; border:1px solid rgba(255,255,255,0.1);" onclick="limpiarP()">Limpiar</button>
+            </div>
+            <div id="admListP"></div>
+        </div>
+        
+        <div id="t-user" style="display:none;"><div id="admListU"></div></div>
+        
+        <div id="t-order" style="display:none;">
+            <button class="btn-add" style="background:var(--danger); margin-bottom:20px;" onclick="vaciarHistorial()">BORRAR HISTORIAL</button>
+            <div id="admListO"></div>
+        </div>
+        
+        <div id="t-slider" style="display:none;">
+            <div class="admin-form-box">
+                <div class="form-group"><label>URL de imagen del slider</label><input id="sliderUrl" placeholder="https://..."></div>
+                <button class="btn-add" style="background:var(--success)" onclick="addHeroImage()">AGREGAR AL SLIDER</button>
+            </div>
+            <div id="admListSlider"></div>
+        </div>
+    </div>
+</div>
+
 <div class="modal" id="loginModal">
-    <div class="modal-content" style="max-width:420px; text-align:center;">
+    <div class="modal-content" style="max-width:420px; text-align:center; padding: 30px; margin: auto;">
         <h2 style="margin-bottom:10px;">¡Bienvenido de nuevo!</h2>
         <p style="opacity:0.6; font-size:14px; margin-bottom:30px;">Accedé a tu cuenta mayorista</p>
         <div class="form-group"><input id="uInp" placeholder="Nombre de usuario"></div>
@@ -447,9 +644,8 @@
     </div>
 </div>
 
-<!-- REGISTRO -->
-<div class="modal" id="regModal">
-    <div class="modal-content" style="max-width:480px;">
+<div class="modal" id="regModal" style="align-items: flex-start; overflow-y: auto;">
+    <div class="modal-content" style="max-width:480px; margin: 40px auto; padding: 30px;">
         <h2 style="text-align:center; margin-bottom:5px;">Nueva Solicitud</h2>
         <p style="text-align:center; opacity:0.5; font-size:13px; margin-bottom:25px;">Completá los datos de tu comercio</p>
         <div class="form-group"><label>Nombre de Usuario</label><input id="rU" placeholder="Ej: Kiosco_SantaFe"></div>
@@ -461,118 +657,71 @@
     </div>
 </div>
 
-<!-- ADMIN MODAL - MÁS ESTÉTICO Y SIN PRECIO MAYORISTA -->
-<div class="modal" id="adminModal">
-    <div class="modal-content">
-        <div class="flex-between" style="margin-bottom:30px;">
-            <h2 style="margin:0;">Gestión Maestra</h2>
-            <button onclick="closeAll()" style="background:none; border:none; color:white; font-size:30px; cursor:pointer;">✕</button>
-        </div>
-
-        <div class="admin-tabs">
-            <button class="tab-btn active" onclick="tab('t-prod', event)">PRODUCTOS</button>
-            <button class="tab-btn" onclick="tab('t-user', event)">CLIENTES</button>
-            <button class="tab-btn" onclick="tab('t-order', event)">HISTORIAL</button>
-            <button class="tab-btn" onclick="tab('t-slider', event)">SLIDER HERO</button>
-        </div>
-
-        <!-- PRODUCTOS - SIN PRECIO MAYORISTA -->
-        <div id="t-prod">
-            <div class="admin-form-box">
-                <input id="fId" type="hidden">
-                <div class="form-group"><label>Nombre del Producto</label><input id="fNom"></div>
-                <div class="form-group"><label>Precio Normal ($)</label><input id="fPre" type="number"></div>
-                <div class="form-group"><label>Oferta Especial</label><input id="fPro"></div>
-                <div class="form-group"><label>Categoría</label><input id="fCat" placeholder="fundas, cargadores..."></div>
-                <div class="form-group"><label>URL de la Imagen</label><input id="fImg"></div>
-                <button class="btn-add" style="background:var(--success)" onclick="saveP()">GUARDAR PRODUCTO</button>
-                <button class="btn-add" style="background:none; color:white; margin-top:10px; border:1px solid rgba(255,255,255,0.1);" onclick="limpiarP()">Limpiar campos</button>
-            </div>
-            <div id="admListP"></div>
-        </div>
-
-        <!-- CLIENTES -->
-        <div id="t-user" style="display:none;"><div id="admListU"></div></div>
-
-        <!-- HISTORIAL -->
-        <div id="t-order" style="display:none;">
-            <button class="btn-add" style="background:var(--danger); margin-bottom:20px;" onclick="vaciarHistorial()">BORRAR TODO EL HISTORIAL</button>
-            <div id="admListO"></div>
-        </div>
-
-        <!-- SLIDER HERO -->
-        <div id="t-slider" style="display:none;">
-            <div class="admin-form-box">
-                <div class="form-group"><label>URL de la imagen del slider</label><input id="sliderUrl" placeholder="https://..."></div>
-                <button class="btn-add" style="background:var(--success)" onclick="addHeroImage()">AGREGAR IMAGEN AL SLIDER</button>
-            </div>
-            <div id="admListSlider"></div>
-        </div>
-    </div>
-</div>
-
 <div class="overlay" id="ov" onclick="closeAll()"></div>
 
-<!-- DRAWER INFO -->
-<div id="infoDrawer" class="drawer" style="overflow-y: auto; padding-bottom: 40px;">
-    <div class="flex-between" style="margin-bottom:25px; position: sticky; top: 0; background: var(--card); z-index: 10; padding: 20px 0;">
-        <h2 style="margin:0; color:var(--accent); font-size:28px;">MS47</h2>
-        <span onclick="closeAll()" style="cursor:pointer; font-size:28px; opacity:0.5;">✕</span>
+<div id="infoDrawer" class="drawer">
+    <div class="drawer-header">
+        <div class="flex-between">
+            <h2 style="margin:0; color:var(--accent); font-size:28px;">MS47</h2>
+            <span onclick="closeAll()" style="cursor:pointer; font-size:28px; opacity:0.5;">✕</span>
+        </div>
     </div>
-    <div style="text-align:center; margin-bottom:30px; padding-bottom:25px; border-bottom:1px solid rgba(255,255,255,0.1);">
-        <img src="log.png" style="height:120px; width:auto; margin-bottom:15px;" alt="MS47">
-        <h2 style="margin:0 0 6px 0; font-size:26px;">Mundo Tic</h2>
-        <p style="margin:0; opacity:0.75; font-size:15px; line-height:1.4;">Equipamos tu mundo digital<br>en Santa Fe, Argentina</p>
-    </div>
-    <div style="margin-bottom:30px;">
-        <label style="font-size:11px; opacity:0.5; font-weight:800; text-transform:uppercase; letter-spacing:1px; display:block; margin-bottom:8px;">📍 Nuestra ubicación</label>
-        <iframe src="https://www.google.com/maps/embed?pb=!4v1775166766805!6m8!1m7!1sUNvillbDlFtQX-QCWfM6Qg!2m2!1d-31.60307134083026!2d-60.68883673305861!3f321.1365989960637!4f-9.386863229755448!5f1.0897090201782524" width="100%" height="220" style="border-radius:20px; border:none; box-shadow:0 4px 15px rgba(0,0,0,0.3);" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
-    </div>
-    <div style="margin-bottom:30px;">
-        <div style="display:flex; align-items:center; gap:12px;">
-            <span style="font-size:22px;">📍</span>
-            <div>
-                <small style="opacity:0.5; font-weight:700;">DIRECCIÓN</small>
-                <div style="font-size:15px;">belgran 7197</div>
+    <div style="padding:25px 25px 0 25px; flex-grow:1; display:flex; flex-direction:column;">
+        <div style="text-align:center; margin-bottom:30px; padding-bottom:25px; border-bottom:1px solid rgba(255,255,255,0.1);">
+            <img src="log.png" style="height:120px; width:auto; margin-bottom:15px;" alt="MS47">
+            <h2 style="margin:0 0 6px 0; font-size:26px;">Mundo Tic</h2>
+            <p style="margin:0; opacity:0.75; font-size:15px; line-height:1.4;">Equipamos tu mundo digital<br>en Santa Fe, Argentina</p>
+        </div>
+        
+        <div style="margin-bottom:30px;">
+            <div style="display:flex; align-items:center; gap:12px;">
+                <span style="font-size:22px;"></span>
+                <div>
+                    <small style="opacity:0.5; font-weight:700;"></small>
+                    <div style="font-size:15px;"></div>
+                </div>
             </div>
         </div>
-    </div>
-    <div style="margin-bottom:30px; display:flex; flex-direction:column; gap:12px;">
-        <a href="https://wa.me/5493424063266" target="_blank" style="display:flex; align-items:center; gap:12px; background:#25d366; color:white; padding:18px 20px; border-radius:16px; text-decoration:none; font-weight:700; justify-content:center; font-size:17px;">📲 CHATEAR POR WHATSAPP</a>
-        <a href="https://www.instagram.com/mundo.tic/" target="_blank" style="display:flex; align-items:center; gap:12px; background:#e1306c; color:white; padding:18px 20px; border-radius:16px; text-decoration:none; font-weight:700; justify-content:center; font-size:17px;">📷 INSTAGRAM</a>
-        <a href="https://www.facebook.com/profile.php?id=61587552659399&ref=PROFILE_EDIT_xav_ig_profile_page_web" target="_blank" style="display:flex; align-items:center; gap:12px; background:#1877f2; color:white; padding:18px 20px; border-radius:16px; text-decoration:none; font-weight:700; justify-content:center; font-size:17px;">📘 FACEBOOK</a>
-    </div>
-    <div id="perfilContenido" style="display:none;">
-        <div style="background:rgba(255,255,255,0.03); padding:25px; border-radius:25px; border:1px solid rgba(255,255,255,0.05); margin-bottom:25px;">
-            <div style="margin-bottom:20px;"><small style="opacity:0.4; text-transform:uppercase; font-size:10px; font-weight:800; letter-spacing:1px;">Usuario</small><div id="p-user" style="font-size:20px; font-weight:800; color:var(--accent);">--</div></div>
-            <div style="margin-bottom:20px;"><small style="opacity:0.4; text-transform:uppercase; font-size:10px; font-weight:800; letter-spacing:1px;">Teléfono</small><div id="p-tel" style="font-size:16px; font-weight:600;">--</div></div>
-            <div><small style="opacity:0.4; text-transform:uppercase; font-size:10px; font-weight:800; letter-spacing:1px;">Dirección / Comercio</small><div id="p-dir" style="font-size:14px; opacity:0.8; line-height:1.6;">--</div></div>
+        <div style="margin-bottom:30px; display:flex; flex-direction:column; gap:12px;">
+            <a href="https://wa.me/5493424063266" target="_blank" style="display:flex; align-items:center; gap:12px; background:#25d366; color:white; padding:18px 20px; border-radius:16px; text-decoration:none; font-weight:700; justify-content:center; font-size:17px;">📲 CHATEAR POR WHATSAPP</a>
+            <a href="https://www.instagram.com/mundo.tic/" target="_blank" style="display:flex; align-items:center; gap:12px; background:#e1306c; color:white; padding:18px 20px; border-radius:16px; text-decoration:none; font-weight:700; justify-content:center; font-size:17px;">📷 INSTAGRAM</a>
+            <a href="https://www.facebook.com/profile.php?id=61587552659399&ref=PROFILE_EDIT_xav_ig_profile_page_web" target="_blank" style="display:flex; align-items:center; gap:12px; background:#1877f2; color:white; padding:18px 20px; border-radius:16px; text-decoration:none; font-weight:700; justify-content:center; font-size:17px;">📘 FACEBOOK</a>
         </div>
-        <div style="padding:15px; background:rgba(16,185,129,0.1); border-radius:16px; color:var(--success); font-weight:800; border:1px solid rgba(16,185,129,0.2); text-align:center; font-size:11px; margin-bottom:30px;">✓ ESTADO: CLIENTE MAYORISTA ACTIVO</div>
-    </div>
-    <div id="perfilVacio" style="text-align:center; padding:60px 0; opacity:0.4;">
-        <div style="font-size:50px; margin-bottom:20px;">👤</div>
-        <p>Iniciá sesión para ver tu información y precios especiales.</p>
-    </div>
-    <div style="padding-top:20px; border-top:1px solid rgba(255,255,255,0.05); margin-top: auto;">
-        <button id="logoutBtn" onclick="logout()" style="display:none; width:100%; background:var(--danger); color:white; border:none; padding:18px; border-radius:18px; font-weight:800; cursor:pointer; margin-bottom:15px;">CERRAR SESIÓN</button>
-        <p style="font-size:10px; text-align:center; opacity:0.3; font-weight:700;">MS47 v5.4 • SANTA FE</p>
+        <div id="perfilContenido" style="display:none;">
+            <div style="background:rgba(255,255,255,0.03); padding:25px; border-radius:25px; border:1px solid rgba(255,255,255,0.05); margin-bottom:25px;">
+                <div style="margin-bottom:20px;"><small style="opacity:0.4; text-transform:uppercase; font-size:10px; font-weight:800; letter-spacing:1px;">Usuario</small><div id="p-user" style="font-size:20px; font-weight:800; color:var(--accent);">--</div></div>
+                <div style="margin-bottom:20px;"><small style="opacity:0.4; text-transform:uppercase; font-size:10px; font-weight:800; letter-spacing:1px;">Teléfono</small><div id="p-tel" style="font-size:16px; font-weight:600;">--</div></div>
+                <div><small style="opacity:0.4; text-transform:uppercase; font-size:10px; font-weight:800; letter-spacing:1px;">Dirección / Comercio</small><div id="p-dir" style="font-size:14px; opacity:0.8; line-height:1.6;">--</div></div>
+            </div>
+            <div style="padding:15px; background:rgba(16,185,129,0.1); border-radius:16px; color:var(--success); font-weight:800; border:1px solid rgba(16,185,129,0.2); text-align:center; font-size:11px; margin-bottom:30px;">✓ ESTADO: CLIENTE MAYORISTA ACTIVO</div>
+        </div>
+        <div id="perfilVacio" style="text-align:center; padding:60px 0; opacity:0.4;">
+            <div style="font-size:50px; margin-bottom:20px;">👤</div>
+            <p>Iniciá sesión para ver tu información y precios especiales.</p>
+        </div>
+        <div style="padding-top:20px; border-top:1px solid rgba(255,255,255,0.05); margin-top: auto;">
+            <button id="logoutBtn" onclick="logout()" style="display:none; width:100%; background:var(--danger); color:white; border:none; padding:18px; border-radius:18px; font-weight:800; cursor:pointer; margin-bottom:15px;">CERRAR SESIÓN</button>
+            <p style="font-size:10px; text-align:center; opacity:0.3; font-weight:700;">MS47 v6.0 • SANTA FE</p>
+        </div>
     </div>
 </div>
 
-<!-- CARRITO -->
 <div id="cartDrawer" class="drawer">
-    <div class="flex-between" style="margin-bottom:30px;">
-        <h2 style="margin:0;">Tu Carrito</h2>
-        <span onclick="closeAll()" style="cursor:pointer; font-size:28px; opacity:0.5;">✕</span>
-    </div>
-    <div id="cartItems" style="flex-grow:1; overflow-y:auto; padding-right:5px;"></div>
-    <div style="padding-top:25px; border-top:1px solid rgba(255,255,255,0.1); margin-top:20px;">
-        <div class="flex-between" style="margin-bottom:25px;">
-            <span style="font-size:18px; opacity:0.7;">Total Estimado:</span>
-            <span id="cartTotal" style="font-size:32px; font-weight:800; color:var(--accent);">$0</span>
+    <div class="drawer-header">
+        <div class="flex-between">
+            <h2 style="margin:0;">Tu Carrito</h2>
+            <span onclick="closeAll()" style="cursor:pointer; font-size:28px; opacity:0.5;">✕</span>
         </div>
-        <button class="btn-add" style="background:#25d366; padding:22px; font-size:16px;" onclick="finalizarYEnviar()">ENVIAR PEDIDO POR WHATSAPP 🚀</button>
+    </div>
+    <div style="padding:25px 25px 0 25px; flex-grow:1; display:flex; flex-direction:column;">
+        <div id="cartItems" style="flex-grow:1; overflow-y:auto; padding-right:5px;"></div>
+        <div style="padding-top:25px; border-top:1px solid rgba(255,255,255,0.1); margin-top:20px;">
+            <div class="flex-between" style="margin-bottom:25px;">
+                <span style="font-size:18px; opacity:0.7;">Total Estimado:</span>
+                <span id="cartTotal" style="font-size:32px; font-weight:800; color:var(--accent);">$0</span>
+            </div>
+            <button class="btn-add" style="background:#25d366; padding:22px; font-size:16px;" onclick="finalizarYEnviar()">ENVIAR PEDIDO POR WHATSAPP 🚀</button>
+        </div>
     </div>
 </div>
 
@@ -597,21 +746,37 @@
     let isMay = false;
     let usuarioLogueado = null;
     let filterCat = "";
+    let currentProductId = null;
+    let currentDetailQty = 1;
+    let rotators = [];
+    let heroInterval = null;
 
     function init() {
+        // Cargar productos en tiempo real desde Firebase
         db.collection("productos").onSnapshot(snap => {
             prods = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            // Asegurar que exista el array de imagenes y el stock por defecto si no existen
+            prods.forEach(p => {
+                if (!p.imagenes) p.imagenes = p.imagen ? [p.imagen] : [];
+                if (typeof p.stock === 'undefined') p.stock = 10;
+            });
             render();
             renderAdmP();
         });
+
+        // Cargar usuarios
         db.collection("usuarios").onSnapshot(snap => {
             users = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             renderAdmU();
         });
+
+        // Cargar pedidos
         db.collection("pedidos").orderBy("fecha", "desc").onSnapshot(snap => {
             orders = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             renderAdmO();
         });
+
+        // Cargar slider hero
         db.collection("hero").orderBy("order").onSnapshot(snap => {
             heroImages = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             renderHeroSlider();
@@ -647,16 +812,38 @@
         });
 
         let current = 0;
-        setInterval(() => {
+        if (heroInterval) clearInterval(heroInterval);
+        heroInterval = setInterval(() => {
             current = (current + 1) % heroImages.length;
-            document.querySelectorAll('.hero-slide').forEach((s, i) => s.classList.toggle('active', i === current));
+            document.querySelectorAll('.hero-slide')
+                .forEach((s, i) => s.classList.toggle('active', i === current));
         }, 5000);
+    }
+
+    function startProductImageRotators() {
+        rotators.forEach(clearInterval);
+        rotators = [];
+        document.querySelectorAll('.product-card').forEach(card => {
+            const id = card.getAttribute('data-id');
+            const product = prods.find(p => p.id === id);
+            if (!product || !product.imagenes || product.imagenes.length <= 1) return;
+            let index = 0;
+            const imgEl = card.querySelector('.img-box img');
+            const interval = setInterval(() => {
+                index = (index + 1) % product.imagenes.length;
+                imgEl.style.opacity = '0';
+                setTimeout(() => {
+                    imgEl.src = product.imagenes[index];
+                    imgEl.style.opacity = '1';
+                }, 300);
+            }, 4500);
+            rotators.push(interval);
+        });
     }
 
     function render() {
         const query = document.getElementById("searchInput").value.toLowerCase().trim();
         const cont = document.getElementById("productsCont");
-
         const filtered = prods.filter(p =>
             p.nombre.toLowerCase().includes(query) &&
             (filterCat === "" || p.categoria === filterCat)
@@ -669,33 +856,107 @@
 
         cont.innerHTML = filtered.map(p => {
             const precioActual = isMay ? (p.precio_may || p.precio) : p.precio;
+            const firstImg = p.imagenes && p.imagenes.length > 0 ? p.imagenes[0] : (p.imagen || 'https://via.placeholder.com/300?text=MS47');
             return `
-                <div class="product-card">
+                <div class="product-card" data-id="${p.id}" onclick="if(!event.target.closest('.btn-add')) showProductDetail('${p.id}')">
                     ${p.promo ? `<div class="promo-badge">${p.promo}</div>` : ''}
                     <div class="img-box">
-                        <img src="${p.imagen || 'https://via.placeholder.com/300?text=MS47'}" alt="${p.nombre}">
+                        <img src="${firstImg}" alt="${p.nombre}">
                     </div>
                     <div class="info-box">
                         <div class="prod-title">${p.nombre}</div>
                         <div class="price-val">$${precioActual}</div>
-                        <button class="btn-add" onclick="addToCart('${p.id}')">🛒 Agregar</button>
+                        <div class="stock-info">Stock: ${p.stock} unidades</div>
+                        <button class="btn-add" onclick="event.stopImmediatePropagation(); addToCart('${p.id}')">🛒 Agregar</button>
                     </div>
                 </div>`;
         }).join("");
+        startProductImageRotators();
+    }
+
+    function showProductDetail(id) {
+        const p = prods.find(x => x.id === id);
+        if (!p) return;
+        currentProductId = id;
+        currentDetailQty = 1;
+        document.getElementById('detailQtyInput').value = 1;
+        
+        const imgs = (p.imagenes && p.imagenes.length > 0) 
+            ? [...p.imagenes] 
+            : (p.imagen ? [p.imagen] : ['https://via.placeholder.com/600']);
+            
+        if (imgs.length === 1) imgs.push(imgs[0]);
+        
+        document.getElementById('detailImg').src = imgs[0];
+        const thumbsContainer = document.getElementById('thumbnails');
+        thumbsContainer.innerHTML = '';
+        
+        imgs.forEach((url, index) => {
+            const thumb = document.createElement('div');
+            thumb.className = `thumb ${index === 0 ? 'active' : ''}`;
+            thumb.innerHTML = `<img src="${url}" alt="">`;
+            thumb.onclick = () => {
+                document.getElementById('detailImg').src = url;
+                document.querySelectorAll('.thumb').forEach(t => t.classList.remove('active'));
+                thumb.classList.add('active');
+            };
+            thumbsContainer.appendChild(thumb);
+        });
+        
+        document.getElementById('detailTitle').innerText = p.nombre;
+        const precioAMostrar = isMay ? (p.precio_may || p.precio) : p.precio;
+        document.getElementById('detailPrice').innerHTML = `ARS $ <strong>${precioAMostrar}</strong>`;
+        document.getElementById('detailStock').innerHTML = `Stock: <strong>${p.stock}</strong>`;
+        document.getElementById('detailDesc').innerHTML = p.descripcion?.replace(/\n/g, '<br>') || '';
+        document.getElementById('detailCaract').innerHTML = p.caracteristicas?.replace(/\n/g, '<br>') || '';
+        document.getElementById('detailFicha').innerHTML = p.ficha?.replace(/\n/g, '<br>') || '';
+        
+        document.getElementById('productDetailModal').style.display = 'flex';
+        document.body.classList.add("modal-open");
+    }
+
+    function changeDetailQty(delta) {
+        let qty = parseInt(document.getElementById('detailQtyInput').value) || 1;
+        qty = Math.max(1, qty + delta);
+        document.getElementById('detailQtyInput').value = qty;
+        currentDetailQty = qty;
+    }
+
+    function closeProductDetail() {
+        document.getElementById('productDetailModal').style.display = 'none';
+        document.body.classList.remove("modal-open");
+        currentProductId = null;
+    }
+
+    function addCurrentToCart() {
+        if (!currentProductId) return;
+        const p = prods.find(x => x.id === currentProductId);
+        if (!p) return;
+        if (p.stock < currentDetailQty) return alert(`❌ Solo quedan ${p.stock} unidades`);
+        const exist = cart.find(i => i.id === currentProductId);
+        if (exist) exist.qty += currentDetailQty;
+        else cart.push({id: currentProductId, qty: currentDetailQty});
+        updateCartUI();
+        showToast();
+        closeProductDetail();
     }
 
     function addToCart(id) {
+        const p = prods.find(x => x.id === id);
+        if (!p || p.stock < 1) return alert("Stock insuficiente");
         const exist = cart.find(i => i.id === id);
         if (exist) exist.qty++;
         else cart.push({id, qty: 1});
         updateCartUI();
         showToast();
     }
+
     function showToast() {
         const toast = document.getElementById("toast");
         toast.style.display = "flex";
         setTimeout(() => toast.style.display = "none", 2200);
     }
+
     function updateCartUI() {
         let total = 0;
         let count = 0;
@@ -714,16 +975,16 @@
                         <div style="color:var(--accent); font-weight:800;">$${sub}</div>
                     </div>
                     <div style="display:flex; align-items:center; gap:12px;">
-                        <button class="qty-btn" onclick="changeQty('${item.id}', -1)">-</button>
+                        <button class="qty-btn" onclick="changeQty('${item.id}', -1)" style="background:#64748b;">−</button>
                         <b style="min-width:25px; text-align:center;">${item.qty}</b>
                         <button class="qty-btn" onclick="changeQty('${item.id}', 1)">+</button>
                     </div>
                 </div>`;
         }).join("");
-
         document.getElementById("cartTotal").innerText = "$" + total;
         document.getElementById("cartCount").innerText = count;
     }
+
     function changeQty(id, delta) {
         const item = cart.find(i => i.id === id);
         if (item) {
@@ -737,13 +998,11 @@
         const u = document.getElementById("uInp").value.trim();
         const p = document.getElementById("pInp").value.trim();
         if (!u || !p) return alert("Completá usuario y contraseña");
-
         if (u === "admin" && p === "admin") {
             closeAll();
             openModal("adminModal");
             return;
         }
-
         const userFound = users.find(x => x.user === u && x.pass === p);
         if (userFound) {
             if (userFound.activo) {
@@ -776,7 +1035,6 @@
         const t = document.getElementById("rT").value.trim();
         const d = document.getElementById("rD").value.trim();
         if (!u || !p || !t || !d) return alert("Completá todos los campos");
-
         try {
             await db.collection("usuarios").add({ user: u, pass: p, tel: t, dir: d, activo: false, fecha: Date.now() });
             alert("✅ Solicitud enviada correctamente. Esperá la validación.");
@@ -790,35 +1048,45 @@
 
     function renderAdmP() {
         const list = document.getElementById("admListP");
-        list.innerHTML = prods.length === 0 
-            ? `<p style="text-align:center; padding:40px; opacity:0.4;">Aún no hay productos. Agrega uno arriba.</p>`
-            : prods.map(p => `
+        list.innerHTML = prods.length === 0
+            ? `<p style="text-align:center; padding:40px; opacity:0.4;">Aún no hay productos.</p>`
+            : prods.map(p => {
+                const firstImg = p.imagenes && p.imagenes.length > 0 ? p.imagenes[0] : (p.imagen || 'https://via.placeholder.com/70');
+                return `
                 <div class="admin-item">
-                    <img src="${p.imagen || 'https://via.placeholder.com/70'}" class="admin-item-img" alt="${p.nombre}">
+                    <img src="${firstImg}" class="admin-item-img" alt="${p.nombre}">
                     <div style="flex:1;">
                         <b>${p.nombre}</b><br>
-                        <small>Precio: $${p.precio} ${p.promo ? '| ' + p.promo : ''}</small><br>
+                        <small>$${p.precio} (May: $${p.precio_may || p.precio}) | Stock: ${p.stock}</small><br>
                         <span style="background:#334155; color:white; padding:2px 8px; border-radius:9999px; font-size:11px;">${p.categoria}</span>
                     </div>
                     <div>
-                        <button onclick="editP('${p.id}')" style="font-size:18px; margin-right:8px;">✏️</button>
-                        <button onclick="del('productos','${p.id}')" style="color:var(--danger); font-size:18px;">🗑️</button>
+                        <button onclick="editP('${p.id}')" style="font-size:18px; margin-right:8px; cursor:pointer; background:none; border:none;">✏️</button>
+                        <button onclick="del('productos','${p.id}')" style="color:var(--danger); font-size:18px; cursor:pointer; background:none; border:none;">🗑️</button>
                     </div>
                 </div>
-            `).join("");
+            `}).join("");
     }
 
     async function saveP() {
         const id = document.getElementById("fId").value;
         const nom = document.getElementById("fNom").value.trim();
         if (!nom) return alert("El nombre del producto es obligatorio");
-
+        
+        const imagenesRaw = document.getElementById("fImagenes").value.trim();
+        const imagenes = imagenesRaw ? imagenesRaw.split('\n').map(u => u.trim()).filter(u => u) : [];
+        
         const data = {
             nombre: nom,
             precio: parseFloat(document.getElementById("fPre").value) || 0,
+            precio_may: parseFloat(document.getElementById("fPreMay").value) || 0,
+            stock: parseInt(document.getElementById("fStock").value) || 0,
             promo: document.getElementById("fPro").value.trim(),
             categoria: document.getElementById("fCat").value.trim().toLowerCase(),
-            imagen: document.getElementById("fImg").value.trim()
+            imagenes: imagenes,
+            descripcion: document.getElementById("fDesc").value.trim(),
+            caracteristicas: document.getElementById("fCaract").value.trim(),
+            ficha: document.getElementById("fFicha").value.trim()
         };
 
         try {
@@ -828,8 +1096,6 @@
                 await db.collection("productos").add(data);
             }
             limpiarP();
-            renderAdmP();
-            render();
             alert("✅ Producto guardado correctamente");
         } catch (e) {
             console.error("Error Firebase:", e);
@@ -841,26 +1107,41 @@
         document.getElementById("fId").value = "";
         document.getElementById("fNom").value = "";
         document.getElementById("fPre").value = "";
+        document.getElementById("fPreMay").value = "";
+        document.getElementById("fStock").value = "10";
         document.getElementById("fPro").value = "";
         document.getElementById("fCat").value = "";
-        document.getElementById("fImg").value = "";
+        document.getElementById("fImagenes").value = "";
+        document.getElementById("fDesc").value = "";
+        document.getElementById("fCaract").value = "";
+        document.getElementById("fFicha").value = "";
     }
 
     function editP(id) {
         const p = prods.find(x => x.id === id);
         if (!p) return;
-        document.getElementById("fId").value = id;
+        document.getElementById("fId").value = p.id;
         document.getElementById("fNom").value = p.nombre || "";
         document.getElementById("fPre").value = p.precio || "";
+        document.getElementById("fPreMay").value = p.precio_may || "";
+        document.getElementById("fStock").value = p.stock !== undefined ? p.stock : 10;
         document.getElementById("fPro").value = p.promo || "";
         document.getElementById("fCat").value = p.categoria || "";
-        document.getElementById("fImg").value = p.imagen || "";
-
-        document.querySelectorAll("#t-prod, #t-user, #t-order, #t-slider").forEach(el => el.style.display = "none");
-        document.getElementById("t-prod").style.display = "block";
-        document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-        const prodBtn = Array.from(document.querySelectorAll(".tab-btn")).find(btn => btn.textContent.includes("PRODUCTOS"));
-        if (prodBtn) prodBtn.classList.add("active");
+        
+        // Manejar el array de imagenes de Firebase
+        let imagesToFill = p.imagenes || [];
+        if (imagesToFill.length === 0 && p.imagen) imagesToFill = [p.imagen];
+        document.getElementById("fImagenes").value = imagesToFill.join('\n');
+        
+        document.getElementById("fDesc").value = p.descripcion || "";
+        document.getElementById("fCaract").value = p.caracteristicas || "";
+        document.getElementById("fFicha").value = p.ficha || "";
+        
+        tab('t-prod');
+        setTimeout(() => {
+            const adminModalContent = document.querySelector('#adminModal');
+            if(adminModalContent) adminModalContent.scrollTo({ top: 0, behavior: "smooth" });
+        }, 200);
     }
 
     function renderAdmU() {
@@ -882,7 +1163,7 @@
                     📱 <strong>${u.tel}</strong><br>
                     📍 ${u.dir || 'Sin dirección'}
                 </div>
-                <button onclick="updU('${u.id}', true)" style="background:var(--success); padding:8px 20px; width:100%;">✅ Aprobar cliente</button>
+                <button onclick="updU('${u.id}', true)" style="background:var(--success); padding:8px 20px; width:100%; cursor:pointer; border:none; border-radius:12px; color:white; font-weight:bold;">✅ Aprobar cliente</button>
             </div>
         `).join("");
         html += `<h4 style="margin:40px 0 15px 5px; opacity:0.6;">Clientes activos (${act.length})</h4>`;
@@ -896,7 +1177,7 @@
                         <span style="background:#10b981; color:white; padding:2px 10px; border-radius:9999px; font-size:11px; font-weight:700;">ACTIVO</span>
                     </div>
                 </div>
-                <button onclick="del('usuarios','${u.id}')" style="color:var(--danger); font-size:22px; align-self:center;">🗑️</button>
+                <button onclick="del('usuarios','${u.id}')" style="color:var(--danger); font-size:22px; align-self:center; background:none; border:none; cursor:pointer;">🗑️</button>
             </div>
         `).join("");
         list.innerHTML = html;
@@ -924,14 +1205,14 @@
     function renderAdmSlider() {
         const list = document.getElementById("admListSlider");
         if (heroImages.length === 0) {
-            list.innerHTML = `<p style="opacity:0.5; padding:30px; text-align:center;">No hay imágenes en el slider. Agrega una arriba.</p>`;
+            list.innerHTML = `<p style="opacity:0.5; padding:30px; text-align:center;">No hay imágenes en el slider.</p>`;
             return;
         }
         list.innerHTML = heroImages.map(h => `
             <div class="admin-item">
                 <img src="${h.url}" class="admin-item-img" alt="slide">
                 <div style="flex:1;"><b>Imagen ${h.order + 1}</b></div>
-                <button onclick="deleteHeroImage('${h.id}')" style="color:var(--danger); font-size:18px;">🗑️</button>
+                <button onclick="deleteHeroImage('${h.id}')" style="color:var(--danger); font-size:18px; cursor:pointer; background:none; border:none;">🗑️</button>
             </div>
         `).join("");
     }
@@ -951,74 +1232,81 @@
         }
     }
 
-    function toggleTheme() { document.body.classList.toggle("light"); }
-    function openModal(id) {
-        closeAll();
-        document.getElementById(id).style.display = "flex";
-    }
-    function closeAll() {
-        document.querySelectorAll(".modal").forEach(m => m.style.display = "none");
-        document.querySelectorAll(".drawer").forEach(d => d.classList.remove("active"));
-        document.getElementById("ov").classList.remove("active");
-    }
-    function toggleInfo() {
-        document.getElementById("infoDrawer").classList.toggle("active");
-        document.getElementById("ov").classList.toggle("active");
-    }
-    function toggleCart() {
-        document.getElementById("cartDrawer").classList.toggle("active");
-        document.getElementById("ov").classList.toggle("active");
-        updateCartUI();
-    }
     function tab(id, e) {
         document.querySelectorAll("#t-prod, #t-user, #t-order, #t-slider").forEach(el => el.style.display = "none");
         document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
         document.getElementById(id).style.display = "block";
-        if (e && e.target) e.target.classList.add("active");
+        if (e && e.target) {
+            e.target.classList.add("active");
+        } else {
+            const targetBtn = document.querySelector(`.tab-btn[onclick*="${id}"]`);
+            if (targetBtn) targetBtn.classList.add("active");
+        }
     }
+
     function setCat(el, cat) {
         filterCat = cat;
         document.querySelectorAll('.cat-item').forEach(item => item.classList.remove('active'));
         el.classList.add('active');
         render();
     }
+
     async function finalizarYEnviar() {
         if (cart.length === 0) return alert("El carrito está vacío.");
-        let textoPedido = `*📦 NUEVO PEDIDO MS47*\n`;
-        if (usuarioLogueado) {
-            textoPedido += `*Cliente:* ${usuarioLogueado.user}\n*Local:* ${usuarioLogueado.dir || 'Sin dirección'}\n`;
-        } else {
-            textoPedido += `*Cliente:* Minorista\n`;
+        
+        // Validar stock primero
+        for (let item of cart) {
+            const p = prods.find(x => x.id === item.id);
+            if (p && p.stock < item.qty) return alert(`❌ Stock insuficiente para ${p.nombre}`);
         }
+
+        let textoPedido = `*📦 NUEVO PEDIDO MS47*\n`;
+        if (usuarioLogueado) textoPedido += `*Cliente:* ${usuarioLogueado.user}\n*Local:* ${usuarioLogueado.dir || 'Sin dirección'}\n`;
+        else textoPedido += `*Cliente:* Minorista\n`;
         textoPedido += `----------------------------\n`;
+
+        const batch = db.batch();
+
         cart.forEach(item => {
             const p = prods.find(x => x.id === item.id);
-            if (p) textoPedido += `• ${p.nombre} [x${item.qty}]\n`;
+            if (p) {
+                textoPedido += `• ${p.nombre} [x${item.qty}]\n`;
+                // Descontar stock en Firebase
+                const pRef = db.collection("productos").doc(p.id);
+                batch.update(pRef, { stock: p.stock - item.qty });
+            }
         });
+        
         const total = document.getElementById("cartTotal").innerText;
         textoPedido += `----------------------------\n*TOTAL ESTIMADO: ${total}*`;
 
         try {
+            await batch.commit(); // Ejecuta las actualizaciones de stock
             await db.collection("pedidos").add({ detalle: textoPedido, total: total, fecha: Date.now() });
+            
             const nro = "5493424063266";
             window.open(`https://wa.me/${nro}?text=${encodeURIComponent(textoPedido)}`);
+            
             cart = [];
             updateCartUI();
             closeAll();
-            alert("Pedido enviado por WhatsApp");
+            alert("✅ Pedido enviado y stock actualizado");
         } catch(e) {
             console.error(e);
-            alert("Error al guardar el pedido.");
+            alert("Error al procesar el pedido.");
         }
     }
+
     async function del(col, id) {
         if (confirm("¿Eliminar este registro?")) {
             await db.collection(col).doc(id).delete();
         }
     }
+
     async function updU(id, stat) {
         await db.collection("usuarios").doc(id).update({activo: stat});
     }
+
     async function vaciarHistorial() {
         if (confirm("¿Borrar TODO el historial de pedidos?")) {
             const snap = await db.collection("pedidos").get();
@@ -1027,6 +1315,32 @@
             await batch.commit();
             alert("Historial vaciado.");
         }
+    }
+
+    function toggleTheme() { document.body.classList.toggle("light"); }
+    function openModal(id) {
+        closeAll();
+        document.body.classList.add("no-scroll");
+        document.getElementById(id).style.display = "flex";
+    }
+    function toggleInfo() {
+        const d = document.getElementById("infoDrawer");
+        d.classList.toggle("active");
+        document.getElementById("ov").classList.toggle("active");
+        document.body.classList.toggle("no-scroll", d.classList.contains("active"));
+    }
+    function toggleCart() {
+        const d = document.getElementById("cartDrawer");
+        d.classList.toggle("active");
+        document.getElementById("ov").classList.toggle("active");
+        document.body.classList.toggle("no-scroll", d.classList.contains("active"));
+        updateCartUI();
+    }
+    function closeAll() {
+        document.querySelectorAll(".modal").forEach(m => m.style.display = "none");
+        document.querySelectorAll(".drawer").forEach(d => d.classList.remove("active"));
+        document.getElementById("ov").classList.remove("active");
+        document.body.classList.remove("no-scroll");
     }
     function logout() {
         if (confirm("¿Cerrar sesión?")) location.reload();
@@ -1040,6 +1354,12 @@
             alert("Clave incorrecta.");
         }
     }
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+            const modal = document.getElementById("productDetailModal");
+            if (modal && modal.style.display === "flex") closeProductDetail();
+        }
+    });
 
     window.onload = init;
 </script>
