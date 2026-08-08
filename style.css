@@ -475,3 +475,6 @@
 /* Oculta el precio/consulta de stock cuando features.stockControl = false en config.js */
 body.no-stock .stock-info,
 body.no-stock .detail-stock { display: none; }
+
+/* Oculta el campo de variantes en el panel admin cuando features.productVariants = false */
+body.no-variants .variantes-field { display: none; }
