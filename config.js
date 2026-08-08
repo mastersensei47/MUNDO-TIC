@@ -88,7 +88,23 @@ const STORE_CONFIG = {
   currency: "$",
 
   // --------------------------------------------------------------------
-  // 8) FIREBASE — credenciales DEL PROYECTO DE ESTE CLIENTE
+  // 8) NOTIFICACIONES POR EMAIL (opcional)
+  //    Le avisa al admin por email apenas entra un pedido, sin depender de
+  //    que abra WhatsApp. Usa EmailJS (envío de emails sin backend propio,
+  //    gratis hasta 200 emails/mes). Ver README.md → "Notificación
+  //    automática de pedidos" para el paso a paso de cómo conseguir estos
+  //    3 valores.
+  // --------------------------------------------------------------------
+  notifications: {
+    emailEnabled: false,
+    emailJsServiceId: "",
+    emailJsTemplateId: "",
+    emailJsPublicKey: "",
+    adminEmail: "",
+  },
+
+  // --------------------------------------------------------------------
+  // 9) FIREBASE — credenciales DEL PROYECTO DE ESTE CLIENTE
   //    Cada cliente tiene su propio proyecto Firebase (100% aislado del
   //    resto). Ver README.md → "Alta de un cliente nuevo" para el
   //    paso a paso de dónde sacar estos valores y qué reglas de
