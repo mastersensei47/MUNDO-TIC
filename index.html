@@ -67,6 +67,10 @@
             </div>
             <div id="detailPrice" class="detail-price"></div>
             <div id="detailStock" class="detail-stock"></div>
+            <div id="detailVarianteSection" style="display:none; margin: 15px 0;">
+                <label style="font-weight:700; font-size:14px; display:block; margin-bottom:8px;">Elegí una opción:</label>
+                <select id="detailVarianteSelect" style="width:100%; padding:14px; border-radius:12px; background:var(--card); color:var(--text); border:1px solid rgba(255,255,255,0.1); font-size:15px;"></select>
+            </div>
             <div class="detail-qty">
                 <span style="font-weight:700; font-size:16px;">Cantidad:</span>
                 <button onclick="changeDetailQty(-1)" class="qty-btn">−</button>
@@ -114,6 +118,10 @@
                 <div class="form-group"><label>Stock disponible</label><input id="fStock" type="number" min="0" value="10"></div>
                 <div class="form-group"><label>Oferta Especial</label><input id="fPro"></div>
                 <div class="form-group"><label>Categoría</label><select id="fCat"></select></div>
+                <div class="form-group variantes-field">
+                    <label>Variantes (opcional) — una por línea: Nombre | Stock</label>
+                    <textarea id="fVariantes" rows="4" placeholder="S | 5&#10;M | 8&#10;L | 0"></textarea>
+                </div>
                 <div class="form-group">
                     <label>Imágenes (una URL por línea)</label>
                     <textarea id="fImagenes" rows="5" placeholder="https://url1.jpg&#10;https://url2.jpg"></textarea>
