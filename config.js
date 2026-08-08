@@ -43,6 +43,7 @@ const STORE_CONFIG = {
     stockControl: true,       // ¿Mostrar cantidad de stock disponible?
     heroSlider: true,         // ¿Mostrar el carrusel de imágenes arriba de todo?
     userRegistration: true,   // ¿Permitir que clientes se registren como mayoristas?
+    productVariants: false,   // ¿Productos con variantes (talle/color/etc)? Ideal para indumentaria y calzado.
   },
 
   // --------------------------------------------------------------------
