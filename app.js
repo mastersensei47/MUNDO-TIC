@@ -22,6 +22,7 @@ let usuarioLogueado = null;
 let filterCat = "";
 let currentProductId = null;
 let currentDetailQty = 1;
+let currentVariantes = []; // variantes (talle/color) del producto abierto en el detalle
 let rotators = [];
 let heroInterval = null;
 
@@ -154,6 +155,7 @@ function aplicarBranding() {
         STORE_CONFIG.features.heroSlider ? "" : "none";
 
     document.body.classList.toggle("no-stock", !STORE_CONFIG.features.stockControl);
+    document.body.classList.toggle("no-variants", !STORE_CONFIG.features.productVariants);
 }
 
 function renderCategorias() {
@@ -256,6 +258,7 @@ function render() {
     cont.innerHTML = filtered.map(p => {
         const precioActual = isMay ? (p.precio_may || p.precio) : p.precio;
         const firstImg = p.imagenes && p.imagenes.length > 0 ? p.imagenes[0] : (p.imagen || 'https://via.placeholder.com/300?text=Sin+imagen');
+        const conVariantes = p.tieneVariantes && STORE_CONFIG.features.productVariants;
         return `
             <div class="product-card" data-id="${p.id}" onclick="if(!event.target.closest('.btn-add')) showProductDetail('${p.id}')">
                 ${p.promo ? `<div class="promo-badge">${p.promo}</div>` : ''}
@@ -265,15 +268,15 @@ function render() {
                 <div class="info-box">
                     <div class="prod-title">${p.nombre}</div>
                     <div class="price-val">${STORE_CONFIG.currency}${precioActual}</div>
-                    <div class="stock-info">Stock: ${p.stock} unidades</div>
-                    <button class="btn-add" onclick="event.stopImmediatePropagation(); addToCart('${p.id}')">🛒 Agregar</button>
+                    ${conVariantes ? '' : `<div class="stock-info">Stock: ${p.stock} unidades</div>`}
+                    <button class="btn-add" onclick="event.stopImmediatePropagation(); ${conVariantes ? `showProductDetail('${p.id}')` : `addToCart('${p.id}')`}">🛒 ${conVariantes ? 'Ver opciones' : 'Agregar'}</button>
                 </div>
             </div>`;
     }).join("");
     startProductImageRotators();
 }
 
-function showProductDetail(id) {
+async function showProductDetail(id) {
     const p = prods.find(x => x.id === id);
     if (!p) return;
     currentProductId = id;
@@ -305,7 +308,34 @@ function showProductDetail(id) {
     document.getElementById('detailTitle').innerText = p.nombre;
     const precioAMostrar = isMay ? (p.precio_may || p.precio) : p.precio;
     document.getElementById('detailPrice').innerHTML = `${STORE_CONFIG.currency} <strong>${precioAMostrar}</strong>`;
-    document.getElementById('detailStock').innerHTML = `Stock: <strong>${p.stock}</strong>`;
+
+    // Variantes (talle/color) si el producto y la tienda las tienen activadas
+    const varSection = document.getElementById('detailVarianteSection');
+    const varSelect = document.getElementById('detailVarianteSelect');
+    const detailStockEl = document.getElementById('detailStock');
+    if (p.tieneVariantes && STORE_CONFIG.features.productVariants) {
+        detailStockEl.style.display = 'none';
+        varSection.style.display = 'block';
+        varSelect.innerHTML = '<option value="">Cargando...</option>';
+        try {
+            const snap = await db.collection("productos").doc(id).collection("variantes").orderBy("orden").get();
+            currentVariantes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        } catch (e) {
+            console.error(e);
+            currentVariantes = [];
+        }
+        varSelect.innerHTML = currentVariantes.length === 0
+            ? '<option value="">Sin opciones disponibles</option>'
+            : '<option value="">Elegí una opción...</option>' + currentVariantes.map(v =>
+                `<option value="${v.nombre}" ${v.stock <= 0 ? 'disabled' : ''}>${v.nombre} ${v.stock > 0 ? `(${v.stock} disp.)` : '(sin stock)'}</option>`
+              ).join('');
+    } else {
+        currentVariantes = [];
+        varSection.style.display = 'none';
+        detailStockEl.style.display = '';
+        detailStockEl.innerHTML = `Stock: <strong>${p.stock}</strong>`;
+    }
+
     document.getElementById('detailDesc').innerHTML = p.descripcion?.replace(/\n/g, '<br>') || '';
     document.getElementById('detailCaract').innerHTML = p.caracteristicas?.replace(/\n/g, '<br>') || '';
     document.getElementById('detailFicha').innerHTML = p.ficha?.replace(/\n/g, '<br>') || '';
@@ -337,10 +367,20 @@ function addCurrentToCart() {
     if (!currentProductId) return;
     const p = prods.find(x => x.id === currentProductId);
     if (!p) return;
-    if (p.stock < currentDetailQty) return alert(`❌ Solo quedan ${p.stock} unidades`);
-    const exist = cart.find(i => i.id === currentProductId);
+
+    let variante = null;
+    if (p.tieneVariantes && STORE_CONFIG.features.productVariants) {
+        variante = document.getElementById('detailVarianteSelect').value;
+        if (!variante) return alert("Elegí una opción antes de agregar al carrito");
+        const v = currentVariantes.find(x => x.nombre === variante);
+        if (!v || v.stock < currentDetailQty) return alert(`❌ Solo quedan ${v ? v.stock : 0} unidades de "${variante}"`);
+    } else {
+        if (p.stock < currentDetailQty) return alert(`❌ Solo quedan ${p.stock} unidades`);
+    }
+
+    const exist = cart.find(i => i.id === currentProductId && (i.variante || null) === variante);
     if (exist) exist.qty += currentDetailQty;
-    else cart.push({id: currentProductId, qty: currentDetailQty});
+    else cart.push({id: currentProductId, qty: currentDetailQty, variante});
     updateCartUI();
     showToast();
     closeProductDetail();
@@ -348,10 +388,12 @@ function addCurrentToCart() {
 
 function addToCart(id) {
     const p = prods.find(x => x.id === id);
-    if (!p || p.stock < 1) return alert("Stock insuficiente");
-    const exist = cart.find(i => i.id === id);
+    if (!p) return;
+    if (p.tieneVariantes && STORE_CONFIG.features.productVariants) return showProductDetail(id);
+    if (p.stock < 1) return alert("Stock insuficiente");
+    const exist = cart.find(i => i.id === id && !i.variante);
     if (exist) exist.qty++;
-    else cart.push({id, qty: 1});
+    else cart.push({id, qty: 1, variante: null});
     updateCartUI();
     showToast();
 }
@@ -368,7 +410,7 @@ function updateCartUI() {
     let total = 0;
     let count = 0;
     const list = document.getElementById("cartItems");
-    list.innerHTML = cart.map(item => {
+    list.innerHTML = cart.map((item, idx) => {
         const p = prods.find(x => x.id === item.id);
         if (!p) return "";
         const precio = isMay ? (p.precio_may || p.precio) : p.precio;
@@ -378,13 +420,13 @@ function updateCartUI() {
         return `
             <div style="padding:18px 0; border-bottom:1px solid rgba(255,255,255,0.05); display:flex; justify-content:space-between; align-items:center;">
                 <div style="flex:1;">
-                    <div style="font-weight:700; font-size:14px; margin-bottom:4px;">${p.nombre}</div>
+                    <div style="font-weight:700; font-size:14px; margin-bottom:4px;">${p.nombre}${item.variante ? ` <span style="opacity:0.6; font-weight:500;">(${item.variante})</span>` : ''}</div>
                     <div style="color:var(--accent); font-weight:800;">${STORE_CONFIG.currency}${sub}</div>
                 </div>
                 <div style="display:flex; align-items:center; gap:12px;">
-                    <button class="qty-btn" onclick="changeQty('${item.id}', -1)" style="background:#64748b;">−</button>
+                    <button class="qty-btn" onclick="changeQty(${idx}, -1)" style="background:#64748b;">−</button>
                     <b style="min-width:25px; text-align:center;">${item.qty}</b>
-                    <button class="qty-btn" onclick="changeQty('${item.id}', 1)">+</button>
+                    <button class="qty-btn" onclick="changeQty(${idx}, 1)">+</button>
                 </div>
             </div>`;
     }).join("");
@@ -392,12 +434,11 @@ function updateCartUI() {
     document.getElementById("cartCount").innerText = count;
 }
 
-function changeQty(id, delta) {
-    const item = cart.find(i => i.id === id);
-    if (item) {
-        item.qty += delta;
-        if (item.qty <= 0) cart = cart.filter(i => i.id !== id);
-    }
+function changeQty(idx, delta) {
+    const item = cart[idx];
+    if (!item) return;
+    item.qty += delta;
+    if (item.qty <= 0) cart.splice(idx, 1);
     updateCartUI();
 }
 
@@ -478,7 +519,7 @@ function renderAdmP() {
                 <img src="${firstImg}" class="admin-item-img" alt="${p.nombre}">
                 <div style="flex:1;">
                     <b>${p.nombre}</b><br>
-                    <small>${STORE_CONFIG.currency}${p.precio} (May: ${STORE_CONFIG.currency}${p.precio_may || p.precio}) | Stock: ${p.stock}</small><br>
+                    <small>${STORE_CONFIG.currency}${p.precio} (May: ${STORE_CONFIG.currency}${p.precio_may || p.precio})${p.tieneVariantes ? ' | Con variantes' : ` | Stock: ${p.stock}`}</small><br>
                     <span style="background:#334155; color:white; padding:2px 8px; border-radius:9999px; font-size:11px;">${p.categoria}</span>
                 </div>
                 <div>
@@ -497,6 +538,13 @@ async function saveP() {
     const imagenesRaw = document.getElementById("fImagenes").value.trim();
     const imagenes = imagenesRaw ? imagenesRaw.split('\n').map(u => u.trim()).filter(u => u) : [];
 
+    // Variantes: una por línea, formato "Nombre | Stock" (ej: "M | 8")
+    const variantesRaw = document.getElementById("fVariantes").value.trim();
+    const variantesParsed = variantesRaw ? variantesRaw.split('\n').map(line => {
+        const [nombreV, stockStr] = line.split('|').map(s => (s || '').trim());
+        return nombreV ? { nombre: nombreV, stock: parseInt(stockStr) || 0 } : null;
+    }).filter(Boolean) : [];
+
     const data = {
         nombre: nom,
         precio: parseFloat(document.getElementById("fPre").value) || 0,
@@ -507,15 +555,31 @@ async function saveP() {
         imagenes: imagenes,
         descripcion: document.getElementById("fDesc").value.trim(),
         caracteristicas: document.getElementById("fCaract").value.trim(),
-        ficha: document.getElementById("fFicha").value.trim()
+        ficha: document.getElementById("fFicha").value.trim(),
+        tieneVariantes: variantesParsed.length > 0
     };
 
     try {
+        let productId = id;
         if (id) {
             await db.collection("productos").doc(id).update(data);
         } else {
-            await db.collection("productos").add(data);
+            const ref = await db.collection("productos").add(data);
+            productId = ref.id;
         }
+
+        // Sincronizar la subcolección de variantes: se reemplaza entera por los
+        // valores actuales del formulario (que se precargan siempre con datos
+        // en vivo desde editP, así que no se pisa stock real por accidente).
+        const varCol = db.collection("productos").doc(productId).collection("variantes");
+        const oldSnap = await varCol.get();
+        const syncBatch = db.batch();
+        oldSnap.forEach(doc => syncBatch.delete(doc.ref));
+        variantesParsed.forEach((v, i) => {
+            syncBatch.set(varCol.doc(), { nombre: v.nombre, stock: v.stock, orden: i });
+        });
+        await syncBatch.commit();
+
         limpiarP();
         alert("✅ Producto guardado correctamente");
     } catch (e) {
@@ -532,13 +596,14 @@ function limpiarP() {
     document.getElementById("fStock").value = "10";
     document.getElementById("fPro").value = "";
     if (document.getElementById("fCat").options.length) document.getElementById("fCat").selectedIndex = 0;
+    document.getElementById("fVariantes").value = "";
     document.getElementById("fImagenes").value = "";
     document.getElementById("fDesc").value = "";
     document.getElementById("fCaract").value = "";
     document.getElementById("fFicha").value = "";
 }
 
-function editP(id) {
+async function editP(id) {
     const p = prods.find(x => x.id === id);
     if (!p) return;
     document.getElementById("fId").value = p.id;
@@ -557,6 +622,18 @@ function editP(id) {
     document.getElementById("fDesc").value = p.descripcion || "";
     document.getElementById("fCaract").value = p.caracteristicas || "";
     document.getElementById("fFicha").value = p.ficha || "";
+
+    // Traer las variantes en vivo desde Firestore (no desde caché) para no
+    // pisar por accidente el stock real con datos viejos al guardar.
+    const fVar = document.getElementById("fVariantes");
+    fVar.value = p.tieneVariantes ? "Cargando..." : "";
+    try {
+        const snap = await db.collection("productos").doc(id).collection("variantes").orderBy("orden").get();
+        fVar.value = snap.docs.map(d => `${d.data().nombre} | ${d.data().stock}`).join('\n');
+    } catch (e) {
+        console.error(e);
+        fVar.value = "";
+    }
 
     tab('t-prod');
     setTimeout(() => {
@@ -685,12 +762,6 @@ function setCat(el, cat) {
 async function finalizarYEnviar() {
     if (cart.length === 0) return alert("El carrito está vacío.");
 
-    // Validar stock primero
-    for (let item of cart) {
-        const p = prods.find(x => x.id === item.id);
-        if (p && p.stock < item.qty) return alert(`❌ Stock insuficiente para ${p.nombre}`);
-    }
-
     let textoPedido = `*📦 NUEVO PEDIDO — ${STORE_CONFIG.storeName.toUpperCase()}*\n`;
     if (usuarioLogueado) textoPedido += `*Cliente:* ${usuarioLogueado.user}\n*Local:* ${usuarioLogueado.dir || 'Sin dirección'}\n`;
     else textoPedido += `*Cliente:* Minorista\n`;
@@ -698,17 +769,39 @@ async function finalizarYEnviar() {
 
     const batch = db.batch();
 
-    cart.forEach(item => {
-        const p = prods.find(x => x.id === item.id);
-        if (p) {
-            textoPedido += `• ${p.nombre} [x${item.qty}]\n`;
-            // Descontar stock en Firebase. Las reglas de seguridad solo dejan
-            // bajar este campo puntual (nunca precio, nombre, etc.), así que
-            // esto funciona incluso para compradores sin cuenta.
-            const pRef = db.collection("productos").doc(p.id);
-            batch.update(pRef, { stock: p.stock - item.qty });
+    // Revalidamos el stock en vivo (no el que quedó cacheado en pantalla) y
+    // armamos el batch de descuento. Para productos con variante, el
+    // descuento se hace sobre el documento de esa variante puntual, no
+    // sobre el producto.
+    try {
+        for (const item of cart) {
+            const p = prods.find(x => x.id === item.id);
+            if (!p) continue;
+
+            if (item.variante) {
+                const snap = await db.collection("productos").doc(p.id).collection("variantes")
+                    .where("nombre", "==", item.variante).limit(1).get();
+                if (snap.empty) return alert(`❌ La opción "${item.variante}" de ${p.nombre} ya no está disponible. Actualizá la página.`);
+                const varDoc = snap.docs[0];
+                const varData = varDoc.data();
+                if (varData.stock < item.qty) return alert(`❌ Stock insuficiente para ${p.nombre} (${item.variante})`);
+                textoPedido += `• ${p.nombre} — ${item.variante} [x${item.qty}]\n`;
+                // Descontar stock de la variante. Las reglas de seguridad solo
+                // dejan bajar este campo puntual (nunca nombre/precio/etc.).
+                batch.update(varDoc.ref, { stock: varData.stock - item.qty });
+            } else {
+                if (p.stock < item.qty) return alert(`❌ Stock insuficiente para ${p.nombre}`);
+                textoPedido += `• ${p.nombre} [x${item.qty}]\n`;
+                // Descontar stock en Firebase. Las reglas de seguridad solo
+                // dejan bajar este campo puntual, así que esto funciona
+                // incluso para compradores sin cuenta.
+                batch.update(db.collection("productos").doc(p.id), { stock: p.stock - item.qty });
+            }
         }
-    });
+    } catch (e) {
+        console.error(e);
+        return alert("No pudimos verificar el stock. Probá de nuevo.");
+    }
 
     const total = document.getElementById("cartTotal").innerText;
     textoPedido += `----------------------------\n*TOTAL ESTIMADO: ${total}*`;
