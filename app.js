@@ -44,6 +44,7 @@ function init() {
     renderCategorias();
     renderCategoriasSelect();
     updateCartUI();
+    inicializarNotificaciones();
 
     // Resolver sesión: ¿invitado, administrador o cliente mayorista?
     auth.onAuthStateChanged(async (user) => {
@@ -179,6 +180,34 @@ function mostrarPerfilVacio() {
     document.getElementById("perfilContenido").style.display = "none";
     document.getElementById("perfilVacio").style.display = "block";
     document.getElementById("logoutBtn").style.display = "none";
+}
+
+// ==================== NOTIFICACIÓN AUTOMÁTICA POR EMAIL (opcional) ====================
+// Usa EmailJS (sin backend propio). Ver README.md → "Notificación
+// automática de pedidos" para el paso a paso de configuración.
+
+function inicializarNotificaciones() {
+    const n = STORE_CONFIG.notifications;
+    if (n && n.emailEnabled && typeof emailjs !== 'undefined' && n.emailJsPublicKey) {
+        emailjs.init({ publicKey: n.emailJsPublicKey });
+    }
+}
+
+function notificarPedidoPorEmail(textoPedido, total) {
+    const n = STORE_CONFIG.notifications;
+    if (!n || !n.emailEnabled) return;
+    if (typeof emailjs === 'undefined') return console.warn("EmailJS no está cargado.");
+    if (!n.emailJsServiceId || !n.emailJsTemplateId || !n.adminEmail) {
+        return console.warn("Notificaciones por email activadas pero falta completar config.js → notifications.");
+    }
+    // Si falla, solo lo dejamos en consola: nunca debe romper el checkout,
+    // que ya se confirmó igual por WhatsApp y quedó guardado en Firestore.
+    emailjs.send(n.emailJsServiceId, n.emailJsTemplateId, {
+        to_email: n.adminEmail,
+        tienda: STORE_CONFIG.storeName,
+        total: total,
+        mensaje: textoPedido
+    }).catch(err => console.warn("No se pudo enviar el email de notificación:", err));
 }
 
 // ==================== HERO SLIDER ====================
@@ -809,6 +838,8 @@ async function finalizarYEnviar() {
     try {
         await batch.commit(); // Ejecuta las actualizaciones de stock
         await db.collection("pedidos").add({ detalle: textoPedido, total: total, fecha: Date.now() });
+
+        notificarPedidoPorEmail(textoPedido, total); // no bloquea ni rompe el checkout si falla
 
         window.open(`https://wa.me/${STORE_CONFIG.whatsappNumber}?text=${encodeURIComponent(textoPedido)}`);
 
