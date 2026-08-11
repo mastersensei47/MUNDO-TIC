@@ -41,7 +41,10 @@
 <div class="cat-scroll" id="catBar"></div>
 
 <div class="search-container">
-    <input type="text" id="searchInput" class="search-bar" placeholder="Busca marcas o productos..." onkeyup="render()">
+    <input type="text" id="searchInput" class="search-bar" placeholder="Busca marcas o productos..."
+        onkeyup="render()" oninput="actualizarSugerencias()" onfocus="actualizarSugerencias()"
+        onblur="setTimeout(()=>{const b=document.getElementById('searchSuggestions'); if(b) b.style.display='none';}, 150)">
+    <div id="searchSuggestions" class="search-suggestions"></div>
 </div>
 
 <div class="products-grid" id="productsCont"></div>
@@ -107,6 +110,7 @@
             <button class="tab-btn active" onclick="tab('t-prod', event)">PRODUCTOS</button>
             <button class="tab-btn" onclick="tab('t-user', event)">CLIENTES</button>
             <button class="tab-btn" onclick="tab('t-order', event)">HISTORIAL</button>
+            <button class="tab-btn" onclick="tab('t-stats', event)">ESTADÍSTICAS</button>
             <button class="tab-btn" onclick="tab('t-slider', event)">SLIDER HERO</button>
         </div>
 
@@ -139,8 +143,15 @@
         <div id="t-user" style="display:none;"><div id="admListU"></div></div>
 
         <div id="t-order" style="display:none;">
-            <button class="btn-add" style="background:var(--danger); margin-bottom:20px;" onclick="vaciarHistorial()">BORRAR HISTORIAL</button>
+            <div style="display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap;">
+                <button class="btn-add" style="background:var(--danger); flex:1; min-width:160px; margin-top:0;" onclick="vaciarHistorial()">BORRAR HISTORIAL</button>
+                <button class="btn-add" style="background:var(--accent); flex:1; min-width:160px; margin-top:0;" onclick="exportarPedidosCSV()">📊 EXPORTAR A EXCEL</button>
+            </div>
             <div id="admListO"></div>
+        </div>
+
+        <div id="t-stats" style="display:none;">
+            <div id="admStats"></div>
         </div>
 
         <div id="t-slider" style="display:none;">
@@ -161,6 +172,7 @@
         <div class="form-group"><input id="pInp" type="password" placeholder="Contraseña"></div>
         <button class="btn-add" onclick="doLogin()">INICIAR SESIÓN</button>
         <p style="margin-top:15px; font-size:13px;"><span onclick="recuperarClave()" style="color:var(--accent); cursor:pointer; opacity:0.8;">¿Olvidaste tu contraseña?</span></p>
+        <p style="margin-top:8px; font-size:13px;"><span onclick="openModal('setupModal')" style="color:var(--accent); cursor:pointer; opacity:0.7;">¿Sos el administrador y todavía no tenés cuenta?</span></p>
         <button onclick="closeAll()" style="background:none; border:2px solid rgba(255,255,255,0.3); color:white; padding:16px; border-radius:16px; font-weight:700; width:100%; margin-top:15px;">← Volver atrás</button>
         <p id="regPrompt" style="margin-top:30px; font-size:14px;">¿No tenés cuenta? <span onclick="openModal('regModal')" style="color:var(--accent); cursor:pointer; font-weight:800;">Solicitá una acá</span></p>
     </div>
@@ -176,6 +188,23 @@
         <div class="form-group"><label>Información del Local</label><textarea id="rD" placeholder="Nombre del negocio, calle y altura..."></textarea></div>
         <button class="btn-add" style="background:var(--success); margin-top:10px; padding:20px;" onclick="registrarUsuario()">ENVIAR PARA REVISIÓN</button>
         <button class="btn-add" style="background:none; color:white; margin-top:10px; opacity:0.6;" onclick="closeAll()">Volver atrás</button>
+    </div>
+</div>
+
+<div class="modal" id="setupModal">
+    <div class="modal-content" style="max-width:420px; text-align:center; padding: 30px; margin: auto;">
+        <h2 style="margin-bottom:10px;">Configurar administrador</h2>
+        <div id="setupPaso1">
+            <p style="opacity:0.6; font-size:14px; margin-bottom:20px;">Solo funciona con el email que se autorizó como administrador al configurar esta tienda en Firebase (config/setup → allowedAdminEmail).</p>
+            <div class="form-group"><input id="setupEmail" placeholder="Tu email"></div>
+            <div class="form-group"><input id="setupPass" type="password" placeholder="Elegí una contraseña (mín. 6 caracteres)"></div>
+            <button class="btn-add" style="background:var(--success);" onclick="crearCuentaAdmin()">CREAR CUENTA</button>
+        </div>
+        <div id="setupPaso2" style="display:none;">
+            <p style="opacity:0.8; font-size:14px; margin-bottom:20px;">Te enviamos un email de verificación. Abrilo, hacé clic en el link, y después tocá el botón de abajo.</p>
+            <button class="btn-add" style="background:var(--success);" onclick="confirmarAdminVerificado()">YA VERIFIQUÉ MI EMAIL</button>
+        </div>
+        <button onclick="closeAll()" style="background:none; border:2px solid rgba(255,255,255,0.3); color:white; padding:16px; border-radius:16px; font-weight:700; width:100%; margin-top:15px;">← Volver atrás</button>
     </div>
 </div>
 
@@ -206,7 +235,9 @@
                 <div style="margin-bottom:20px;"><small style="opacity:0.4; text-transform:uppercase; font-size:10px; font-weight:800; letter-spacing:1px;">Teléfono</small><div id="p-tel" style="font-size:16px; font-weight:600;">--</div></div>
                 <div><small style="opacity:0.4; text-transform:uppercase; font-size:10px; font-weight:800; letter-spacing:1px;">Dirección / Comercio</small><div id="p-dir" style="font-size:14px; opacity:0.8; line-height:1.6;">--</div></div>
             </div>
-            <div style="padding:15px; background:rgba(16,185,129,0.1); border-radius:16px; color:var(--success); font-weight:800; border:1px solid rgba(16,185,129,0.2); text-align:center; font-size:11px; margin-bottom:30px;">✓ ESTADO: CLIENTE MAYORISTA ACTIVO</div>
+            <div style="padding:15px; background:rgba(16,185,129,0.1); border-radius:16px; color:var(--success); font-weight:800; border:1px solid rgba(16,185,129,0.2); text-align:center; font-size:11px; margin-bottom:20px;">✓ ESTADO: CLIENTE MAYORISTA ACTIVO</div>
+            <button class="btn-add" style="background:var(--accent); margin-top:0;" onclick="verMisPedidos()">📦 VER MIS PEDIDOS</button>
+            <div id="misPedidosList" style="margin-top:15px; margin-bottom:20px;"></div>
         </div>
         <div id="perfilVacio" style="text-align:center; padding:60px 0; opacity:0.4;">
             <div style="font-size:50px; margin-bottom:20px;">👤</div>
