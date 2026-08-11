@@ -110,6 +110,7 @@ function init() {
     db.collection("pedidos").orderBy("fecha", "desc").onSnapshot(snap => {
         orders = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         renderAdmO();
+        renderAdmStats();
     }, err => console.warn("pedidos:", err.code));
 
     // Cargar slider hero
@@ -303,6 +304,64 @@ function render() {
             </div>`;
     }).join("");
     startProductImageRotators();
+}
+
+// ==================== BUSCADOR CON SUGERENCIAS ====================
+// Todo client-side, sin servicios externos: coincidencia por texto y, si
+// no hay resultados, una tolerancia simple a errores de tipeo.
+
+function normalizarTexto(s) {
+    return (s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
+function distanciaEdicion(a, b) {
+    const dp = [];
+    for (let i = 0; i <= a.length; i++) dp.push([i]);
+    for (let j = 1; j <= b.length; j++) dp[0][j] = j;
+    for (let i = 1; i <= a.length; i++) {
+        for (let j = 1; j <= b.length; j++) {
+            dp[i][j] = a[i - 1] === b[j - 1] ? dp[i - 1][j - 1] : 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
+        }
+    }
+    return dp[a.length][b.length];
+}
+
+function actualizarSugerencias() {
+    const box = document.getElementById("searchSuggestions");
+    if (!box) return;
+    const qRaw = document.getElementById("searchInput").value.trim();
+    if (!qRaw) { box.style.display = "none"; box.innerHTML = ""; return; }
+    const q = normalizarTexto(qRaw);
+
+    let candidatos = prods.filter(p => normalizarTexto(p.nombre).includes(q));
+    if (candidatos.length === 0 && q.length >= 3) {
+        // Sin coincidencia directa: probamos tolerar un par de errores de tipeo
+        candidatos = prods
+            .map(p => ({ p, dist: distanciaEdicion(q, normalizarTexto(p.nombre).slice(0, q.length + 3)) }))
+            .filter(x => x.dist <= 2)
+            .sort((a, b) => a.dist - b.dist)
+            .map(x => x.p);
+    }
+    candidatos = candidatos.slice(0, 6);
+
+    if (candidatos.length === 0) { box.style.display = "none"; box.innerHTML = ""; return; }
+
+    box.innerHTML = candidatos.map(p => {
+        const img = (p.imagenes && p.imagenes[0]) ? p.imagenes[0] : (p.imagen || 'https://via.placeholder.com/40');
+        return `<div class="suggestion-item" onmousedown="elegirSugerencia('${p.id}')">
+            <img src="${img}" alt="">
+            <span>${p.nombre}</span>
+        </div>`;
+    }).join('');
+    box.style.display = "block";
+}
+
+function elegirSugerencia(id) {
+    const p = prods.find(x => x.id === id);
+    if (!p) return;
+    document.getElementById("searchInput").value = p.nombre;
+    document.getElementById("searchSuggestions").style.display = "none";
+    render();
 }
 
 async function showProductDetail(id) {
@@ -507,6 +566,38 @@ function llenarPerfil(data) {
     document.getElementById("p-user").innerText = data.user;
     document.getElementById("p-tel").innerText = data.tel || "--";
     document.getElementById("p-dir").innerText = data.dir || "Sin dirección registrada";
+    document.getElementById("misPedidosList").innerHTML = ""; // se carga recién al tocar el botón
+}
+
+// Le muestra al cliente logueado sus propios pedidos (las reglas de
+// Firestore solo dejan leer pedidos donde clienteUid == su propio uid).
+// Los pedidos hechos antes de esta actualización no tienen ese campo, así
+// que no van a aparecer acá — es una limitación de los datos viejos, no
+// un error.
+async function verMisPedidos() {
+    if (!usuarioLogueado) return;
+    const cont = document.getElementById("misPedidosList");
+    cont.innerHTML = '<p style="opacity:0.5; text-align:center; padding:20px;">Cargando...</p>';
+    try {
+        const snap = await db.collection("pedidos").where("clienteUid", "==", usuarioLogueado.id).get();
+        const propios = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => b.fecha - a.fecha);
+        if (propios.length === 0) {
+            cont.innerHTML = '<p style="opacity:0.5; text-align:center; padding:20px;">Todavía no hiciste ningún pedido.</p>';
+            return;
+        }
+        cont.innerHTML = propios.map(o => `
+            <div class="admin-item" style="flex-direction:column; align-items:flex-start;">
+                <div class="flex-between" style="width:100%;">
+                    <b style="color:var(--accent);">${o.total}</b>
+                    <small>${new Date(o.fecha).toLocaleDateString('es-ES')}</small>
+                </div>
+                <div style="font-size:12px; opacity:0.7; white-space:pre-wrap; margin-top:6px;">${o.detalle}</div>
+            </div>
+        `).join('');
+    } catch (e) {
+        console.error(e);
+        cont.innerHTML = '<p style="opacity:0.5; text-align:center; padding:20px;">No pudimos cargar tus pedidos.</p>';
+    }
 }
 
 async function registrarUsuario() {
@@ -532,6 +623,56 @@ async function registrarUsuario() {
         if (e.code === 'auth/email-already-in-use') alert("Ese nombre de usuario ya está en uso.");
         else if (e.code === 'auth/weak-password') alert("La contraseña es muy débil (mínimo 6 caracteres).");
         else alert("Error al enviar la solicitud.");
+    }
+}
+
+// ==================== PRIMER INGRESO — CREAR CUENTA DE ADMINISTRADOR ====================
+// No hay usuario/contraseña "de fábrica" en el código (sería inseguro:
+// quedaría visible para cualquiera que vea el código fuente). En cambio,
+// el dueño de la tienda crea su propia cuenta acá, protegida por dos
+// candados: que su email coincida con el que se autorizó en Firestore
+// (config/setup → allowedAdminEmail) y que lo verifique de verdad
+// haciendo clic en el link que le llega por correo. Ver README.md →
+// "Alta de un cliente nuevo".
+
+async function crearCuentaAdmin() {
+    const email = document.getElementById("setupEmail").value.trim().toLowerCase();
+    const pass = document.getElementById("setupPass").value.trim();
+    if (!email.includes("@")) return alert("Ingresá un email válido");
+    if (pass.length < 6) return alert("La contraseña debe tener al menos 6 caracteres");
+
+    try {
+        const cred = await auth.createUserWithEmailAndPassword(email, pass);
+        await cred.user.sendEmailVerification();
+        document.getElementById("setupPaso1").style.display = "none";
+        document.getElementById("setupPaso2").style.display = "block";
+    } catch (e) {
+        console.error(e);
+        if (e.code === 'auth/email-already-in-use') alert("Ya existe una cuenta con ese email. Si es tuya, iniciá sesión normalmente desde 'Usuario (o email de administrador)'.");
+        else alert("No pudimos crear la cuenta: " + (e.message || e));
+    }
+}
+
+async function confirmarAdminVerificado() {
+    if (!auth.currentUser) return alert("Se cerró la sesión. Volvé a intentar desde 'Crear cuenta'.");
+    await auth.currentUser.reload();
+    await auth.currentUser.getIdToken(true); // refresca el token para que email_verified esté al día
+    if (!auth.currentUser.emailVerified) {
+        return alert("Todavía no verificaste tu email. Revisá tu bandeja de entrada (y spam) y volvé a intentar.");
+    }
+    try {
+        await db.collection("admins").doc(auth.currentUser.uid).set({
+            email: auth.currentUser.email, creado: Date.now()
+        });
+        alert("✅ ¡Listo! Ya sos administrador de esta tienda.");
+        closeAll();
+        document.getElementById("setupPaso1").style.display = "block";
+        document.getElementById("setupPaso2").style.display = "none";
+        document.getElementById("setupEmail").value = "";
+        document.getElementById("setupPass").value = "";
+    } catch (e) {
+        console.error(e);
+        alert("Ese email no está autorizado como administrador de esta tienda. Verificá con quien configuró el sitio que sea exactamente el mismo email cargado en Firestore.");
     }
 }
 
@@ -733,6 +874,111 @@ function renderAdmO() {
     `).join("");
 }
 
+// Exporta el historial de pedidos como CSV (se abre directo en Excel/Sheets,
+// sin depender de ninguna librería externa).
+function exportarPedidosCSV() {
+    if (orders.length === 0) return alert("No hay pedidos para exportar.");
+    const filas = [["Fecha", "Total", "Cliente", "Detalle"]];
+    orders.forEach(o => {
+        filas.push([
+            new Date(o.fecha).toLocaleString('es-ES'),
+            o.total || '',
+            o.clienteUser || 'Minorista',
+            (o.detalle || '').replace(/\n/g, ' | ')
+        ]);
+    });
+    const csv = filas.map(fila => fila.map(c => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" }); // BOM: que Excel reconozca tildes/ñ
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `pedidos_${STORE_CONFIG.storeId}_${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+// ==================== PANEL ADMIN — ESTADÍSTICAS ====================
+// Todo se calcula en el navegador a partir de los pedidos ya cargados
+// (orders), sin servicios ni costos extra. Los pedidos guardados antes de
+// esta actualización no tienen los campos nuevos (items/montoTotal/
+// clienteUser), así que no aportan al detalle por producto/cliente, pero
+// sí se cuentan en el total de pedidos e ingresos cuando se puede leer el
+// monto desde el texto "total".
+
+function getWeekNumber(d) {
+    const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    const dayNum = date.getUTCDay() || 7;
+    date.setUTCDate(date.getUTCDate() + 4 - dayNum);
+    const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+    return Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
+}
+
+function calcularEstadisticas() {
+    const stats = { totalPedidos: orders.length, ingresosTotales: 0, productosVendidos: {}, clientes: {}, porSemana: {} };
+    orders.forEach(o => {
+        const monto = typeof o.montoTotal === 'number' ? o.montoTotal : (parseFloat(String(o.total || '').replace(/[^\d.-]/g, '')) || 0);
+        stats.ingresosTotales += monto;
+
+        const cliente = o.clienteUser || 'Minorista';
+        if (!stats.clientes[cliente]) stats.clientes[cliente] = { pedidos: 0, monto: 0 };
+        stats.clientes[cliente].pedidos++;
+        stats.clientes[cliente].monto += monto;
+
+        (o.items || []).forEach(it => {
+            const key = it.nombre + (it.variante ? ` (${it.variante})` : '');
+            stats.productosVendidos[key] = (stats.productosVendidos[key] || 0) + it.qty;
+        });
+
+        const d = new Date(o.fecha);
+        const semanaKey = `${d.getFullYear()}-S${getWeekNumber(d)}`;
+        stats.porSemana[semanaKey] = (stats.porSemana[semanaKey] || 0) + monto;
+    });
+    return stats;
+}
+
+function renderAdmStats() {
+    const cont = document.getElementById("admStats");
+    if (!cont) return;
+    const stats = calcularEstadisticas();
+    const topProductos = Object.entries(stats.productosVendidos).sort((a, b) => b[1] - a[1]).slice(0, 10);
+    const topClientes = Object.entries(stats.clientes).sort((a, b) => b[1].monto - a[1].monto).slice(0, 10);
+    const semanas = Object.entries(stats.porSemana).sort((a, b) => a[0] < b[0] ? 1 : -1).slice(0, 8);
+    const vacio = (txt) => `<p style="opacity:0.4; padding:15px 5px;">${txt}</p>`;
+
+    cont.innerHTML = `
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-bottom:10px;">
+            <div class="admin-item" style="flex-direction:column; text-align:center;">
+                <small style="opacity:0.5;">PEDIDOS TOTALES</small>
+                <div style="font-size:26px; font-weight:800; color:var(--accent);">${stats.totalPedidos}</div>
+            </div>
+            <div class="admin-item" style="flex-direction:column; text-align:center;">
+                <small style="opacity:0.5;">INGRESOS TOTALES</small>
+                <div style="font-size:26px; font-weight:800; color:var(--success);">${STORE_CONFIG.currency}${stats.ingresosTotales.toFixed(0)}</div>
+            </div>
+        </div>
+
+        <h4 style="opacity:0.6; margin: 25px 0 10px 5px;">Productos más vendidos</h4>
+        ${topProductos.length === 0 ? vacio("Todavía no hay pedidos con detalle suficiente.") :
+            topProductos.map(([nombre, qty]) => `
+            <div class="admin-item"><div style="flex:1;">${nombre}</div><b style="color:var(--accent);">${qty} vendidos</b></div>
+        `).join('')}
+
+        <h4 style="opacity:0.6; margin: 30px 0 10px 5px;">Clientes más activos</h4>
+        ${topClientes.length === 0 ? vacio("Todavía no hay datos suficientes.") :
+            topClientes.map(([user, d]) => `
+            <div class="admin-item"><div style="flex:1;">${user}</div><b>${d.pedidos} pedidos — ${STORE_CONFIG.currency}${d.monto.toFixed(0)}</b></div>
+        `).join('')}
+
+        <h4 style="opacity:0.6; margin: 30px 0 10px 5px;">Ingresos por semana</h4>
+        ${semanas.length === 0 ? vacio("Todavía no hay datos suficientes.") :
+            semanas.map(([semana, monto]) => `
+            <div class="admin-item"><div style="flex:1;">${semana}</div><b>${STORE_CONFIG.currency}${monto.toFixed(0)}</b></div>
+        `).join('')}
+    `;
+}
+
 // ==================== PANEL ADMIN — SLIDER HERO ====================
 
 function renderAdmSlider() {
@@ -768,7 +1014,7 @@ async function deleteHeroImage(id) {
 // ==================== NAVEGACIÓN DEL PANEL / CATEGORÍAS ====================
 
 function tab(id, e) {
-    document.querySelectorAll("#t-prod, #t-user, #t-order, #t-slider").forEach(el => el.style.display = "none");
+    document.querySelectorAll("#t-prod, #t-user, #t-order, #t-slider, #t-stats").forEach(el => el.style.display = "none");
     document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
     document.getElementById(id).style.display = "block";
     if (e && e.target) {
@@ -797,6 +1043,8 @@ async function finalizarYEnviar() {
     textoPedido += `----------------------------\n`;
 
     const batch = db.batch();
+    let montoTotalNumerico = 0;
+    const itemsPedido = [];
 
     // Revalidamos el stock en vivo (no el que quedó cacheado en pantalla) y
     // armamos el batch de descuento. Para productos con variante, el
@@ -806,6 +1054,10 @@ async function finalizarYEnviar() {
         for (const item of cart) {
             const p = prods.find(x => x.id === item.id);
             if (!p) continue;
+
+            const precioUnit = isMay ? (p.precio_may || p.precio) : p.precio;
+            montoTotalNumerico += precioUnit * item.qty;
+            itemsPedido.push({ id: p.id, nombre: p.nombre, qty: item.qty, variante: item.variante || null });
 
             if (item.variante) {
                 const snap = await db.collection("productos").doc(p.id).collection("variantes")
@@ -837,7 +1089,15 @@ async function finalizarYEnviar() {
 
     try {
         await batch.commit(); // Ejecuta las actualizaciones de stock
-        await db.collection("pedidos").add({ detalle: textoPedido, total: total, fecha: Date.now() });
+        await db.collection("pedidos").add({
+            detalle: textoPedido,
+            total: total,
+            fecha: Date.now(),
+            montoTotal: montoTotalNumerico,
+            clienteUid: usuarioLogueado ? usuarioLogueado.id : null,
+            clienteUser: usuarioLogueado ? usuarioLogueado.user : null,
+            items: itemsPedido
+        });
 
         notificarPedidoPorEmail(textoPedido, total); // no bloquea ni rompe el checkout si falla
 
