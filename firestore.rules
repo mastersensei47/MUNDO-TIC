@@ -85,27 +85,55 @@ service cloud.firestore {
     // ------------------------------------------------------------------
     // PEDIDOS
     // Cualquiera (incluso sin login) puede generar un pedido desde el
-    // checkout. Solo el administrador puede leerlos o borrarlos desde el
-    // panel. Se valida que traiga los campos mínimos esperados.
+    // checkout. El administrador puede leer y borrar todos. Un cliente
+    // logueado puede leer (no borrar) los pedidos que le pertenecen a él
+    // (clienteUid == su propio uid), para mostrarle su propio historial.
     // ------------------------------------------------------------------
     match /pedidos/{orderId} {
       allow create: if request.resource.data.keys().hasAll(['detalle','total','fecha'])
                     && request.resource.data.detalle is string
-                    && request.resource.data.total is string;
-      allow read, delete: if esAdmin();
+                    && request.resource.data.total is string
+                    && (
+                         !('clienteUid' in request.resource.data) ||
+                         request.resource.data.clienteUid == null ||
+                         (estaLogueado() && request.resource.data.clienteUid == request.auth.uid)
+                       );
+      allow read: if esAdmin() || (estaLogueado() && resource.data.clienteUid == request.auth.uid);
+      allow delete: if esAdmin();
       allow update: if false;
     }
 
     // ------------------------------------------------------------------
+    // CONFIGURACIÓN DE ALTA DEL ADMINISTRADOR
+    // Documento único config/setup con el email autorizado a convertirse en
+    // administrador (lo carga a mano quien configura el proyecto en
+    // Firebase — ver README.md → "Alta de un cliente nuevo"). Nunca se
+    // escribe desde la web, y solo lo puede leer el propio email que
+    // coincide (y ya con el email verificado).
+    // ------------------------------------------------------------------
+    match /config/setup {
+      allow read: if estaLogueado()
+                  && request.auth.token.email_verified == true
+                  && request.auth.token.email == resource.data.allowedAdminEmail;
+      allow write: if false;
+    }
+
+    // ------------------------------------------------------------------
     // ADMINISTRADORES
-    // Esta colección NUNCA se escribe desde la web (allow write: if false).
-    // Se agrega manualmente desde la consola de Firebase al dar de alta al
-    // primer administrador de cada cliente. Ver README.md → "Alta de un
-    // cliente nuevo".
+    // No hay contraseña "de fábrica" en el código: para convertirse en
+    // administrador hay que crear una cuenta con el email exacto que se
+    // autorizó en config/setup Y haber verificado ese email por correo
+    // (request.auth.token.email_verified). Esto evita que alguien pueda
+    // adivinar/copiar ese email y auto-asignarse como admin sin controlar
+    // esa casilla de correo de verdad.
     // ------------------------------------------------------------------
     match /admins/{uid} {
       allow read: if esDueno(uid);
-      allow write: if false;
+      allow create: if esDueno(uid)
+                    && request.auth.token.email_verified == true
+                    && exists(/databases/$(database)/documents/config/setup)
+                    && request.auth.token.email == get(/databases/$(database)/documents/config/setup).data.allowedAdminEmail;
+      allow update, delete: if false;
     }
   }
 }
