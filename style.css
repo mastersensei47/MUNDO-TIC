@@ -129,6 +129,7 @@
             max-width: 1400px;
             margin: 0 auto;
             padding: 0 20px 15px;
+            position: relative;
         }
         .search-bar {
             width: 100%;
@@ -141,6 +142,32 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
         .search-bar:focus { box-shadow: 0 0 0 3px var(--accent); }
+        .search-suggestions {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 20px;
+            right: 20px;
+            background: var(--card);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            margin-top: 6px;
+            max-height: 320px;
+            overflow-y: auto;
+            z-index: 500;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+        }
+        .suggestion-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 15px;
+            cursor: pointer;
+        }
+        .suggestion-item:hover { background: rgba(255,255,255,0.06); }
+        .suggestion-item img {
+            width: 36px; height: 36px; object-fit: cover; border-radius: 8px; flex-shrink: 0;
+        }
         .products-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
