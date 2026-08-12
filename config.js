@@ -16,10 +16,11 @@
    ============================================================================ */
 
 const MASTER_FIREBASE_CONFIG = {
-  apiKey: "AIzaSyDAqlchDsLHIMMbv6YL2ipggaShXlFqiW8",
-  authDomain: "tienda-online-baaf6.firebaseapp.com",
-  projectId: "tienda-online-baaf6",
-  storageBucket: "tienda-online-baaf6.firebasestorage.app",
-  messagingSenderId: "121093097347",
-  appId: "1:121093097347:web:ca8ea54b592cb20f5098b6"
+  apiKey: "AIzaSyD_uELDR3InLuRlsxXCyFuIM4OzYw6xYkE",
+  authDomain: "tienda-c497e.firebaseapp.com",
+  projectId: "tienda-c497e",
+  storageBucket: "tienda-c497e.firebasestorage.app",
+  messagingSenderId: "709484748527",
+  appId: "1:709484748527:web:64dbea8f89b02b830a851a",
+  measurementId: "G-CCNPEMM8WG"
 };
