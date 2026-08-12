@@ -1,14 +1,99 @@
 // ============================================================================
 // APP.JS — Lógica de la tienda (no debería hacer falta tocar este archivo
-// para dar de alta un cliente nuevo; toda la personalización vive en config.js)
+// para dar de alta un cliente nuevo; toda la personalización vive en la
+// configuración de cada tienda, resuelta dinámicamente por ?slug=)
 // ============================================================================
 
-// ==================== FIREBASE ====================
-// Las credenciales viven en config.js (STORE_CONFIG.firebase), así cada
-// cliente tiene su propio proyecto sin tocar este archivo.
-firebase.initializeApp(STORE_CONFIG.firebase);
-const db = firebase.firestore();
-const auth = firebase.auth();
+// ==================== MULTI-TIENDA: RESOLUCIÓN DINÁMICA POR SLUG ====================
+// Este sitio es UNO SOLO y sirve a todos los clientes según el slug de la
+// URL (ej: tuservidor.com/?slug=mundo-tic). Cada cliente sigue teniendo su
+// propio proyecto de Firebase, 100% aislado del resto — lo único
+// centralizado es un directorio (proyecto "master") que dice "el slug
+// mundo-tic corresponde a este firebaseConfig". Ver README.md →
+// "Sistema multi-tienda por slug".
+//
+// MASTER_FIREBASE_CONFIG viene de config.js y es el ÚNICO dato fijo de todo
+// el sistema: es el mismo para todos los clientes, porque apunta al
+// proyecto "directorio", no a ningún cliente en particular.
+
+let db, auth, STORE_CONFIG;
+let clienteApp, masterApp;
+
+function leerSlug() {
+    return new URLSearchParams(location.search).get("slug");
+}
+
+function mostrarErrorSlug(mensaje) {
+    const el = document.getElementById("slugError");
+    if (el) {
+        el.querySelector("p").innerText = mensaje;
+        el.style.display = "flex";
+    }
+    document.body.classList.add("no-scroll");
+}
+
+// Valores por defecto para cualquier campo de config/tienda que un cliente
+// no haya cargado todavía, así el sitio nunca se rompe por un dato faltante.
+const CONFIG_DEFAULTS = {
+    storeName: "Tienda", tagline: "", city: "", logoUrl: "log.png",
+    businessType: "generico", whatsappNumber: "", instagramUrl: "", facebookUrl: "",
+    currency: "$",
+    features: { wholesalePricing: true, stockControl: true, heroSlider: true, userRegistration: true, productVariants: false },
+    categories: [],
+    theme: { bg: "#0f172a", card: "#1e293b", text: "#f1f5f9", accent: "#3b82f6", success: "#10b981", promo: "#f59e0b", danger: "#ef4444", radius: "18px" },
+    notifications: { emailEnabled: false, emailJsServiceId: "", emailJsTemplateId: "", emailJsPublicKey: "", adminEmail: "" }
+};
+
+async function bootstrap() {
+    const slug = leerSlug();
+    if (!slug) {
+        return mostrarErrorSlug("Falta indicar la tienda en el link (falta ?slug=... en la URL). Pedile el link completo a quien te lo compartió.");
+    }
+
+    try {
+        // 1) Conectar al proyecto MASTER (el directorio) para resolver el slug.
+        masterApp = firebase.initializeApp(MASTER_FIREBASE_CONFIG, "master");
+        const masterDb = firebase.firestore(masterApp);
+        const clienteDoc = await masterDb.collection("clientes").doc(slug).get();
+
+        if (!clienteDoc.exists || clienteDoc.data().activo === false) {
+            return mostrarErrorSlug("No encontramos esta tienda. Verificá el link, o consultá con el negocio.");
+        }
+        const { firebaseConfig } = clienteDoc.data();
+        if (!firebaseConfig || !firebaseConfig.projectId) {
+            return mostrarErrorSlug("Esta tienda todavía no está configurada del todo. Volvé a intentar más tarde.");
+        }
+
+        // 2) Conectar al proyecto PROPIO de ese cliente (aislado del resto).
+        clienteApp = firebase.initializeApp(firebaseConfig, "cliente");
+        db = firebase.firestore(clienteApp);
+        auth = firebase.auth(clienteApp);
+
+        // 3) Traer la configuración de marca/tema/categorías de ESE cliente
+        // (vive en su propio Firestore, nunca en el proyecto master).
+        let datosTienda = {};
+        try {
+            const cfgDoc = await db.collection("config").doc("tienda").get();
+            if (cfgDoc.exists) datosTienda = cfgDoc.data();
+        } catch (e) {
+            console.warn("No se pudo leer config/tienda, se usan valores por defecto:", e);
+        }
+
+        STORE_CONFIG = {
+            ...CONFIG_DEFAULTS,
+            ...datosTienda,
+            features: { ...CONFIG_DEFAULTS.features, ...(datosTienda.features || {}) },
+            theme: { ...CONFIG_DEFAULTS.theme, ...(datosTienda.theme || {}) },
+            notifications: { ...CONFIG_DEFAULTS.notifications, ...(datosTienda.notifications || {}) },
+            storeId: slug // el slug ES el identificador interno, siempre
+        };
+
+        init();
+    } catch (e) {
+        console.error("Error al inicializar la tienda:", e);
+        mostrarErrorSlug("No pudimos cargar esta tienda. Probá de nuevo en unos minutos.");
+    }
+}
 
 let prods = [];
 let cart = [];
@@ -31,7 +116,7 @@ let heroInterval = null;
 // (contiene "@", como hace normalmente el administrador) se usa tal cual,
 // para que la recuperación de contraseña por correo funcione de verdad.
 // Si escribió un nombre de usuario simple (clientes mayoristas), se arma un
-// email interno con el storeId como dominio ficticio.
+// email interno con el storeId (= slug) como dominio ficticio.
 function toAuthEmail(input) {
     const v = (input || "").trim();
     if (v.includes("@")) return v.toLowerCase();
@@ -1189,4 +1274,4 @@ document.addEventListener("keydown", (e) => {
     }
 });
 
-window.onload = init;
+window.onload = bootstrap;
