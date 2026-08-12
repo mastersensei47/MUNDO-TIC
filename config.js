@@ -16,10 +16,10 @@
    ============================================================================ */
 
 const MASTER_FIREBASE_CONFIG = {
-  apiKey: "TU_API_KEY_DEL_PROYECTO_MASTER",
-  authDomain: "tu-proyecto-master.firebaseapp.com",
-  projectId: "tu-proyecto-master",
-  storageBucket: "tu-proyecto-master.firebasestorage.app",
-  messagingSenderId: "000000000000",
-  appId: "1:000000000000:web:xxxxxxxxxxxxxxxxxxxxxx"
+  apiKey: "AIzaSyDAqlchDsLHIMMbv6YL2ipggaShXlFqiW8",
+  authDomain: "tienda-online-baaf6.firebaseapp.com",
+  projectId: "tienda-online-baaf6",
+  storageBucket: "tienda-online-baaf6.firebasestorage.app",
+  messagingSenderId: "121093097347",
+  appId: "1:121093097347:web:ca8ea54b592cb20f5098b6"
 };
