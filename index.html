@@ -47,7 +47,7 @@
 <div class="cat-scroll" id="catBar"></div>
 
 <div class="search-container">
-    <input type="text" id="searchInput" class="search-bar" placeholder="Busca marcas o productos..."
+    <input type="text" id="searchInput" class="search-bar" placeholder="Busca marcas o productos..." autocomplete="off" name="busqueda-productos"
         onkeyup="render()" oninput="actualizarSugerencias()" onfocus="actualizarSugerencias()"
         onblur="setTimeout(()=>{const b=document.getElementById('searchSuggestions'); if(b) b.style.display='none';}, 150)">
     <div id="searchSuggestions" class="search-suggestions"></div>
@@ -118,6 +118,7 @@
             <button class="tab-btn" onclick="tab('t-order', event)">HISTORIAL</button>
             <button class="tab-btn" onclick="tab('t-stats', event)">ESTADÍSTICAS</button>
             <button class="tab-btn" onclick="tab('t-slider', event)">SLIDER HERO</button>
+            <button class="tab-btn" onclick="tab('t-config', event)">CONFIGURACIÓN</button>
         </div>
 
         <div id="t-prod">
@@ -166,6 +167,29 @@
                 <button class="btn-add" style="background:var(--success)" onclick="addHeroImage()">AGREGAR AL SLIDER</button>
             </div>
             <div id="admListSlider"></div>
+        </div>
+
+        <div id="t-config" style="display:none;">
+            <div class="admin-form-box">
+                <h4 style="margin-top:0; opacity:0.7;">Colores</h4>
+                <div class="form-group"><label>Color principal (accent)</label><input id="cfgAccent" type="color" style="height:50px; padding:5px; cursor:pointer;"></div>
+                <div class="form-group"><label>Color de fondo</label><input id="cfgBg" type="color" style="height:50px; padding:5px; cursor:pointer;"></div>
+
+                <h4 style="margin-top:25px; opacity:0.7;">Secciones</h4>
+                <label style="display:flex; align-items:center; gap:10px; margin-bottom:15px; cursor:pointer;">
+                    <input type="checkbox" id="cfgMostrarHero" style="width:20px; height:20px;"> Mostrar carrusel de imágenes (Hero)
+                </label>
+                <label style="display:flex; align-items:center; gap:10px; margin-bottom:15px; cursor:pointer;">
+                    <input type="checkbox" id="cfgMostrarMapa" style="width:20px; height:20px;"> Mostrar mapa de ubicación
+                </label>
+
+                <div class="form-group">
+                    <label>Código del mapa (Google Maps → Compartir → Insertar un mapa → Copiar HTML)</label>
+                    <textarea id="cfgMapaIframe" rows="4" placeholder='&lt;iframe src="https://www.google.com/maps/embed?pb=..." width="600" height="450"&gt;&lt;/iframe&gt;'></textarea>
+                </div>
+
+                <button class="btn-add" style="background:var(--success)" onclick="guardarConfigTienda()">GUARDAR CONFIGURACIÓN</button>
+            </div>
         </div>
     </div>
 </div>
@@ -235,6 +259,7 @@
             <a id="igLink" href="#" target="_blank" style="display:flex; align-items:center; gap:12px; background:#e1306c; color:white; padding:18px 20px; border-radius:16px; text-decoration:none; font-weight:700; justify-content:center; font-size:17px;">📷 INSTAGRAM</a>
             <a id="fbLink" href="#" target="_blank" style="display:flex; align-items:center; gap:12px; background:#1877f2; color:white; padding:18px 20px; border-radius:16px; text-decoration:none; font-weight:700; justify-content:center; font-size:17px;">📘 FACEBOOK</a>
         </div>
+        <div id="mapaContainer" style="display:none; margin-bottom:30px;"></div>
         <div id="perfilContenido" style="display:none;">
             <div style="background:rgba(255,255,255,0.03); padding:25px; border-radius:25px; border:1px solid rgba(255,255,255,0.05); margin-bottom:25px;">
                 <div style="margin-bottom:20px;"><small style="opacity:0.4; text-transform:uppercase; font-size:10px; font-weight:800; letter-spacing:1px;">Usuario</small><div id="p-user" style="font-size:20px; font-weight:800; color:var(--accent);">--</div></div>
