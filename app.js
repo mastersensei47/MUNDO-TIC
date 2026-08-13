@@ -37,8 +37,8 @@ function mostrarErrorSlug(mensaje) {
 const CONFIG_DEFAULTS = {
     storeName: "Tienda", tagline: "", city: "", logoUrl: "log.png",
     businessType: "generico", whatsappNumber: "", instagramUrl: "", facebookUrl: "",
-    currency: "$",
-    features: { wholesalePricing: true, stockControl: true, heroSlider: true, userRegistration: true, productVariants: false },
+    currency: "$", mapaUrl: "",
+    features: { wholesalePricing: true, stockControl: true, heroSlider: true, userRegistration: true, productVariants: false, mostrarMapa: false },
     categories: [],
     theme: { bg: "#0f172a", card: "#1e293b", text: "#f1f5f9", accent: "#3b82f6", success: "#10b981", promo: "#f59e0b", danger: "#ef4444", radius: "18px" },
     notifications: { emailEnabled: false, emailJsServiceId: "", emailJsTemplateId: "", emailJsPublicKey: "", adminEmail: "" }
@@ -124,12 +124,19 @@ function toAuthEmail(input) {
 }
 
 function init() {
+    // Fix autofill: algunos navegadores autocompletan este campo con el
+    // email guardado (ej: el del admin) a pesar de autocomplete="off".
+    const searchEl = document.getElementById("searchInput");
+    if (searchEl) searchEl.value = "";
+
     aplicarTema();
     aplicarBranding();
     renderCategorias();
     renderCategoriasSelect();
     updateCartUI();
     inicializarNotificaciones();
+    renderMapa();
+    cargarFormConfig();
 
     // Resolver sesión: ¿invitado, administrador o cliente mayorista?
     auth.onAuthStateChanged(async (user) => {
@@ -1096,10 +1103,72 @@ async function deleteHeroImage(id) {
     }
 }
 
+// ==================== PANEL ADMIN — CONFIGURACIÓN DE LA TIENDA ====================
+// Edita el documento config/tienda del propio Firestore de esta tienda
+// (colores, mapa, y qué secciones mostrar), sin tocar Firestore a mano.
+
+// Acepta el <iframe> completo que da Google Maps ("Compartir" → "Insertar
+// un mapa" → "Copiar HTML"), o directamente una URL ya extraída.
+function extraerUrlIframe(textoPegado) {
+    if (!textoPegado) return "";
+    const texto = textoPegado.trim();
+    const m = texto.match(/src=["']([^"']+)["']/i);
+    let url = m ? m[1] : (/^https?:\/\//i.test(texto) ? texto : "");
+    return url.replace(/["'<>]/g, ""); // nunca debería haber esto en una URL válida
+}
+
+function renderMapa() {
+    const cont = document.getElementById("mapaContainer");
+    if (!cont) return;
+    if (STORE_CONFIG.features.mostrarMapa && STORE_CONFIG.mapaUrl) {
+        cont.innerHTML = `<iframe src="${STORE_CONFIG.mapaUrl}" width="100%" height="220" style="border:0; border-radius:var(--radius); display:block;" allowfullscreen="" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>`;
+        cont.style.display = "block";
+    } else {
+        cont.innerHTML = "";
+        cont.style.display = "none";
+    }
+}
+
+function cargarFormConfig() {
+    const accentEl = document.getElementById("cfgAccent");
+    if (!accentEl) return; // el panel admin todavía no está en el DOM (no debería pasar, pero por las dudas)
+    accentEl.value = STORE_CONFIG.theme.accent || "#3b82f6";
+    document.getElementById("cfgBg").value = STORE_CONFIG.theme.bg || "#0f172a";
+    document.getElementById("cfgMostrarHero").checked = STORE_CONFIG.features.heroSlider !== false;
+    document.getElementById("cfgMostrarMapa").checked = !!STORE_CONFIG.features.mostrarMapa;
+    document.getElementById("cfgMapaIframe").value = STORE_CONFIG.mapaUrl || "";
+}
+
+async function guardarConfigTienda() {
+    const iframePegado = document.getElementById("cfgMapaIframe").value.trim();
+    const mapaUrl = extraerUrlIframe(iframePegado);
+    if (iframePegado && !mapaUrl) {
+        return alert('No pudimos reconocer el link del mapa. En Google Maps: Compartir → Insertar un mapa → Copiar HTML, y pegá ese código completo (o directamente la URL que aparece dentro de src="...").');
+    }
+
+    const datos = {
+        theme: { ...STORE_CONFIG.theme, accent: document.getElementById("cfgAccent").value, bg: document.getElementById("cfgBg").value },
+        features: { ...STORE_CONFIG.features, heroSlider: document.getElementById("cfgMostrarHero").checked, mostrarMapa: document.getElementById("cfgMostrarMapa").checked },
+        mapaUrl: mapaUrl
+    };
+
+    try {
+        await db.collection("config").doc("tienda").set(datos, { merge: true });
+        STORE_CONFIG = { ...STORE_CONFIG, ...datos };
+        aplicarTema();
+        aplicarBranding();
+        renderMapa();
+        alert("✅ Configuración guardada");
+    } catch (e) {
+        console.error(e);
+        alert("Error al guardar: " + (e.message || e));
+    }
+}
+
 // ==================== NAVEGACIÓN DEL PANEL / CATEGORÍAS ====================
 
 function tab(id, e) {
-    document.querySelectorAll("#t-prod, #t-user, #t-order, #t-slider, #t-stats").forEach(el => el.style.display = "none");
+    document.querySelectorAll("#t-prod, #t-user, #t-order, #t-slider, #t-stats, #t-config").forEach(el => el.style.display = "none");
     document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
     document.getElementById(id).style.display = "block";
     if (e && e.target) {
