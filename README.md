@@ -124,6 +124,13 @@ slug que va a tener en la URL (ej. `kiosco-don-juan`) y esas 6 credenciales
 → **Guardar tienda**. Copiá el link que te muestra — es la URL final de
 esa tienda.
 
+> Desde esa misma lista podés **buscar** una tienda por nombre o slug (con
+> contador de resultados), **editarla** (✏️ — incluso cambiar el slug, que
+> internamente borra el documento viejo y crea uno nuevo), **pausarla**
+> (⏸️ — el link deja de funcionar sin borrar nada) o **eliminarla del
+> directorio** (🗑️ — esto NO borra el proyecto de Firebase del cliente ni
+> sus datos, solo la saca de la lista).
+
 ### 6. Autorizar el email del administrador de esa tienda
 En el Firestore **de ese cliente** (no en el master): colección `config` →
 documento con ID personalizado `setup` → campo `allowedAdminEmail` (string)
@@ -288,6 +295,24 @@ Excel o Google Sheets.
 Un cliente mayorista logueado tiene un botón **"Ver mis pedidos"** en su
 perfil (ícono ☰). Las reglas de Firestore solo dejan que cada uno vea los
 suyos. Los pedidos de antes de esta actualización no van a aparecer acá.
+
+## Panel de configuración de la tienda (colores, mapa, secciones)
+
+Pestaña **CONFIGURACIÓN** en el panel admin — edita el documento
+`config/tienda` sin tocar Firestore a mano:
+
+- **Colores**: color principal (accent) y de fondo, se aplican al instante.
+- **Secciones**: mostrar/ocultar el carrusel Hero y el mapa de ubicación,
+  cada uno con su propio interruptor.
+- **Mapa**: pegá el `<iframe>` completo que te da Google Maps (**Compartir
+  → Insertar un mapa → Copiar HTML**) — el sistema extrae automáticamente
+  el link de adentro, no hace falta editarlo a mano. También podés pegar
+  directamente la URL si ya la tenés. El mapa aparece en el panel de info
+  (ícono ☰), junto a WhatsApp/Instagram/Facebook.
+
+El resto de la configuración de marca (nombre, categorías, WhatsApp,
+notificaciones) todavía se carga a mano desde Firestore — ver "Ideas para
+más adelante".
 
 ## Cómo carga productos el dueño de la tienda
 
