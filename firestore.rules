@@ -119,6 +119,16 @@ service cloud.firestore {
     }
 
     // ------------------------------------------------------------------
+    // CONFIG/TIENDA — marca, tema, categorías, mapa, etc. de esta tienda.
+    // Lectura pública (el sitio la necesita para pintar la tienda incluso
+    // sin login). Escritura solo admin (panel → pestaña Configuración).
+    // ------------------------------------------------------------------
+    match /config/tienda {
+      allow read: if true;
+      allow write: if esAdmin();
+    }
+
+    // ------------------------------------------------------------------
     // ADMINISTRADORES
     // No hay contraseña "de fábrica" en el código: para convertirse en
     // administrador hay que crear una cuenta con el email exacto que se
