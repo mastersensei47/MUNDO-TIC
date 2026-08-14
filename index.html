@@ -22,16 +22,22 @@
     <p style="opacity:0.6; max-width:400px;"></p>
 </div>
 
+<div id="bannerPausa" style="display:none; background:var(--danger); color:white; text-align:center; padding:12px 20px; font-weight:700; font-size:14px;">
+    ⚠️ Atención: La tienda no está recibiendo pedidos en este momento.
+</div>
+<div id="bannerPromo" style="display:none; background:var(--promo); color:#000; text-align:center; padding:12px 20px; font-weight:700; font-size:14px;"></div>
+
 <header>
     <div class="header-left">
         <button class="icon-btn" onclick="toggleInfo()">☰</button>
         <img src="log.png" class="main-logo" onclick="location.reload()" alt="Logo">
+        <span class="main-logo-text" onclick="location.reload()" style="display:none; font-weight:800; font-size:20px; cursor:pointer;"></span>
     </div>
     <div class="header-icons">
         <button class="icon-btn" onclick="toggleTheme()">🌓</button>
         <button class="icon-btn" onclick="openModal('loginModal')">👤</button>
         <button class="icon-btn" onclick="verificarAdmin()">⚙️</button>
-        <div class="icon-btn" onclick="toggleCart()" style="cursor:pointer; position:relative;">
+        <div id="cartIconBtn" class="icon-btn" onclick="toggleCart()" style="cursor:pointer; position:relative;">
             🛒 <b id="cartCount" style="background:var(--danger); font-size:10px; padding:2px 7px; border-radius:12px; position:absolute; top:2px; right:2px;">0</b>
         </div>
     </div>
@@ -171,11 +177,50 @@
 
         <div id="t-config" style="display:none;">
             <div class="admin-form-box">
-                <h4 style="margin-top:0; opacity:0.7;">Colores</h4>
+                <h4 style="margin-top:0; opacity:0.7;">Datos generales y de contacto</h4>
+                <div class="form-group"><label>WhatsApp para pedidos (con código de país)</label><input id="cfgWhatsapp" placeholder="5493424123456"></div>
+                <div class="form-group"><label>Dirección del local</label><input id="cfgAddress" placeholder="Av. Facundo Zuviría 4500"></div>
+                <div class="form-group"><label>Horarios de atención</label><input id="cfgHorarios" placeholder="Lun a Vie 8 a 18 hs"></div>
+                <div class="form-group"><label>Instagram (URL completa)</label><input id="cfgInstagram" placeholder="https://instagram.com/tuusuario"></div>
+                <div class="form-group"><label>Facebook (URL completa)</label><input id="cfgFacebook" placeholder="https://facebook.com/tupagina"></div>
+                <div class="form-group"><label>TikTok (URL completa)</label><input id="cfgTiktok" placeholder="https://tiktok.com/@tuusuario"></div>
+
+                <h4 style="margin-top:30px; opacity:0.7;">Estado de la tienda</h4>
+                <label style="display:flex; align-items:center; gap:10px; margin-bottom:15px; cursor:pointer;">
+                    <input type="checkbox" id="cfgPausada" style="width:20px; height:20px;"> Pausar tienda (vacaciones / mantenimiento)
+                </label>
+                <label style="display:flex; align-items:center; gap:10px; margin-bottom:10px; cursor:pointer;">
+                    <input type="checkbox" id="cfgBannerActivo" style="width:20px; height:20px;"> Mostrar banner de aviso arriba de todo
+                </label>
+                <div class="form-group"><input id="cfgBannerTexto" placeholder="Ej: ¡ENVÍOS GRATIS comprando más de $20.000!"></div>
+
+                <h4 style="margin-top:30px; opacity:0.7;">Medios de pago aceptados</h4>
+                <label style="display:flex; align-items:center; gap:10px; margin-bottom:12px; cursor:pointer;">
+                    <input type="checkbox" id="cfgPagoEfectivo" style="width:20px; height:20px;"> Efectivo / Contra entrega
+                </label>
+                <label style="display:flex; align-items:center; gap:10px; margin-bottom:12px; cursor:pointer;">
+                    <input type="checkbox" id="cfgPagoTransferencia" style="width:20px; height:20px;"> Transferencia bancaria
+                </label>
+                <div class="form-group"><label>Datos para transferir (CBU / Alias / Titular)</label><textarea id="cfgDatosTransferencia" rows="3" placeholder="CBU: ...&#10;Alias: ...&#10;Titular: ..."></textarea></div>
+                <label style="display:flex; align-items:center; gap:10px; margin-bottom:15px; cursor:pointer;">
+                    <input type="checkbox" id="cfgPagoMercadoPago" style="width:20px; height:20px;"> Mercado Pago
+                </label>
+
+                <h4 style="margin-top:30px; opacity:0.7;">Experiencia visual</h4>
+                <div class="form-group"><label>URL del logo (vacío = se muestra el nombre en texto)</label><input id="cfgLogoUrl" placeholder="https://..."></div>
+                <div class="form-group">
+                    <label>Tema rápido (opcional — pisa los colores de abajo)</label>
+                    <select id="cfgThemePreset" onchange="aplicarPresetTema()">
+                        <option value="">— Elegir un tema... —</option>
+                        <option value="oscuro">Tema Oscuro</option>
+                        <option value="claro">Tema Claro</option>
+                        <option value="neon">Tema Neón</option>
+                    </select>
+                </div>
                 <div class="form-group"><label>Color principal (accent)</label><input id="cfgAccent" type="color" style="height:50px; padding:5px; cursor:pointer;"></div>
                 <div class="form-group"><label>Color de fondo</label><input id="cfgBg" type="color" style="height:50px; padding:5px; cursor:pointer;"></div>
 
-                <h4 style="margin-top:25px; opacity:0.7;">Secciones</h4>
+                <h4 style="margin-top:30px; opacity:0.7;">Secciones</h4>
                 <label style="display:flex; align-items:center; gap:10px; margin-bottom:15px; cursor:pointer;">
                     <input type="checkbox" id="cfgMostrarHero" style="width:20px; height:20px;"> Mostrar carrusel de imágenes (Hero)
                 </label>
@@ -250,14 +295,18 @@
     <div style="padding:25px 25px 0 25px; flex-grow:1; display:flex; flex-direction:column;">
         <div style="text-align:center; margin-bottom:30px; padding-bottom:25px; border-bottom:1px solid rgba(255,255,255,0.1);">
             <img id="drawerLogo" src="log.png" style="height:120px; width:auto; margin-bottom:15px;" alt="Logo">
+            <div id="drawerLogoText" style="display:none; font-size:32px; font-weight:800; margin-bottom:15px;"></div>
             <h2 id="drawerStoreName" style="margin:0 0 6px 0; font-size:26px;"></h2>
             <p id="drawerTagline" style="margin:0; opacity:0.75; font-size:15px; line-height:1.4;"></p>
+            <p id="drawerDireccion" style="display:none; margin:10px 0 0 0; opacity:0.7; font-size:13px;"></p>
+            <p id="drawerHorarios" style="display:none; margin:4px 0 0 0; opacity:0.7; font-size:13px;"></p>
         </div>
 
         <div style="margin-bottom:30px; display:flex; flex-direction:column; gap:12px;">
             <a id="waLink" href="#" target="_blank" style="display:flex; align-items:center; gap:12px; background:#25d366; color:white; padding:18px 20px; border-radius:16px; text-decoration:none; font-weight:700; justify-content:center; font-size:17px;">📲 CHATEAR POR WHATSAPP</a>
             <a id="igLink" href="#" target="_blank" style="display:flex; align-items:center; gap:12px; background:#e1306c; color:white; padding:18px 20px; border-radius:16px; text-decoration:none; font-weight:700; justify-content:center; font-size:17px;">📷 INSTAGRAM</a>
             <a id="fbLink" href="#" target="_blank" style="display:flex; align-items:center; gap:12px; background:#1877f2; color:white; padding:18px 20px; border-radius:16px; text-decoration:none; font-weight:700; justify-content:center; font-size:17px;">📘 FACEBOOK</a>
+            <a id="ttLink" href="#" target="_blank" style="display:flex; align-items:center; gap:12px; background:#000000; color:white; padding:18px 20px; border-radius:16px; text-decoration:none; font-weight:700; justify-content:center; font-size:17px;">🎵 TIKTOK</a>
         </div>
         <div id="mapaContainer" style="display:none; margin-bottom:30px;"></div>
         <div id="perfilContenido" style="display:none;">
@@ -294,6 +343,10 @@
             <div class="flex-between" style="margin-bottom:25px;">
                 <span style="font-size:18px; opacity:0.7;">Total Estimado:</span>
                 <span id="cartTotal" style="font-size:32px; font-weight:800; color:var(--accent);">$0</span>
+            </div>
+            <div id="metodoPagoContainer" style="display:none; margin-bottom:20px;">
+                <label style="font-weight:700; font-size:14px; display:block; margin-bottom:8px;">Método de pago</label>
+                <select id="metodoPagoSelect" style="width:100%; padding:14px; border-radius:12px; background:var(--card); color:var(--text); border:1px solid rgba(255,255,255,0.1); font-size:15px;"></select>
             </div>
             <button class="btn-add" style="background:#25d366; padding:22px; font-size:16px;" onclick="finalizarYEnviar()">ENVIAR PEDIDO POR WHATSAPP 🚀</button>
         </div>
