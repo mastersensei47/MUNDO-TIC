@@ -145,24 +145,24 @@ desde ahora entra con ese email y contraseña, y el ⚙️ le abre el panel
 directo. Si alguien lo intenta con un email distinto, el sistema lo
 rechaza sin dar pistas.
 
-### 8. Cargar la configuración de marca de esa tienda
-En el Firestore **de ese cliente**: colección `config` → documento con ID
-personalizado `tienda` → completá los campos (ver ejemplos en "Ejemplos de
-configuración por tipo de negocio" más abajo): `storeName`, `tagline`,
-`city`, `logoUrl`, `whatsappNumber`, `instagramUrl`, `facebookUrl`,
-`currency`, `businessType`, y los objetos `features`, `categories`,
-`theme`.
+### 8. Cargar la configuración inicial de esa tienda
+Con la cuenta de administrador ya creada (paso 7), una parte se completa
+directo desde el panel (⚙️ → **CONFIGURACIÓN**): WhatsApp, dirección,
+horarios, redes sociales, pausa/banner, medios de pago, logo, colores y
+tema rápido.
+
+Lo que **todavía** hay que cargar a mano en el Firestore de ese cliente
+(colección `config` → documento `tienda`), porque no tiene pantalla propia
+todavía — ver ejemplos en "Ejemplos de configuración por tipo de negocio"
+más abajo: `storeName`, `tagline`, `city`, `businessType`, `currency`,
+`categories`, y las funciones de `features` que no están en el panel
+(`wholesalePricing`, `stockControl`, `userRegistration`, `productVariants`).
 
 > `logoUrl` tiene que ser una **URL pública completa** (no un archivo local
 > como antes), porque ahora el sitio es uno solo para todos los clientes.
 > Subí el logo a Firebase Storage del propio cliente, a un servicio como
-> Imgur, o a donde prefieras, y pegá esa URL ahí.
->
-> Cargar esto campo por campo desde la consola de Firebase es más lento que
-> editar un archivo, pero se hace una sola vez por cliente. El siguiente
-> paso natural (no incluido todavía) es una pantalla dentro del panel admin
-> de cada tienda para editar esto sin tocar Firestore a mano — ver "Ideas
-> para más adelante".
+> Imgur, o a donde prefieras, y pegá esa URL en el panel. Si lo dejás
+> vacío, se muestra el nombre del comercio en texto.
 
 ### 9. Listo
 No hace falta publicar nada nuevo: el sitio ya está corriendo (es el mismo
@@ -296,23 +296,43 @@ Un cliente mayorista logueado tiene un botón **"Ver mis pedidos"** en su
 perfil (ícono ☰). Las reglas de Firestore solo dejan que cada uno vea los
 suyos. Los pedidos de antes de esta actualización no van a aparecer acá.
 
-## Panel de configuración de la tienda (colores, mapa, secciones)
+## Panel de configuración de la tienda
 
 Pestaña **CONFIGURACIÓN** en el panel admin — edita el documento
-`config/tienda` sin tocar Firestore a mano:
+`config/tienda` sin tocar Firestore a mano. Está organizada en 4 bloques:
 
-- **Colores**: color principal (accent) y de fondo, se aplican al instante.
-- **Secciones**: mostrar/ocultar el carrusel Hero y el mapa de ubicación,
-  cada uno con su propio interruptor.
-- **Mapa**: pegá el `<iframe>` completo que te da Google Maps (**Compartir
-  → Insertar un mapa → Copiar HTML**) — el sistema extrae automáticamente
-  el link de adentro, no hace falta editarlo a mano. También podés pegar
-  directamente la URL si ya la tenés. El mapa aparece en el panel de info
-  (ícono ☰), junto a WhatsApp/Instagram/Facebook.
+**Datos generales y de contacto**
+- WhatsApp para pedidos (el mismo que usa el checkout).
+- Dirección del local y horarios de atención — se muestran en el panel de
+  info (ícono ☰) solo si están cargados.
+- Instagram, Facebook y TikTok (URLs completas) — cada ícono se muestra u
+  oculta solo según si está cargado.
 
-El resto de la configuración de marca (nombre, categorías, WhatsApp,
-notificaciones) todavía se carga a mano desde Firestore — ver "Ideas para
-más adelante".
+**Estado de la tienda**
+- **Pausar tienda**: oculta el ícono del carrito y muestra un banner rojo
+  arriba de todo ("La tienda no está recibiendo pedidos"). El checkout
+  también queda bloqueado del lado del servidor por las dudas, no solo
+  oculto visualmente.
+- **Banner de aviso**: un cartel arriba de todo con el texto que quieras
+  (ej. "Envíos gratis +$20.000"). Si la tienda está pausada, el banner de
+  pausa tiene prioridad y el de aviso no se muestra.
+
+**Medios de pago aceptados**
+- Efectivo, transferencia bancaria (con un campo para CBU/Alias/Titular) y
+  Mercado Pago — tildá los que aceptás. Si hay más de uno activo, el
+  cliente elige cuál va a usar antes de enviar el pedido por WhatsApp; si
+  hay uno solo, se usa directo sin preguntar. Si eligió transferencia, los
+  datos para transferir van incluidos en el mensaje de WhatsApp.
+- Esto es solo informativo/organizativo — no hay integración de cobro real
+  con Mercado Pago (eso sigue siendo una idea a futuro, ver más abajo).
+
+**Experiencia visual**
+- **Logo**: URL de la imagen. Si lo dejás vacío, se muestra el nombre del
+  comercio en texto grande en vez de un logo roto.
+- **Tema rápido**: elegí "Tema Oscuro", "Tema Claro" o "Tema Neón" para
+  aplicar una combinación de colores completa de una sola vez (podés
+  ajustar el color principal y de fondo a mano después).
+- **Colores** (accent / fondo) y **secciones** (Hero / Mapa) como antes.
 
 ## Cómo carga productos el dueño de la tienda
 
@@ -412,9 +432,13 @@ categories: [
 
 ## Ideas para más adelante (no incluidas todavía)
 
-- Pantalla dentro del panel admin de cada tienda para editar su propia
-  configuración de marca/tema/categorías (`config/tienda`) sin tocar
-  Firestore a mano.
+- Pantalla en el panel admin para editar `storeName`, `categories` y el
+  resto de `features` sin tocar Firestore a mano (hoy ya se puede editar
+  contacto, pausa/banner, medios de pago, logo y tema desde el panel — ver
+  "Panel de configuración de la tienda").
+- Cobro real con Mercado Pago (Checkout Pro) — hoy "Mercado Pago" como
+  medio de pago es solo informativo, el cliente igual coordina el pago por
+  fuera del sitio.
 - Precio distinto por variante (hoy todas las variantes de un producto
   comparten el mismo precio).
 - Notificación automática por WhatsApp Business API real (hoy es por
