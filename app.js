@@ -35,9 +35,12 @@ function mostrarErrorSlug(mensaje) {
 // Valores por defecto para cualquier campo de config/tienda que un cliente
 // no haya cargado todavía, así el sitio nunca se rompe por un dato faltante.
 const CONFIG_DEFAULTS = {
-    storeName: "Tienda", tagline: "", city: "", logoUrl: "log.png",
-    businessType: "generico", whatsappNumber: "", instagramUrl: "", facebookUrl: "",
+    storeName: "Tienda", tagline: "", city: "", logoUrl: "",
+    address: "", horarios: "",
+    businessType: "generico", whatsappNumber: "", instagramUrl: "", facebookUrl: "", tiktokUrl: "",
     currency: "$", mapaUrl: "",
+    pausada: false, bannerActivo: false, bannerTexto: "",
+    pagos: { efectivo: true, transferencia: false, mercadopago: false, datosTransferencia: "" },
     features: { wholesalePricing: true, stockControl: true, heroSlider: true, userRegistration: true, productVariants: false, mostrarMapa: false },
     categories: [],
     theme: { bg: "#0f172a", card: "#1e293b", text: "#f1f5f9", accent: "#3b82f6", success: "#10b981", promo: "#f59e0b", danger: "#ef4444", radius: "18px" },
@@ -85,6 +88,7 @@ async function bootstrap() {
             features: { ...CONFIG_DEFAULTS.features, ...(datosTienda.features || {}) },
             theme: { ...CONFIG_DEFAULTS.theme, ...(datosTienda.theme || {}) },
             notifications: { ...CONFIG_DEFAULTS.notifications, ...(datosTienda.notifications || {}) },
+            pagos: { ...CONFIG_DEFAULTS.pagos, ...(datosTienda.pagos || {}) },
             storeId: slug // el slug ES el identificador interno, siempre
         };
 
@@ -136,6 +140,7 @@ function init() {
     updateCartUI();
     inicializarNotificaciones();
     renderMapa();
+    renderBanners();
     cargarFormConfig();
 
     // Resolver sesión: ¿invitado, administrador o cliente mayorista?
@@ -223,11 +228,37 @@ function aplicarTema() {
 function aplicarBranding() {
     document.title = STORE_CONFIG.storeName;
 
-    document.querySelectorAll(".main-logo, #drawerLogo").forEach(el => el.src = STORE_CONFIG.logoUrl);
+    // Logo: si no hay logoUrl cargado, mostramos el nombre del comercio en texto
+    const tieneLogo = !!STORE_CONFIG.logoUrl;
+    document.querySelectorAll(".main-logo, #drawerLogo").forEach(el => {
+        el.style.display = tieneLogo ? "" : "none";
+        if (tieneLogo) el.src = STORE_CONFIG.logoUrl;
+    });
+    document.querySelectorAll(".main-logo-text, #drawerLogoText").forEach(el => {
+        el.style.display = tieneLogo ? "none" : "";
+        el.innerText = STORE_CONFIG.storeName;
+    });
+
     document.getElementById("drawerBrand").innerText = STORE_CONFIG.storeName;
     document.getElementById("drawerStoreName").innerText = STORE_CONFIG.storeName;
     document.getElementById("drawerTagline").innerHTML =
         STORE_CONFIG.tagline + (STORE_CONFIG.city ? `<br>en ${STORE_CONFIG.city}` : "");
+
+    // Dirección y horarios (solo se muestran si están cargados)
+    const dirEl = document.getElementById("drawerDireccion");
+    if (STORE_CONFIG.address) {
+        dirEl.innerText = "📍 " + STORE_CONFIG.address;
+        dirEl.style.display = "block";
+    } else {
+        dirEl.style.display = "none";
+    }
+    const horEl = document.getElementById("drawerHorarios");
+    if (STORE_CONFIG.horarios) {
+        horEl.innerText = "🕒 " + STORE_CONFIG.horarios;
+        horEl.style.display = "block";
+    } else {
+        horEl.style.display = "none";
+    }
 
     document.getElementById("waLink").href = `https://wa.me/${STORE_CONFIG.whatsappNumber}`;
 
@@ -238,6 +269,10 @@ function aplicarBranding() {
     const fb = document.getElementById("fbLink");
     fb.href = STORE_CONFIG.facebookUrl || "#";
     fb.style.display = STORE_CONFIG.facebookUrl ? "flex" : "none";
+
+    const tt = document.getElementById("ttLink");
+    tt.href = STORE_CONFIG.tiktokUrl || "#";
+    tt.style.display = STORE_CONFIG.tiktokUrl ? "flex" : "none";
 
     document.getElementById("footerVersion").innerText =
         `${STORE_CONFIG.storeName}${STORE_CONFIG.city ? " • " + STORE_CONFIG.city.toUpperCase() : ""}`;
@@ -250,6 +285,31 @@ function aplicarBranding() {
 
     document.body.classList.toggle("no-stock", !STORE_CONFIG.features.stockControl);
     document.body.classList.toggle("no-variants", !STORE_CONFIG.features.productVariants);
+}
+
+// Banner de pausa/mantenimiento y banner promocional (arriba de todo el sitio).
+// Si la tienda está pausada, ese banner tiene prioridad y se oculta el
+// carrito; el banner promocional no tiene sentido mostrarlo si no se están
+// recibiendo pedidos.
+function renderBanners() {
+    const bannerPausa = document.getElementById("bannerPausa");
+    const bannerPromo = document.getElementById("bannerPromo");
+    const cartBtn = document.getElementById("cartIconBtn");
+
+    if (STORE_CONFIG.pausada) {
+        bannerPausa.style.display = "block";
+        bannerPromo.style.display = "none";
+        if (cartBtn) cartBtn.style.display = "none";
+    } else {
+        bannerPausa.style.display = "none";
+        if (cartBtn) cartBtn.style.display = "";
+        if (STORE_CONFIG.bannerActivo && STORE_CONFIG.bannerTexto) {
+            bannerPromo.innerText = STORE_CONFIG.bannerTexto;
+            bannerPromo.style.display = "block";
+        } else {
+            bannerPromo.style.display = "none";
+        }
+    }
 }
 
 function renderCategorias() {
@@ -1129,11 +1189,50 @@ function renderMapa() {
     }
 }
 
+// Temas rápidos: aplican una combinación de colores armoniosa de una vez.
+// El admin puede ajustar accent/bg a mano después igual.
+const THEME_PRESETS = {
+    oscuro: { bg: "#0f172a", card: "#1e293b", text: "#f1f5f9", accent: "#3b82f6", success: "#10b981", promo: "#f59e0b", danger: "#ef4444" },
+    claro:  { bg: "#f1f5f9", card: "#ffffff", text: "#0f172a", accent: "#2563eb", success: "#059669", promo: "#d97706", danger: "#dc2626" },
+    neon:   { bg: "#0d0221", card: "#1b0c3d", text: "#f5e9ff", accent: "#ff00e5", success: "#00ff9f", promo: "#ffea00", danger: "#ff2079" }
+};
+let presetTemaSeleccionado = null; // solo se aplica de verdad al guardar
+
+function aplicarPresetTema() {
+    const preset = document.getElementById("cfgThemePreset").value;
+    if (!preset || !THEME_PRESETS[preset]) { presetTemaSeleccionado = null; return; }
+    presetTemaSeleccionado = THEME_PRESETS[preset];
+    document.getElementById("cfgAccent").value = presetTemaSeleccionado.accent;
+    document.getElementById("cfgBg").value = presetTemaSeleccionado.bg;
+}
+
 function cargarFormConfig() {
     const accentEl = document.getElementById("cfgAccent");
     if (!accentEl) return; // el panel admin todavía no está en el DOM (no debería pasar, pero por las dudas)
+
+    document.getElementById("cfgWhatsapp").value = STORE_CONFIG.whatsappNumber || "";
+    document.getElementById("cfgAddress").value = STORE_CONFIG.address || "";
+    document.getElementById("cfgHorarios").value = STORE_CONFIG.horarios || "";
+    document.getElementById("cfgInstagram").value = STORE_CONFIG.instagramUrl || "";
+    document.getElementById("cfgFacebook").value = STORE_CONFIG.facebookUrl || "";
+    document.getElementById("cfgTiktok").value = STORE_CONFIG.tiktokUrl || "";
+
+    document.getElementById("cfgPausada").checked = !!STORE_CONFIG.pausada;
+    document.getElementById("cfgBannerActivo").checked = !!STORE_CONFIG.bannerActivo;
+    document.getElementById("cfgBannerTexto").value = STORE_CONFIG.bannerTexto || "";
+
+    const pagos = STORE_CONFIG.pagos || {};
+    document.getElementById("cfgPagoEfectivo").checked = pagos.efectivo !== false;
+    document.getElementById("cfgPagoTransferencia").checked = !!pagos.transferencia;
+    document.getElementById("cfgDatosTransferencia").value = pagos.datosTransferencia || "";
+    document.getElementById("cfgPagoMercadoPago").checked = !!pagos.mercadopago;
+
+    document.getElementById("cfgLogoUrl").value = STORE_CONFIG.logoUrl || "";
+    document.getElementById("cfgThemePreset").value = "";
+    presetTemaSeleccionado = null;
     accentEl.value = STORE_CONFIG.theme.accent || "#3b82f6";
     document.getElementById("cfgBg").value = STORE_CONFIG.theme.bg || "#0f172a";
+
     document.getElementById("cfgMostrarHero").checked = STORE_CONFIG.features.heroSlider !== false;
     document.getElementById("cfgMostrarMapa").checked = !!STORE_CONFIG.features.mostrarMapa;
     document.getElementById("cfgMapaIframe").value = STORE_CONFIG.mapaUrl || "";
@@ -1146,8 +1245,29 @@ async function guardarConfigTienda() {
         return alert('No pudimos reconocer el link del mapa. En Google Maps: Compartir → Insertar un mapa → Copiar HTML, y pegá ese código completo (o directamente la URL que aparece dentro de src="...").');
     }
 
+    const whatsapp = document.getElementById("cfgWhatsapp").value.trim().replace(/[^0-9]/g, '');
+    if (!whatsapp) return alert("El WhatsApp para pedidos es obligatorio.");
+
+    const themeBase = presetTemaSeleccionado || STORE_CONFIG.theme;
+
     const datos = {
-        theme: { ...STORE_CONFIG.theme, accent: document.getElementById("cfgAccent").value, bg: document.getElementById("cfgBg").value },
+        whatsappNumber: whatsapp,
+        address: document.getElementById("cfgAddress").value.trim(),
+        horarios: document.getElementById("cfgHorarios").value.trim(),
+        instagramUrl: document.getElementById("cfgInstagram").value.trim(),
+        facebookUrl: document.getElementById("cfgFacebook").value.trim(),
+        tiktokUrl: document.getElementById("cfgTiktok").value.trim(),
+        pausada: document.getElementById("cfgPausada").checked,
+        bannerActivo: document.getElementById("cfgBannerActivo").checked,
+        bannerTexto: document.getElementById("cfgBannerTexto").value.trim(),
+        pagos: {
+            efectivo: document.getElementById("cfgPagoEfectivo").checked,
+            transferencia: document.getElementById("cfgPagoTransferencia").checked,
+            datosTransferencia: document.getElementById("cfgDatosTransferencia").value.trim(),
+            mercadopago: document.getElementById("cfgPagoMercadoPago").checked
+        },
+        logoUrl: document.getElementById("cfgLogoUrl").value.trim(),
+        theme: { ...themeBase, accent: document.getElementById("cfgAccent").value, bg: document.getElementById("cfgBg").value },
         features: { ...STORE_CONFIG.features, heroSlider: document.getElementById("cfgMostrarHero").checked, mostrarMapa: document.getElementById("cfgMostrarMapa").checked },
         mapaUrl: mapaUrl
     };
@@ -1155,9 +1275,12 @@ async function guardarConfigTienda() {
     try {
         await db.collection("config").doc("tienda").set(datos, { merge: true });
         STORE_CONFIG = { ...STORE_CONFIG, ...datos };
+        presetTemaSeleccionado = null;
         aplicarTema();
         aplicarBranding();
         renderMapa();
+        renderBanners();
+        renderMetodoPagoSelector();
         alert("✅ Configuración guardada");
     } catch (e) {
         console.error(e);
@@ -1188,12 +1311,56 @@ function setCat(el, cat) {
 
 // ==================== CHECKOUT POR WHATSAPP ====================
 
+// ==================== MEDIOS DE PAGO ====================
+
+function metodosPagoActivos() {
+    const p = STORE_CONFIG.pagos || {};
+    const metodos = [];
+    if (p.efectivo) metodos.push({ id: "efectivo", label: "Efectivo / Contra entrega" });
+    if (p.transferencia) metodos.push({ id: "transferencia", label: "Transferencia bancaria" });
+    if (p.mercadopago) metodos.push({ id: "mercadopago", label: "Mercado Pago" });
+    return metodos;
+}
+
+// Si hay 2 o más métodos activos, el cliente elige uno antes de enviar el
+// pedido. Si hay uno solo, se usa directo sin mostrar el selector.
+function renderMetodoPagoSelector() {
+    const metodos = metodosPagoActivos();
+    const cont = document.getElementById("metodoPagoContainer");
+    if (!cont) return;
+    if (metodos.length <= 1) {
+        cont.style.display = "none";
+        return;
+    }
+    document.getElementById("metodoPagoSelect").innerHTML = metodos.map(m => `<option value="${m.id}">${m.label}</option>`).join('');
+    cont.style.display = "block";
+}
+
 async function finalizarYEnviar() {
+    if (STORE_CONFIG.pausada) return alert("Esta tienda no está recibiendo pedidos en este momento.");
     if (cart.length === 0) return alert("El carrito está vacío.");
 
     let textoPedido = `*📦 NUEVO PEDIDO — ${STORE_CONFIG.storeName.toUpperCase()}*\n`;
     if (usuarioLogueado) textoPedido += `*Cliente:* ${usuarioLogueado.user}\n*Local:* ${usuarioLogueado.dir || 'Sin dirección'}\n`;
     else textoPedido += `*Cliente:* Minorista\n`;
+
+    // Medio de pago elegido (si hay más de uno configurado, el que
+    // seleccionó el cliente; si hay uno solo, se usa directo)
+    const metodos = metodosPagoActivos();
+    let metodoElegido = null;
+    if (metodos.length === 1) metodoElegido = metodos[0].id;
+    else if (metodos.length > 1) {
+        const sel = document.getElementById("metodoPagoSelect");
+        metodoElegido = (sel && sel.value) || metodos[0].id;
+    }
+    if (metodoElegido) {
+        const metodoInfo = metodos.find(m => m.id === metodoElegido);
+        textoPedido += `*Medio de pago:* ${metodoInfo ? metodoInfo.label : metodoElegido}\n`;
+        if (metodoElegido === "transferencia" && STORE_CONFIG.pagos.datosTransferencia) {
+            textoPedido += `*Datos para transferir:*\n${STORE_CONFIG.pagos.datosTransferencia}\n`;
+        }
+    }
+
     textoPedido += `----------------------------\n`;
 
     const batch = db.batch();
@@ -1310,6 +1477,7 @@ function toggleCart() {
     document.getElementById("ov").classList.toggle("active");
     document.body.classList.toggle("no-scroll", d.classList.contains("active"));
     updateCartUI();
+    renderMetodoPagoSelector();
 }
 
 function closeAll() {
