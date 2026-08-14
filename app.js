@@ -133,15 +133,24 @@ function init() {
     const searchEl = document.getElementById("searchInput");
     if (searchEl) searchEl.value = "";
 
-    aplicarTema();
-    aplicarBranding();
-    renderCategorias();
-    renderCategoriasSelect();
-    updateCartUI();
-    inicializarNotificaciones();
-    renderMapa();
-    renderBanners();
-    cargarFormConfig();
+    // Cada paso va en su propio try/catch: si uno falla (ej. por un
+    // archivo desactualizado en el hosting, con index.html y app.js de
+    // versiones distintas), el resto de la tienda igual se termina de
+    // cargar en vez de quedar todo roto en cadena.
+    const pasos = [
+        ["aplicarTema", aplicarTema],
+        ["aplicarBranding", aplicarBranding],
+        ["renderCategorias", renderCategorias],
+        ["renderCategoriasSelect", renderCategoriasSelect],
+        ["updateCartUI", updateCartUI],
+        ["inicializarNotificaciones", inicializarNotificaciones],
+        ["renderMapa", renderMapa],
+        ["renderBanners", renderBanners],
+        ["cargarFormConfig", cargarFormConfig],
+    ];
+    pasos.forEach(([nombre, fn]) => {
+        try { fn(); } catch (e) { console.error(`init(): falló ${nombre}()`, e); }
+    });
 
     // Resolver sesión: ¿invitado, administrador o cliente mayorista?
     auth.onAuthStateChanged(async (user) => {
@@ -225,6 +234,16 @@ function aplicarTema() {
     Object.entries(STORE_CONFIG.theme || {}).forEach(([k, v]) => root.style.setProperty(`--${k}`, v));
 }
 
+// Aplica una función a un elemento SOLO si existe en el DOM. Evita que un
+// solo elemento faltante (por ejemplo, un index.html desactualizado
+// respecto a este app.js) corte a mitad de camino toda la función que lo
+// usa.
+function conEl(id, fn) {
+    const el = document.getElementById(id);
+    if (el) fn(el);
+    else console.warn(`conEl: no se encontró #${id} en el HTML (¿index.html desactualizado?)`);
+}
+
 function aplicarBranding() {
     document.title = STORE_CONFIG.storeName;
 
@@ -239,49 +258,43 @@ function aplicarBranding() {
         el.innerText = STORE_CONFIG.storeName;
     });
 
-    document.getElementById("drawerBrand").innerText = STORE_CONFIG.storeName;
-    document.getElementById("drawerStoreName").innerText = STORE_CONFIG.storeName;
-    document.getElementById("drawerTagline").innerHTML =
-        STORE_CONFIG.tagline + (STORE_CONFIG.city ? `<br>en ${STORE_CONFIG.city}` : "");
+    conEl("drawerBrand", el => el.innerText = STORE_CONFIG.storeName);
+    conEl("drawerStoreName", el => el.innerText = STORE_CONFIG.storeName);
+    conEl("drawerTagline", el => el.innerHTML =
+        STORE_CONFIG.tagline + (STORE_CONFIG.city ? `<br>en ${STORE_CONFIG.city}` : ""));
 
     // Dirección y horarios (solo se muestran si están cargados)
-    const dirEl = document.getElementById("drawerDireccion");
-    if (STORE_CONFIG.address) {
-        dirEl.innerText = "📍 " + STORE_CONFIG.address;
-        dirEl.style.display = "block";
-    } else {
-        dirEl.style.display = "none";
-    }
-    const horEl = document.getElementById("drawerHorarios");
-    if (STORE_CONFIG.horarios) {
-        horEl.innerText = "🕒 " + STORE_CONFIG.horarios;
-        horEl.style.display = "block";
-    } else {
-        horEl.style.display = "none";
-    }
+    conEl("drawerDireccion", el => {
+        if (STORE_CONFIG.address) { el.innerText = "📍 " + STORE_CONFIG.address; el.style.display = "block"; }
+        else el.style.display = "none";
+    });
+    conEl("drawerHorarios", el => {
+        if (STORE_CONFIG.horarios) { el.innerText = "🕒 " + STORE_CONFIG.horarios; el.style.display = "block"; }
+        else el.style.display = "none";
+    });
 
-    document.getElementById("waLink").href = `https://wa.me/${STORE_CONFIG.whatsappNumber}`;
+    conEl("waLink", el => el.href = `https://wa.me/${STORE_CONFIG.whatsappNumber}`);
 
-    const ig = document.getElementById("igLink");
-    ig.href = STORE_CONFIG.instagramUrl || "#";
-    ig.style.display = STORE_CONFIG.instagramUrl ? "flex" : "none";
+    conEl("igLink", el => {
+        el.href = STORE_CONFIG.instagramUrl || "#";
+        el.style.display = STORE_CONFIG.instagramUrl ? "flex" : "none";
+    });
+    conEl("fbLink", el => {
+        el.href = STORE_CONFIG.facebookUrl || "#";
+        el.style.display = STORE_CONFIG.facebookUrl ? "flex" : "none";
+    });
+    conEl("ttLink", el => {
+        el.href = STORE_CONFIG.tiktokUrl || "#";
+        el.style.display = STORE_CONFIG.tiktokUrl ? "flex" : "none";
+    });
 
-    const fb = document.getElementById("fbLink");
-    fb.href = STORE_CONFIG.facebookUrl || "#";
-    fb.style.display = STORE_CONFIG.facebookUrl ? "flex" : "none";
+    conEl("footerVersion", el => el.innerText =
+        `${STORE_CONFIG.storeName}${STORE_CONFIG.city ? " • " + STORE_CONFIG.city.toUpperCase() : ""}`);
 
-    const tt = document.getElementById("ttLink");
-    tt.href = STORE_CONFIG.tiktokUrl || "#";
-    tt.style.display = STORE_CONFIG.tiktokUrl ? "flex" : "none";
+    conEl("regPrompt", el => el.style.display = STORE_CONFIG.features.userRegistration ? "" : "none");
 
-    document.getElementById("footerVersion").innerText =
-        `${STORE_CONFIG.storeName}${STORE_CONFIG.city ? " • " + STORE_CONFIG.city.toUpperCase() : ""}`;
-
-    document.getElementById("regPrompt").style.display =
-        STORE_CONFIG.features.userRegistration ? "" : "none";
-
-    document.getElementById("heroSlider").style.display =
-        STORE_CONFIG.features.heroSlider ? "" : "none";
+    conEl("heroSlider", el => el.style.display =
+        STORE_CONFIG.features.heroSlider ? "" : "none");
 
     document.body.classList.toggle("no-stock", !STORE_CONFIG.features.stockControl);
     document.body.classList.toggle("no-variants", !STORE_CONFIG.features.productVariants);
@@ -295,6 +308,10 @@ function renderBanners() {
     const bannerPausa = document.getElementById("bannerPausa");
     const bannerPromo = document.getElementById("bannerPromo");
     const cartBtn = document.getElementById("cartIconBtn");
+    if (!bannerPausa || !bannerPromo) {
+        console.warn("renderBanners: faltan #bannerPausa/#bannerPromo en el HTML");
+        return;
+    }
 
     if (STORE_CONFIG.pausada) {
         bannerPausa.style.display = "block";
@@ -774,7 +791,9 @@ async function registrarUsuario() {
         console.error(e);
         if (e.code === 'auth/email-already-in-use') alert("Ese nombre de usuario ya está en uso.");
         else if (e.code === 'auth/weak-password') alert("La contraseña es muy débil (mínimo 6 caracteres).");
-        else alert("Error al enviar la solicitud.");
+        else if (e.code === 'auth/operation-not-allowed') alert("El login por usuario/contraseña no está habilitado en este proyecto de Firebase todavía (Authentication → Sign-in method → Email/Password).");
+        else if (e.code === 'permission-denied') alert("Las reglas de seguridad de Firestore de esta tienda no dejan completar el registro. Revisá que esté pegado el firestore.rules más reciente.");
+        else alert("Error al enviar la solicitud" + (e.code ? " (" + e.code + ")" : "") + ". Si persiste, revisá la consola del navegador (F12) para más detalle.");
     }
 }
 
@@ -1245,8 +1264,9 @@ async function guardarConfigTienda() {
         return alert('No pudimos reconocer el link del mapa. En Google Maps: Compartir → Insertar un mapa → Copiar HTML, y pegá ese código completo (o directamente la URL que aparece dentro de src="...").');
     }
 
+    // El WhatsApp ya NO bloquea el guardado del resto de la configuración
+    // (antes, si estaba vacío, no se guardaba nada de nada — bug).
     const whatsapp = document.getElementById("cfgWhatsapp").value.trim().replace(/[^0-9]/g, '');
-    if (!whatsapp) return alert("El WhatsApp para pedidos es obligatorio.");
 
     const themeBase = presetTemaSeleccionado || STORE_CONFIG.theme;
 
@@ -1281,10 +1301,10 @@ async function guardarConfigTienda() {
         renderMapa();
         renderBanners();
         renderMetodoPagoSelector();
-        alert("✅ Configuración guardada");
+        alert(whatsapp ? "✅ Configuración guardada" : "✅ Configuración guardada.\n\n⚠️ Ojo: el WhatsApp para pedidos quedó vacío — el checkout no va a funcionar hasta que lo completes.");
     } catch (e) {
         console.error(e);
-        alert("Error al guardar: " + (e.message || e));
+        alert("Error al guardar: " + (e.message || e) + (e.code ? " (" + e.code + ")" : ""));
     }
 }
 
@@ -1512,3 +1532,12 @@ document.addEventListener("keydown", (e) => {
 });
 
 window.onload = bootstrap;
+
+// Refuerzo extra del fix de autofill: cuando se vuelve a esta página con el
+// botón "atrás" del navegador, algunos navegadores restauran el HTML desde
+// caché (bfcache) sin volver a disparar "load" ni bootstrap() — así que acá
+// forzamos de nuevo la limpieza del buscador por las dudas.
+window.addEventListener("pageshow", () => {
+    const searchEl = document.getElementById("searchInput");
+    if (searchEl) searchEl.value = "";
+});
