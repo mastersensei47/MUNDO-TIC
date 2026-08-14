@@ -39,7 +39,7 @@ const CONFIG_DEFAULTS = {
     address: "", horarios: "",
     businessType: "generico", whatsappNumber: "", instagramUrl: "", facebookUrl: "", tiktokUrl: "",
     currency: "$", mapaUrl: "",
-    pausada: false, bannerActivo: false, bannerTexto: "",
+    pausada: false, bannerActivo: false, bannerTexto: "", bannerBgColor: "#f59e0b", bannerTextColor: "#000000",
     pagos: { efectivo: true, transferencia: false, mercadopago: false, datosTransferencia: "" },
     features: { wholesalePricing: true, stockControl: true, heroSlider: true, userRegistration: true, productVariants: false, mostrarMapa: false },
     categories: [],
@@ -322,6 +322,8 @@ function renderBanners() {
         if (cartBtn) cartBtn.style.display = "";
         if (STORE_CONFIG.bannerActivo && STORE_CONFIG.bannerTexto) {
             bannerPromo.innerText = STORE_CONFIG.bannerTexto;
+            bannerPromo.style.background = STORE_CONFIG.bannerBgColor || "var(--promo)";
+            bannerPromo.style.color = STORE_CONFIG.bannerTextColor || "#000";
             bannerPromo.style.display = "block";
         } else {
             bannerPromo.style.display = "none";
@@ -1211,11 +1213,21 @@ function renderMapa() {
 // Temas rápidos: aplican una combinación de colores armoniosa de una vez.
 // El admin puede ajustar accent/bg a mano después igual.
 const THEME_PRESETS = {
-    oscuro: { bg: "#0f172a", card: "#1e293b", text: "#f1f5f9", accent: "#3b82f6", success: "#10b981", promo: "#f59e0b", danger: "#ef4444" },
-    claro:  { bg: "#f1f5f9", card: "#ffffff", text: "#0f172a", accent: "#2563eb", success: "#059669", promo: "#d97706", danger: "#dc2626" },
-    neon:   { bg: "#0d0221", card: "#1b0c3d", text: "#f5e9ff", accent: "#ff00e5", success: "#00ff9f", promo: "#ffea00", danger: "#ff2079" }
+    oscuro:     { bg: "#0f172a", card: "#1e293b", text: "#f1f5f9", accent: "#3b82f6", success: "#10b981", promo: "#f59e0b", danger: "#ef4444" },
+    claro:      { bg: "#f1f5f9", card: "#ffffff", text: "#0f172a", accent: "#2563eb", success: "#059669", promo: "#d97706", danger: "#dc2626" },
+    neon:       { bg: "#0d0221", card: "#1b0c3d", text: "#f5e9ff", accent: "#ff00e5", success: "#00ff9f", promo: "#ffea00", danger: "#ff2079" },
+    elegante:   { bg: "#1a1a1a", card: "#242424", text: "#e8e6e1", accent: "#c9a961", success: "#7c9885", promo: "#c9a961", danger: "#b85c5c" },
+    cyberpunk:  { bg: "#0a0a0f", card: "#16161f", text: "#f5f5ff", accent: "#f9e900", success: "#00ffc8", promo: "#05d9e8", danger: "#ff003c" },
+    deportivo:  { bg: "#ffffff", card: "#f5f5f5", text: "#1a1a1a", accent: "#e63946", success: "#2a9d3f", promo: "#e63946", danger: "#c1121f" }
 };
 let presetTemaSeleccionado = null; // solo se aplica de verdad al guardar
+
+// Vista previa en vivo: cambia la variable CSS al toque, sin esperar a
+// guardar. Si se recarga la página sin guardar, se pierde (vuelve a
+// mostrarse lo que está guardado de verdad en Firestore).
+function previsualizarColor(variableCSS, valor) {
+    document.documentElement.style.setProperty(variableCSS, valor);
+}
 
 function aplicarPresetTema() {
     const preset = document.getElementById("cfgThemePreset").value;
@@ -1223,6 +1235,8 @@ function aplicarPresetTema() {
     presetTemaSeleccionado = THEME_PRESETS[preset];
     document.getElementById("cfgAccent").value = presetTemaSeleccionado.accent;
     document.getElementById("cfgBg").value = presetTemaSeleccionado.bg;
+    // Vista previa en vivo de la paleta completa (no solo accent/bg)
+    Object.entries(presetTemaSeleccionado).forEach(([k, v]) => previsualizarColor(`--${k}`, v));
 }
 
 function cargarFormConfig() {
@@ -1239,6 +1253,8 @@ function cargarFormConfig() {
     document.getElementById("cfgPausada").checked = !!STORE_CONFIG.pausada;
     document.getElementById("cfgBannerActivo").checked = !!STORE_CONFIG.bannerActivo;
     document.getElementById("cfgBannerTexto").value = STORE_CONFIG.bannerTexto || "";
+    document.getElementById("cfgBannerBg").value = STORE_CONFIG.bannerBgColor || "#f59e0b";
+    document.getElementById("cfgBannerColor").value = STORE_CONFIG.bannerTextColor || "#000000";
 
     const pagos = STORE_CONFIG.pagos || {};
     document.getElementById("cfgPagoEfectivo").checked = pagos.efectivo !== false;
@@ -1251,6 +1267,9 @@ function cargarFormConfig() {
     presetTemaSeleccionado = null;
     accentEl.value = STORE_CONFIG.theme.accent || "#3b82f6";
     document.getElementById("cfgBg").value = STORE_CONFIG.theme.bg || "#0f172a";
+    const radioSel = document.getElementById("cfgRadius");
+    const radioActual = STORE_CONFIG.theme.radius || "18px";
+    radioSel.value = ["0px", "8px", "20px"].includes(radioActual) ? radioActual : "8px";
 
     document.getElementById("cfgMostrarHero").checked = STORE_CONFIG.features.heroSlider !== false;
     document.getElementById("cfgMostrarMapa").checked = !!STORE_CONFIG.features.mostrarMapa;
@@ -1280,6 +1299,8 @@ async function guardarConfigTienda() {
         pausada: document.getElementById("cfgPausada").checked,
         bannerActivo: document.getElementById("cfgBannerActivo").checked,
         bannerTexto: document.getElementById("cfgBannerTexto").value.trim(),
+        bannerBgColor: document.getElementById("cfgBannerBg").value,
+        bannerTextColor: document.getElementById("cfgBannerColor").value,
         pagos: {
             efectivo: document.getElementById("cfgPagoEfectivo").checked,
             transferencia: document.getElementById("cfgPagoTransferencia").checked,
@@ -1287,7 +1308,7 @@ async function guardarConfigTienda() {
             mercadopago: document.getElementById("cfgPagoMercadoPago").checked
         },
         logoUrl: document.getElementById("cfgLogoUrl").value.trim(),
-        theme: { ...themeBase, accent: document.getElementById("cfgAccent").value, bg: document.getElementById("cfgBg").value },
+        theme: { ...themeBase, accent: document.getElementById("cfgAccent").value, bg: document.getElementById("cfgBg").value, radius: document.getElementById("cfgRadius").value },
         features: { ...STORE_CONFIG.features, heroSlider: document.getElementById("cfgMostrarHero").checked, mostrarMapa: document.getElementById("cfgMostrarMapa").checked },
         mapaUrl: mapaUrl
     };
