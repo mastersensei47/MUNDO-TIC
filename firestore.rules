@@ -64,21 +64,22 @@ service cloud.firestore {
       allow write: if esAdmin();
     }
 
-    // ------------------------------------------------------------------
-    // CLIENTES MAYORISTAS
-    // El documento de cada cliente vive en usuarios/{uid}, donde {uid} es
-    // su propio ID de Firebase Authentication. Cada cliente solo puede
-    // crear y leer SU PROPIO perfil, nunca el de otro. No puede
-    // autoaprobarse: el campo "activo" nace en false y solo el
-    // administrador puede cambiarlo a true.
+// ------------------------------------------------------------------
+    // CLIENTES MAYORISTAS / REGISTRO DE USUARIOS (CORREGIDO)
     // ------------------------------------------------------------------
     match /usuarios/{uid} {
-      allow read: if esDueno(uid) || esAdmin();
-      allow create: if esDueno(uid) && request.resource.data.activo == false;
+      // Permitimos lectura para consultar disponibilidad de usuarios / perfiles propios
+      allow read: if true;
+      
+      // Permitimos crear el documento si el usuario está autenticado O si es el registro inicial obligatorio con activo: false
+      allow create: if (esDueno(uid) || estaLogueado()) && request.resource.data.activo == false;
+      
+      // Solo el admin puede activar/modificar el perfil, o el dueño sin alterar su estado "activo"
       allow update: if esAdmin() || (
         esDueno(uid) &&
         request.resource.data.activo == resource.data.activo
       );
+      
       allow delete: if esAdmin();
     }
 
