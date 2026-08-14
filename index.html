@@ -194,6 +194,8 @@
                     <input type="checkbox" id="cfgBannerActivo" style="width:20px; height:20px;"> Mostrar banner de aviso arriba de todo
                 </label>
                 <div class="form-group"><input id="cfgBannerTexto" placeholder="Ej: ¡ENVÍOS GRATIS comprando más de $20.000!"></div>
+                <div class="form-group"><label>Color de fondo del banner</label><input id="cfgBannerBg" type="color" style="height:50px; padding:5px; cursor:pointer;"></div>
+                <div class="form-group"><label>Color del texto del banner</label><input id="cfgBannerColor" type="color" style="height:50px; padding:5px; cursor:pointer;"></div>
 
                 <h4 style="margin-top:30px; opacity:0.7;">Medios de pago aceptados</h4>
                 <label style="display:flex; align-items:center; gap:10px; margin-bottom:12px; cursor:pointer;">
@@ -210,16 +212,28 @@
                 <h4 style="margin-top:30px; opacity:0.7;">Experiencia visual</h4>
                 <div class="form-group"><label>URL del logo (vacío = se muestra el nombre en texto)</label><input id="cfgLogoUrl" placeholder="https://..."></div>
                 <div class="form-group">
-                    <label>Tema rápido (opcional — pisa los colores de abajo)</label>
+                    <label>Tema rápido (opcional — pisa los colores de abajo, con vista previa al instante)</label>
                     <select id="cfgThemePreset" onchange="aplicarPresetTema()">
                         <option value="">— Elegir un tema... —</option>
                         <option value="oscuro">Tema Oscuro</option>
                         <option value="claro">Tema Claro</option>
-                        <option value="neon">Tema Neón</option>
+                        <option value="neon">Gaming / Neón</option>
+                        <option value="elegante">Elegante / Minimalista</option>
+                        <option value="cyberpunk">Cyberpunk</option>
+                        <option value="deportivo">Rojiblanco / Deportivo</option>
                     </select>
                 </div>
-                <div class="form-group"><label>Color principal (accent)</label><input id="cfgAccent" type="color" style="height:50px; padding:5px; cursor:pointer;"></div>
-                <div class="form-group"><label>Color de fondo</label><input id="cfgBg" type="color" style="height:50px; padding:5px; cursor:pointer;"></div>
+                <div class="form-group"><label>Color principal (accent)</label><input id="cfgAccent" type="color" style="height:50px; padding:5px; cursor:pointer;" oninput="previsualizarColor('--accent', this.value)"></div>
+                <div class="form-group"><label>Color de fondo</label><input id="cfgBg" type="color" style="height:50px; padding:5px; cursor:pointer;" oninput="previsualizarColor('--bg', this.value)"></div>
+                <div class="form-group">
+                    <label>Bordes de las tarjetas de producto</label>
+                    <select id="cfgRadius" onchange="previsualizarColor('--radius', this.value)">
+                        <option value="0px">Rectos</option>
+                        <option value="8px">Redondeados</option>
+                        <option value="20px">Muy redondeados (pill)</option>
+                    </select>
+                </div>
+                <p style="opacity:0.5; font-size:12px; margin-top:-10px;">Los colores y bordes se ven al instante como vista previa — recién quedan guardados de verdad al tocar "GUARDAR CONFIGURACIÓN" más abajo.</p>
 
                 <h4 style="margin-top:30px; opacity:0.7;">Secciones</h4>
                 <label style="display:flex; align-items:center; gap:10px; margin-bottom:15px; cursor:pointer;">
