@@ -505,3 +505,73 @@ body.no-stock .detail-stock { display: none; }
 
 /* Oculta el campo de variantes en el panel admin cuando features.productVariants = false */
 body.no-variants .variantes-field { display: none; }
+
+/* ==================== DISEÑO / LAYOUT (pestaña DISEÑO del panel admin) ==================== */
+
+/* --- Catálogo: columna única --- */
+body.catalog-grid1 .products-grid { grid-template-columns: 1fr; }
+
+/* --- Catálogo: lista compacta (modo mayorista/tabla) --- */
+body.catalog-list .products-grid { grid-template-columns: 1fr; gap: 10px; max-width: 900px; }
+body.catalog-list .product-card { flex-direction: row; align-items: center; }
+body.catalog-list .product-card:hover { transform: none; }
+body.catalog-list .img-box { width: 90px; height: 90px; min-width: 90px; padding: 8px; }
+body.catalog-list .info-box { flex: 1; padding: 12px 16px; }
+body.catalog-list .prod-title { font-size: 14px; min-height: 0; margin-bottom: 4px; }
+body.catalog-list .price-val { font-size: 18px; margin-bottom: 4px; }
+body.catalog-list .stock-info { margin-bottom: 8px; }
+body.catalog-list .promo-badge { top: 4px; left: 4px; font-size: 9px; padding: 2px 6px; }
+body.catalog-list .btn-add { padding: 10px 16px; font-size: 13px; align-self: flex-start; }
+
+/* --- Header: no sticky (se va con el scroll normal) --- */
+body.header-not-sticky header { position: static; }
+
+/* --- Header: estilo flotante moderno vs barra tradicional (default = flotante) --- */
+header { margin: 10px; border-radius: 20px; }
+body.header-bar header { margin: 0; border-radius: 0; }
+
+/* --- Efecto en las fotos: zoom al pasar el mouse --- */
+body.img-effect-zoom .img-box img { transition: transform 0.4s ease; }
+body.img-effect-zoom .product-card:hover .img-box img { transform: scale(1.12); }
+
+/* --- Efecto en las fotos: degradé en las esquinas --- */
+body.img-effect-gradient .img-box::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, transparent 55%, rgba(0,0,0,0.35) 100%);
+    pointer-events: none;
+}
+
+/* --- Efecto glow/neón en las tarjetas --- */
+body.glow-effect .product-card { box-shadow: 0 0 18px rgba(0,0,0,0.15), 0 0 22px var(--accent); }
+body.glow-effect .product-card:hover { box-shadow: 0 0 28px var(--accent); }
+
+/* --- Animación: sacudida del ícono del carrito al agregar un producto --- */
+@keyframes shakeCartIcon {
+    0%, 100% { transform: rotate(0); }
+    20% { transform: rotate(-18deg); }
+    40% { transform: rotate(14deg); }
+    60% { transform: rotate(-10deg); }
+    80% { transform: rotate(6deg); }
+}
+.shake-cart { animation: shakeCartIcon 0.45s ease; display: inline-block; }
+
+/* --- Carrito como ventana emergente centrada (modal) en vez de panel lateral --- */
+body.cart-style-modal #cartDrawer {
+    left: 50%; right: auto; top: 50%;
+    transform: translate(-50%, -45%) scale(0.95);
+    width: 92%; max-width: 480px; height: auto; max-height: 82vh;
+    border-radius: var(--radius);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+body.cart-style-modal #cartDrawer.active {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* --- Ocultar el campo de precio mayorista en el form de producto (modo "solo minorista") --- */
+body.precio-mayorista-oculto .precio-mayorista-field { display: none; }
