@@ -334,6 +334,40 @@ Pestaña **CONFIGURACIÓN** en el panel admin — edita el documento
   ajustar el color principal y de fondo a mano después).
 - **Colores** (accent / fondo) y **secciones** (Hero / Mapa) como antes.
 
+**Datos generales y de contacto** (ampliado)
+- **Nombre de la tienda**: ahora se edita desde el panel, ya no hace falta
+  tocar Firestore para esto.
+- **¿A qué público apunta la tienda?**: Mayorista y minorista / Solo
+  mayorista / Solo minorista. "Solo minorista" apaga automáticamente el
+  precio mayorista y el registro de clientes mayoristas — el cliente no ve
+  ni un rastro de esos textos o formularios. Es un selector único que por
+  detrás prende/apaga los dos interruptores relacionados, para no tener
+  que coordinarlos a mano.
+
+## Panel de diseño (pestaña DISEÑO)
+
+Otra pestaña nueva en el panel admin, para ajustes visuales más de fondo:
+
+- **Vista del catálogo**: grilla de 2 columnas (por defecto), columna
+  única con tarjetas grandes, o lista compacta tipo tabla (pensada para
+  catálogos mayoristas largos).
+- **Efecto en las fotos**: sin filtro, zoom suave al pasar el mouse, o un
+  degradé en las esquinas de cada imagen.
+- **Brillo/glow neón**: un resplandor de color (con el accent de la
+  tienda) alrededor de las tarjetas, para un estilo más gaming/moderno.
+- **Header sticky**: fijo arriba al hacer scroll, o desplazamiento normal.
+- **Estilo del menú**: flotante con bordes redondeados (por defecto) o
+  barra completa tradicional.
+- **Animación al agregar al carrito**: cartel emergente clásico, sacudida
+  del ícono del carrito, o la imagen del producto "volando" hasta el
+  carrito.
+- **Cómo se abre el carrito**: panel lateral (drawer, por defecto) o
+  ventana emergente centrada (modal).
+
+> Una página de checkout dedicada (en vez de carrito lateral/modal) queda
+> pendiente — es un cambio de arquitectura más grande que una simple
+> variación de CSS, mejor encararlo aparte si hace falta de verdad.
+
 ## Cómo carga productos el dueño de la tienda
 
 Logueado como administrador: ícono ⚙️ → pestaña **PRODUCTOS** → completar
@@ -432,10 +466,10 @@ categories: [
 
 ## Ideas para más adelante (no incluidas todavía)
 
-- Pantalla en el panel admin para editar `storeName`, `categories` y el
-  resto de `features` sin tocar Firestore a mano (hoy ya se puede editar
-  contacto, pausa/banner, medios de pago, logo y tema desde el panel — ver
-  "Panel de configuración de la tienda").
+- Pantalla en el panel admin para editar `categories` sin tocar Firestore
+  a mano (nombre de tienda, contacto, pausa/banner, medios de pago, logo,
+  tema y diseño ya se editan desde el panel).
+- Página de checkout dedicada como alternativa al carrito lateral/modal.
 - Cobro real con Mercado Pago (Checkout Pro) — hoy "Mercado Pago" como
   medio de pago es solo informativo, el cliente igual coordina el pago por
   fuera del sitio.
