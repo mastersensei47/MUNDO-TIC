@@ -126,6 +126,7 @@
             <button class="tab-btn" onclick="tab('t-stats', event)">ESTADÍSTICAS</button>
             <button class="tab-btn" onclick="tab('t-slider', event)">SLIDER HERO</button>
             <button class="tab-btn" onclick="tab('t-config', event)">CONFIGURACIÓN</button>
+            <button class="tab-btn" onclick="tab('t-layout', event)">DISEÑO</button>
         </div>
 
         <div id="t-prod">
@@ -133,7 +134,7 @@
                 <input id="fId" type="hidden">
                 <div class="form-group"><label>Nombre del Producto</label><input id="fNom"></div>
                 <div class="form-group"><label>Precio Normal ($)</label><input id="fPre" type="number"></div>
-                <div class="form-group"><label>Precio Mayorista ($)</label><input id="fPreMay" type="number"></div>
+                <div class="form-group precio-mayorista-field"><label>Precio Mayorista ($)</label><input id="fPreMay" type="number"></div>
                 <div class="form-group"><label>Stock disponible</label><input id="fStock" type="number" min="0" value="10"></div>
                 <div class="form-group"><label>Oferta Especial</label><input id="fPro"></div>
                 <div class="form-group"><label>Categoría</label><select id="fCat"></select></div>
@@ -179,6 +180,16 @@
         <div id="t-config" style="display:none;">
             <div class="admin-form-box">
                 <h4 style="margin-top:0; opacity:0.7;">Datos generales y de contacto</h4>
+                <div class="form-group"><label>Nombre de la tienda</label><input id="cfgStoreName" placeholder="Ej: Mundo Tic"></div>
+                <div class="form-group">
+                    <label>¿A qué público apunta la tienda?</label>
+                    <select id="cfgBusinessMode">
+                        <option value="ambos">Mayorista y minorista</option>
+                        <option value="mayorista">Solo mayorista</option>
+                        <option value="minorista">Solo minorista</option>
+                    </select>
+                </div>
+                <p style="opacity:0.5; font-size:12px; margin-top:-10px;">"Solo minorista" oculta por completo el registro de clientes mayoristas y el precio mayorista, para que nadie vea nada relacionado.</p>
                 <div class="form-group"><label>WhatsApp para pedidos (con código de país)</label><input id="cfgWhatsapp" placeholder="5493424123456"></div>
                 <div class="form-group"><label>Dirección del local</label><input id="cfgAddress" placeholder="Av. Facundo Zuviría 4500"></div>
                 <div class="form-group"><label>Horarios de atención</label><input id="cfgHorarios" placeholder="Lun a Vie 8 a 18 hs"></div>
@@ -251,13 +262,70 @@
                 <button class="btn-add" style="background:var(--success)" onclick="guardarConfigTienda()">GUARDAR CONFIGURACIÓN</button>
             </div>
         </div>
+
+        <div id="t-layout" style="display:none;">
+            <div class="admin-form-box">
+                <h4 style="margin-top:0; opacity:0.7;">Catálogo</h4>
+                <div class="form-group">
+                    <label>Vista del catálogo (en celulares)</label>
+                    <select id="cfgCatalogView">
+                        <option value="grid2">Grilla de 2 columnas</option>
+                        <option value="grid1">Columna única (tarjetas grandes)</option>
+                        <option value="list">Lista compacta (modo mayorista)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Efecto en las fotos del catálogo</label>
+                    <select id="cfgImageEffect">
+                        <option value="none">Sin filtro</option>
+                        <option value="zoom">Zoom al pasar el mouse</option>
+                        <option value="gradient">Degradé en las esquinas</option>
+                    </select>
+                </div>
+                <label style="display:flex; align-items:center; gap:10px; margin-bottom:15px; cursor:pointer;">
+                    <input type="checkbox" id="cfgGlowEffect" style="width:20px; height:20px;"> Efecto de brillo/glow tipo neón en las tarjetas
+                </label>
+
+                <h4 style="margin-top:30px; opacity:0.7;">Menú superior</h4>
+                <label style="display:flex; align-items:center; gap:10px; margin-bottom:15px; cursor:pointer;">
+                    <input type="checkbox" id="cfgHeaderSticky" style="width:20px; height:20px;"> Header fijo al hacer scroll (sticky)
+                </label>
+                <div class="form-group">
+                    <label>Estilo del menú</label>
+                    <select id="cfgHeaderStyle">
+                        <option value="floating">Flotante moderno (bordes redondeados)</option>
+                        <option value="bar">Barra completa tradicional</option>
+                    </select>
+                </div>
+
+                <h4 style="margin-top:30px; opacity:0.7;">Carrito</h4>
+                <div class="form-group">
+                    <label>Animación al agregar al carrito</label>
+                    <select id="cfgAddToCartAnim">
+                        <option value="banner">Cartel emergente (clásico)</option>
+                        <option value="shake">Sacudida del ícono del carrito</option>
+                        <option value="fly">Volar la imagen hasta el carrito</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Cómo se abre el carrito</label>
+                    <select id="cfgCartStyle">
+                        <option value="drawer">Panel lateral (drawer)</option>
+                        <option value="modal">Ventana emergente centrada (modal)</option>
+                    </select>
+                </div>
+                <p style="opacity:0.5; font-size:12px;">¿Página de checkout dedicada en vez de carrito? Es un cambio más grande — avisame si te interesa y lo armamos aparte.</p>
+
+                <button class="btn-add" style="background:var(--success)" onclick="guardarConfigTienda()">GUARDAR CONFIGURACIÓN</button>
+            </div>
+        </div>
     </div>
 </div>
 
 <div class="modal" id="loginModal">
     <div class="modal-content" style="max-width:420px; text-align:center; padding: 30px; margin: auto;">
         <h2 style="margin-bottom:10px;">¡Bienvenido de nuevo!</h2>
-        <p style="opacity:0.6; font-size:14px; margin-bottom:30px;">Accedé a tu cuenta</p>
+        <p id="loginSubtitulo" style="opacity:0.6; font-size:14px; margin-bottom:30px;">Accedé a tu cuenta</p>
         <div class="form-group"><input id="uInp" placeholder="Usuario (o email de administrador)"></div>
         <div class="form-group"><input id="pInp" type="password" placeholder="Contraseña"></div>
         <button class="btn-add" onclick="doLogin()">INICIAR SESIÓN</button>
