@@ -37,11 +37,21 @@ function mostrarErrorSlug(mensaje) {
 const CONFIG_DEFAULTS = {
     storeName: "Tienda", tagline: "", city: "", logoUrl: "",
     address: "", horarios: "",
-    businessType: "generico", whatsappNumber: "", instagramUrl: "", facebookUrl: "", tiktokUrl: "",
+    businessType: "generico", businessMode: "ambos", // "mayorista" | "minorista" | "ambos"
+    whatsappNumber: "", instagramUrl: "", facebookUrl: "", tiktokUrl: "",
     currency: "$", mapaUrl: "",
     pausada: false, bannerActivo: false, bannerTexto: "", bannerBgColor: "#f59e0b", bannerTextColor: "#000000",
     pagos: { efectivo: true, transferencia: false, mercadopago: false, datosTransferencia: "" },
     features: { wholesalePricing: true, stockControl: true, heroSlider: true, userRegistration: true, productVariants: false, mostrarMapa: false },
+    layout: {
+        catalogView: "grid2",     // "grid2" | "grid1" | "list"
+        headerSticky: true,
+        headerStyle: "floating",  // "floating" | "bar"
+        imageEffect: "none",      // "none" | "zoom" | "gradient"
+        addToCartAnim: "banner",  // "banner" | "shake" | "fly"
+        cartStyle: "drawer",      // "drawer" | "modal"
+        glowEffect: false
+    },
     categories: [],
     theme: { bg: "#0f172a", card: "#1e293b", text: "#f1f5f9", accent: "#3b82f6", success: "#10b981", promo: "#f59e0b", danger: "#ef4444", radius: "18px" },
     notifications: { emailEnabled: false, emailJsServiceId: "", emailJsTemplateId: "", emailJsPublicKey: "", adminEmail: "" }
@@ -89,6 +99,7 @@ async function bootstrap() {
             theme: { ...CONFIG_DEFAULTS.theme, ...(datosTienda.theme || {}) },
             notifications: { ...CONFIG_DEFAULTS.notifications, ...(datosTienda.notifications || {}) },
             pagos: { ...CONFIG_DEFAULTS.pagos, ...(datosTienda.pagos || {}) },
+            layout: { ...CONFIG_DEFAULTS.layout, ...(datosTienda.layout || {}) },
             storeId: slug // el slug ES el identificador interno, siempre
         };
 
@@ -146,6 +157,7 @@ function init() {
         ["inicializarNotificaciones", inicializarNotificaciones],
         ["renderMapa", renderMapa],
         ["renderBanners", renderBanners],
+        ["aplicarLayout", aplicarLayout],
         ["cargarFormConfig", cargarFormConfig],
     ];
     pasos.forEach(([nombre, fn]) => {
@@ -293,6 +305,14 @@ function aplicarBranding() {
 
     conEl("regPrompt", el => el.style.display = STORE_CONFIG.features.userRegistration ? "" : "none");
 
+    // Texto según el público al que apunta la tienda (mayorista/minorista/ambos)
+    conEl("loginSubtitulo", el => {
+        el.innerText = STORE_CONFIG.businessMode === "mayorista"
+            ? "Ingresá con tu cuenta mayorista"
+            : "Accedé a tu cuenta";
+    });
+    document.body.classList.toggle("precio-mayorista-oculto", !STORE_CONFIG.features.wholesalePricing);
+
     conEl("heroSlider", el => el.style.display =
         STORE_CONFIG.features.heroSlider ? "" : "none");
 
@@ -329,6 +349,21 @@ function renderBanners() {
             bannerPromo.style.display = "none";
         }
     }
+}
+
+// Aplica todas las opciones de diseño/layout como clases en <body> — todo
+// resuelto con CSS (más rápido y sin re-renderizar nada), salvo la
+// animación de "volar al carrito" que se maneja aparte en JS.
+function aplicarLayout() {
+    const l = STORE_CONFIG.layout || {};
+    document.body.classList.toggle("catalog-grid1", l.catalogView === "grid1");
+    document.body.classList.toggle("catalog-list", l.catalogView === "list");
+    document.body.classList.toggle("header-not-sticky", l.headerSticky === false);
+    document.body.classList.toggle("header-bar", l.headerStyle === "bar");
+    document.body.classList.toggle("img-effect-zoom", l.imageEffect === "zoom");
+    document.body.classList.toggle("img-effect-gradient", l.imageEffect === "gradient");
+    document.body.classList.toggle("cart-style-modal", l.cartStyle === "modal");
+    document.body.classList.toggle("glow-effect", !!l.glowEffect);
 }
 
 function renderCategorias() {
@@ -470,7 +505,7 @@ function render() {
                     <div class="prod-title">${p.nombre}</div>
                     <div class="price-val">${STORE_CONFIG.currency}${precioActual}</div>
                     ${conVariantes ? '' : `<div class="stock-info">Stock: ${p.stock} unidades</div>`}
-                    <button class="btn-add" onclick="event.stopImmediatePropagation(); ${conVariantes ? `showProductDetail('${p.id}')` : `addToCart('${p.id}')`}">🛒 ${conVariantes ? 'Ver opciones' : 'Agregar'}</button>
+                    <button class="btn-add" onclick="event.stopImmediatePropagation(); ${conVariantes ? `showProductDetail('${p.id}')` : `addToCart('${p.id}', event)`}">🛒 ${conVariantes ? 'Ver opciones' : 'Agregar'}</button>
                 </div>
             </div>`;
     }).join("");
@@ -641,11 +676,11 @@ function addCurrentToCart() {
     if (exist) exist.qty += currentDetailQty;
     else cart.push({id: currentProductId, qty: currentDetailQty, variante});
     updateCartUI();
-    showToast();
+    animarAgregarCarrito(document.getElementById('detailImg'));
     closeProductDetail();
 }
 
-function addToCart(id) {
+function addToCart(id, evt) {
     const p = prods.find(x => x.id === id);
     if (!p) return;
     if (p.tieneVariantes && STORE_CONFIG.features.productVariants) return showProductDetail(id);
@@ -654,13 +689,76 @@ function addToCart(id) {
     if (exist) exist.qty++;
     else cart.push({id, qty: 1, variante: null});
     updateCartUI();
-    showToast();
+    const origenCard = evt && evt.target && evt.target.closest ? evt.target.closest('.product-card') : null;
+    animarAgregarCarrito(origenCard ? origenCard.querySelector('.img-box img') : null);
 }
 
 function showToast() {
     const toast = document.getElementById("toast");
     toast.style.display = "flex";
     setTimeout(() => toast.style.display = "none", 2200);
+}
+
+// ==================== ANIMACIÓN AL AGREGAR AL CARRITO ====================
+
+function animarAgregarCarrito(imgOrigen) {
+    const anim = (STORE_CONFIG.layout && STORE_CONFIG.layout.addToCartAnim) || "banner";
+
+    if (anim === "shake") {
+        sacudirIconoCarrito();
+        showToast();
+    } else if (anim === "fly" && imgOrigen) {
+        volarAlCarrito(imgOrigen);
+    } else {
+        showToast(); // "banner" (default) o fallback si no hay imagen de origen para "fly"
+    }
+}
+
+function sacudirIconoCarrito() {
+    const cartBtn = document.getElementById("cartIconBtn");
+    if (!cartBtn) return;
+    cartBtn.classList.remove("shake-cart");
+    void cartBtn.offsetWidth; // fuerza reflow para poder repetir la animación seguidas veces
+    cartBtn.classList.add("shake-cart");
+    setTimeout(() => cartBtn.classList.remove("shake-cart"), 450);
+}
+
+// Clona la imagen del producto y la anima "volando" hasta el ícono del
+// carrito. Puramente visual — no afecta el carrito en sí (eso ya se hizo
+// antes de llamar a esta función).
+function volarAlCarrito(imgOrigen) {
+    const cartBtn = document.getElementById("cartIconBtn");
+    if (!cartBtn || !imgOrigen) { showToast(); return; }
+
+    const rectOrigen = imgOrigen.getBoundingClientRect();
+    const rectDestino = cartBtn.getBoundingClientRect();
+    if (rectOrigen.width === 0 || rectDestino.width === 0) { showToast(); return; }
+
+    const clon = imgOrigen.cloneNode(true);
+    clon.style.position = "fixed";
+    clon.style.left = rectOrigen.left + "px";
+    clon.style.top = rectOrigen.top + "px";
+    clon.style.width = rectOrigen.width + "px";
+    clon.style.height = rectOrigen.height + "px";
+    clon.style.borderRadius = "12px";
+    clon.style.objectFit = "cover";
+    clon.style.zIndex = "9999";
+    clon.style.pointerEvents = "none";
+    clon.style.transition = "left 0.6s cubic-bezier(0.4,0,0.2,1), top 0.6s cubic-bezier(0.4,0,0.2,1), width 0.6s, height 0.6s, opacity 0.6s";
+    document.body.appendChild(clon);
+
+    requestAnimationFrame(() => {
+        clon.style.left = (rectDestino.left + rectDestino.width / 2 - 15) + "px";
+        clon.style.top = (rectDestino.top + rectDestino.height / 2 - 15) + "px";
+        clon.style.width = "30px";
+        clon.style.height = "30px";
+        clon.style.opacity = "0.2";
+    });
+
+    setTimeout(() => {
+        clon.remove();
+        sacudirIconoCarrito();
+    }, 620);
 }
 
 // ==================== CARRITO ====================
@@ -1243,6 +1341,8 @@ function cargarFormConfig() {
     const accentEl = document.getElementById("cfgAccent");
     if (!accentEl) return; // el panel admin todavía no está en el DOM (no debería pasar, pero por las dudas)
 
+    document.getElementById("cfgStoreName").value = STORE_CONFIG.storeName || "";
+    document.getElementById("cfgBusinessMode").value = STORE_CONFIG.businessMode || "ambos";
     document.getElementById("cfgWhatsapp").value = STORE_CONFIG.whatsappNumber || "";
     document.getElementById("cfgAddress").value = STORE_CONFIG.address || "";
     document.getElementById("cfgHorarios").value = STORE_CONFIG.horarios || "";
@@ -1274,6 +1374,15 @@ function cargarFormConfig() {
     document.getElementById("cfgMostrarHero").checked = STORE_CONFIG.features.heroSlider !== false;
     document.getElementById("cfgMostrarMapa").checked = !!STORE_CONFIG.features.mostrarMapa;
     document.getElementById("cfgMapaIframe").value = STORE_CONFIG.mapaUrl || "";
+
+    const l = STORE_CONFIG.layout || {};
+    document.getElementById("cfgCatalogView").value = l.catalogView || "grid2";
+    document.getElementById("cfgHeaderSticky").checked = l.headerSticky !== false;
+    document.getElementById("cfgHeaderStyle").value = l.headerStyle || "floating";
+    document.getElementById("cfgImageEffect").value = l.imageEffect || "none";
+    document.getElementById("cfgAddToCartAnim").value = l.addToCartAnim || "banner";
+    document.getElementById("cfgCartStyle").value = l.cartStyle || "drawer";
+    document.getElementById("cfgGlowEffect").checked = !!l.glowEffect;
 }
 
 async function guardarConfigTienda() {
@@ -1289,7 +1398,18 @@ async function guardarConfigTienda() {
 
     const themeBase = presetTemaSeleccionado || STORE_CONFIG.theme;
 
+    // El modo de negocio deriva automáticamente si se muestra precio
+    // mayorista y el registro de clientes — así el dueño elige UNA sola
+    // cosa ("minorista") y no tiene que ir a prender/apagar 2 interruptores
+    // por separado para lograr lo mismo.
+    const businessMode = document.getElementById("cfgBusinessMode").value;
+    const esSoloMinorista = businessMode === "minorista";
+
+    const storeName = document.getElementById("cfgStoreName").value.trim() || STORE_CONFIG.storeName;
+
     const datos = {
+        storeName: storeName,
+        businessMode: businessMode,
         whatsappNumber: whatsapp,
         address: document.getElementById("cfgAddress").value.trim(),
         horarios: document.getElementById("cfgHorarios").value.trim(),
@@ -1309,7 +1429,22 @@ async function guardarConfigTienda() {
         },
         logoUrl: document.getElementById("cfgLogoUrl").value.trim(),
         theme: { ...themeBase, accent: document.getElementById("cfgAccent").value, bg: document.getElementById("cfgBg").value, radius: document.getElementById("cfgRadius").value },
-        features: { ...STORE_CONFIG.features, heroSlider: document.getElementById("cfgMostrarHero").checked, mostrarMapa: document.getElementById("cfgMostrarMapa").checked },
+        features: {
+            ...STORE_CONFIG.features,
+            heroSlider: document.getElementById("cfgMostrarHero").checked,
+            mostrarMapa: document.getElementById("cfgMostrarMapa").checked,
+            wholesalePricing: !esSoloMinorista,
+            userRegistration: !esSoloMinorista
+        },
+        layout: {
+            catalogView: document.getElementById("cfgCatalogView").value,
+            headerSticky: document.getElementById("cfgHeaderSticky").checked,
+            headerStyle: document.getElementById("cfgHeaderStyle").value,
+            imageEffect: document.getElementById("cfgImageEffect").value,
+            addToCartAnim: document.getElementById("cfgAddToCartAnim").value,
+            cartStyle: document.getElementById("cfgCartStyle").value,
+            glowEffect: document.getElementById("cfgGlowEffect").checked
+        },
         mapaUrl: mapaUrl
     };
 
@@ -1319,9 +1454,11 @@ async function guardarConfigTienda() {
         presetTemaSeleccionado = null;
         aplicarTema();
         aplicarBranding();
+        aplicarLayout();
         renderMapa();
         renderBanners();
         renderMetodoPagoSelector();
+        render(); // por si cambió la vista de catálogo (grid/lista) o el modo minorista/mayorista
         alert(whatsapp ? "✅ Configuración guardada" : "✅ Configuración guardada.\n\n⚠️ Ojo: el WhatsApp para pedidos quedó vacío — el checkout no va a funcionar hasta que lo completes.");
     } catch (e) {
         console.error(e);
@@ -1332,7 +1469,7 @@ async function guardarConfigTienda() {
 // ==================== NAVEGACIÓN DEL PANEL / CATEGORÍAS ====================
 
 function tab(id, e) {
-    document.querySelectorAll("#t-prod, #t-user, #t-order, #t-slider, #t-stats, #t-config").forEach(el => el.style.display = "none");
+    document.querySelectorAll("#t-prod, #t-user, #t-order, #t-slider, #t-stats, #t-config, #t-layout").forEach(el => el.style.display = "none");
     document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
     document.getElementById(id).style.display = "block";
     if (e && e.target) {
