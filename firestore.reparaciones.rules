@@ -1,0 +1,49 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ------------------------------------------------------------------
+    // Funciones auxiliares (mismo patrón que la tienda)
+    // ------------------------------------------------------------------
+    function estaLogueado() {
+      return request.auth != null;
+    }
+
+    function esAdmin() {
+      return estaLogueado() &&
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    function esDueno(uid) {
+      return estaLogueado() && request.auth.uid == uid;
+    }
+
+    // ------------------------------------------------------------------
+    // REPARACIONES
+    // A diferencia de la tienda, acá NO hay nada público: es una
+    // herramienta interna del taller, todo requiere ser el administrador.
+    // ------------------------------------------------------------------
+    match /reparaciones/{id} {
+      allow read, write: if esAdmin();
+    }
+
+    // ------------------------------------------------------------------
+    // CONFIGURACIÓN DE ALTA DEL ADMINISTRADOR (idéntico patrón a la tienda)
+    // ------------------------------------------------------------------
+    match /config/setup {
+      allow read: if estaLogueado()
+                  && request.auth.token.email_verified == true
+                  && request.auth.token.email == resource.data.allowedAdminEmail;
+      allow write: if false;
+    }
+
+    match /admins/{uid} {
+      allow read: if esDueno(uid);
+      allow create: if esDueno(uid)
+                    && request.auth.token.email_verified == true
+                    && exists(/databases/$(database)/documents/config/setup)
+                    && request.auth.token.email == get(/databases/$(database)/documents/config/setup).data.allowedAdminEmail;
+      allow update, delete: if false;
+    }
+  }
+}
