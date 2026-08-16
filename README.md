@@ -1,39 +1,49 @@
-# Plantilla de Tienda Online — Sistema multi-tienda por slug
+# Plataforma multi-negocio por slug (tiendas + otras herramientas)
 
-Sistema de e-commerce (catálogo + carrito + checkout por WhatsApp + panel de
-administración) pensado para alojar **muchas tiendas distintas** (kioscos,
-electrónica, mayoristas, etc.) **desde un solo sitio publicado**, cada una
-accesible por su propio link (`.../?slug=nombre-tienda`).
+Sistema pensado para alojar **muchos negocios distintos, de tipos distintos**
+(tiendas online, talleres de reparación, y lo que se agregue después) **desde
+un solo sitio publicado**, cada uno accesible por su propio link
+(`.../?slug=nombre-del-negocio`).
 
-Cada tienda tiene su **propio proyecto de Firebase, 100% aislado del resto**
-— sus productos, clientes y pedidos nunca se mezclan con los de otra tienda.
-Lo único centralizado es un pequeño "directorio" que sabe, para cada slug,
-a qué proyecto de Firebase conectarse.
+Cada negocio tiene su **propio proyecto de Firebase, 100% aislado del resto**
+— sus datos nunca se mezclan con los de otro. Lo único centralizado es un
+pequeño "directorio" (el panel master) que sabe, para cada slug, a qué
+proyecto de Firebase conectarse y qué tipo de aplicación mostrar.
 
 Corre 100% en el navegador (HTML + CSS + JS), sin backend propio.
 
 ## Estructura de archivos
 
 ```
-index.html            La tienda en sí. Sirve a TODOS los clientes según ?slug=
-style.css              Estilos (compartido, no hace falta tocarlo)
-app.js                  Lógica de la tienda (compartida, no hace falta tocarlo)
-config.js               Conexión al proyecto MASTER (fijo, igual para todos)
-firestore.rules         Reglas de seguridad — se pegan en CADA proyecto cliente
-master-admin.html       Panel para dar de alta tiendas nuevas en el directorio
-master-admin.js         Lógica del panel master
-firestore.master.rules  Reglas de seguridad del proyecto MASTER (uno solo)
-log.png                 Logo de referencia/placeholder
+--- Tienda online (tipo "tienda") ---
+index.html                  La tienda en sí. Sirve a todos los clientes tipo tienda según ?slug=
+app.js                       Lógica de la tienda
+firestore.rules              Reglas de seguridad — se pegan en CADA proyecto de tienda
+
+--- Taller de reparaciones (tipo "reparaciones") ---
+reparaciones.html            La app de reparaciones. Sirve según ?slug=
+reparaciones.js               Lógica de reparaciones (repuestos, costos, ganancias)
+firestore.reparaciones.rules  Reglas de seguridad — se pegan en CADA proyecto de taller
+
+--- Compartido por todo el sistema ---
+style.css                    Estilos (compartido entre todas las apps)
+config.js                     Conexión al proyecto MASTER (fijo, igual para todos)
+master-admin.html            Panel para dar de alta negocios nuevos en el directorio
+master-admin.js               Lógica del panel master
+firestore.master.rules        Reglas de seguridad del proyecto MASTER (uno solo)
+log.png                       Logo de referencia/placeholder
 ```
 
-Ya no existe "un archivo config.js por cliente": ahora hay **un solo
-despliegue** de `index.html`/`app.js`/`config.js`, y cada tienda se
-distingue por el slug de la URL. La marca, categorías, tema, etc. de cada
-tienda viven dentro de su propio Firebase (no en ningún archivo).
+Cada negocio se distingue por su slug Y su tipo de aplicación. La marca,
+configuración, etc. de cada uno viven dentro de su propio Firebase (no en
+ningún archivo). Para sumar un tipo de aplicación nuevo en el futuro (más
+allá de tienda/reparaciones), el patrón es siempre el mismo: un
+`archivo.html` + `archivo.js` propios que resuelven el slug contra el
+master igual que estos dos, más sus propias reglas de Firestore.
 
 ---
 
-## Cómo funciona el sistema multi-tienda por slug
+## Cómo funciona el sistema multi-negocio por slug
 
 Cuando alguien abre `tusitio.com/?slug=mundo-tic`, en ese orden:
 
@@ -169,10 +179,37 @@ No hace falta publicar nada nuevo: el sitio ya está corriendo (es el mismo
 para todos los clientes) y esta tienda ya responde en
 `tusitio.com/?slug=el-slug-que-elegiste`.
 
+---
+
+## Alta de un taller de reparaciones nuevo
+
+Mismo patrón exacto que una tienda, pero con `reparaciones.rules` en vez de
+`firestore.rules`, y sin las tiendas mayoristas ni catálogo público (esta
+herramienta es 100% privada, solo la usa el dueño del taller):
+
+1. Crear el proyecto de Firebase del taller (igual que el paso 1 de una tienda).
+2. Habilitar Authentication → Email/Password.
+3. Crear Firestore en modo producción.
+4. Pegar `firestore.reparaciones.rules` (no `firestore.rules`, ese es de tiendas) → Publicar.
+5. Configuración del proyecto → Tus apps → copiar las 6 credenciales →
+   registrarlo en `master-admin.html`, eligiendo **Tipo de aplicación: 🔧
+   Taller de reparaciones**.
+6. Firestore de ese taller → colección `config` → documento `setup` →
+   campo `allowedAdminEmail` = email del dueño del taller.
+7. El dueño abre su link (`tusitio.com/reparaciones.html?slug=...`) → "¿Primera
+   vez? Configurar acceso" → mismo flujo de email + contraseña + verificación
+   que una tienda.
+
+Con eso ya puede cargar reparaciones: cliente, equipo, problema, repuestos
+usados (con su costo cada uno), mano de obra y precio cobrado — el costo
+total y la ganancia se calculan solos. Tiene estados (pendiente / en
+reparación / listo para retirar / entregado), buscador, filtro por estado,
+y estadísticas de ganancia total y del mes en curso.
+
 ## Cómo publicar el sitio (una sola vez para todo el sistema)
 
-Como ahora hay un solo despliegue para todos los clientes, esto se hace
-**una vez**, no por cada cliente. La forma más simple es **Firebase
+Como ahora hay un solo despliegue para todos los clientes (de cualquier
+tipo), esto se hace **una vez**. La forma más simple es **Firebase
 Hosting** del proyecto master (gratis):
 
 ```bash
@@ -184,7 +221,8 @@ firebase deploy
 
 También funciona cualquier hosting estático (Netlify, GitHub Pages,
 Vercel, etc.) — subí toda la carpeta (`index.html`, `style.css`, `app.js`,
-`config.js`, `master-admin.html`, `master-admin.js`, `log.png`) tal cual.
+`config.js`, `master-admin.html`, `master-admin.js`, `reparaciones.html`,
+`reparaciones.js`, `log.png`) tal cual.
 
 ---
 
