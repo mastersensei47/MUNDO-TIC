@@ -12,6 +12,16 @@ let esAdmin = false;
 let clientes = [];
 let editandoSlug = null; // null = alta nueva; string = editando ese slug original
 
+// Tipos de aplicación que puede alojar el directorio. Para sumar un tipo
+// nuevo en el futuro (otra herramienta más, no solo tiendas), alcanza con
+// agregarlo acá y construir su propio archivo .html/.js con el mismo
+// patrón de conexión dinámica por slug que ya usan "index.html" y
+// "reparaciones.html".
+const APP_TYPES = {
+    tienda:       { label: "Tienda online",          archivo: "index.html",         icon: "🛒" },
+    reparaciones: { label: "Taller de reparaciones",  archivo: "reparaciones.html",  icon: "🔧" }
+};
+
 function init() {
     auth.onAuthStateChanged(async (user) => {
         esAdmin = false;
@@ -130,25 +140,28 @@ function renderClientes() {
     if (counter) {
         counter.innerText = clientes.length === 0
             ? ""
-            : (q ? `${filtrados.length} de ${clientes.length} tienda${clientes.length === 1 ? '' : 's'}` : `${clientes.length} tienda${clientes.length === 1 ? '' : 's'}`);
+            : (q ? `${filtrados.length} de ${clientes.length} registro${clientes.length === 1 ? '' : 's'}` : `${clientes.length} registro${clientes.length === 1 ? '' : 's'}`);
     }
 
     const cont = document.getElementById("listaClientes");
     if (clientes.length === 0) {
-        cont.innerHTML = '<p style="opacity:0.4; padding:20px; text-align:center;">Todavía no diste de alta ninguna tienda.</p>';
+        cont.innerHTML = '<p style="opacity:0.4; padding:20px; text-align:center;">Todavía no diste de alta nada en el directorio.</p>';
         return;
     }
     if (filtrados.length === 0) {
-        cont.innerHTML = '<p style="opacity:0.4; padding:20px; text-align:center;">Ninguna tienda coincide con la búsqueda.</p>';
+        cont.innerHTML = '<p style="opacity:0.4; padding:20px; text-align:center;">Nada coincide con la búsqueda.</p>';
         return;
     }
 
     cont.innerHTML = filtrados.map(c => {
         const inactiva = c.activo === false;
+        const tipoInfo = APP_TYPES[c.tipo] || APP_TYPES.tienda;
         return `
         <div class="admin-item">
             <div style="flex:1;">
-                <b>${c.storeName || c.id}</b><br>
+                <b>${c.storeName || c.id}</b>
+                <span style="background:rgba(255,255,255,0.08); padding:2px 8px; border-radius:9999px; font-size:11px; margin-left:6px;">${tipoInfo.icon} ${tipoInfo.label}</span>
+                <br>
                 <small style="opacity:0.6;">slug: ${c.id}${c.firebaseConfig ? ' — proyecto: ' + c.firebaseConfig.projectId : ''}</small><br>
                 <span style="background:${inactiva ? '#64748b' : 'var(--success)'}; color:white; padding:2px 8px; border-radius:9999px; font-size:11px;">${inactiva ? 'INACTIVA' : 'ACTIVA'}</span>
             </div>
@@ -168,6 +181,7 @@ function editarCliente(slug) {
     editandoSlug = slug;
     document.getElementById("cNombre").value = c.storeName || "";
     document.getElementById("cSlug").value = c.id;
+    document.getElementById("cTipo").value = c.tipo || "tienda";
     const fc = c.firebaseConfig || {};
     document.getElementById("cApiKey").value = fc.apiKey || "";
     document.getElementById("cAuthDomain").value = fc.authDomain || "";
@@ -176,7 +190,7 @@ function editarCliente(slug) {
     document.getElementById("cMessagingSenderId").value = fc.messagingSenderId || "";
     document.getElementById("cAppId").value = fc.appId || "";
 
-    document.getElementById("formClienteTitulo").innerText = "Editar tienda: " + (c.storeName || slug);
+    document.getElementById("formClienteTitulo").innerText = "Editar: " + (c.storeName || slug);
     document.getElementById("btnGuardarCliente").innerText = "GUARDAR CAMBIOS";
     document.getElementById("btnCancelarEdicion").style.display = "block";
     document.getElementById("formCliente").scrollIntoView({ behavior: "smooth" });
@@ -189,13 +203,21 @@ function cancelarEdicion() {
 function limpiarFormCliente() {
     editandoSlug = null;
     document.querySelectorAll('#formCliente input').forEach(i => i.value = "");
-    document.getElementById("formClienteTitulo").innerText = "Agregar tienda nueva";
-    document.getElementById("btnGuardarCliente").innerText = "GUARDAR TIENDA";
+    document.getElementById("cTipo").value = "tienda";
+    document.getElementById("formClienteTitulo").innerText = "Agregar registro nuevo";
+    document.getElementById("btnGuardarCliente").innerText = "GUARDAR";
     document.getElementById("btnCancelarEdicion").style.display = "none";
 }
 
+function linkDe(cliente) {
+    const tipoInfo = APP_TYPES[cliente.tipo] || APP_TYPES.tienda;
+    return `${location.origin}${location.pathname.replace('master-admin.html', tipoInfo.archivo)}?slug=${cliente.id}`;
+}
+
 function copiarLink(slug) {
-    const url = `${location.origin}${location.pathname.replace('master-admin.html', 'index.html')}?slug=${slug}`;
+    const c = clientes.find(x => x.id === slug);
+    if (!c) return;
+    const url = linkDe(c);
     if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(url).then(() => alert("Link copiado:\n" + url)).catch(() => prompt("Copiá el link:", url));
     } else {
@@ -214,10 +236,10 @@ async function toggleActivo(slug, activarlo) {
     }
 }
 
-// Esto solo saca a la tienda del directorio (deja de resolver el slug). NO
+// Esto solo saca el registro del directorio (deja de resolver el slug). NO
 // borra el proyecto de Firebase del cliente ni ninguno de sus datos.
 async function borrarCliente(slug) {
-    if (!confirm(`¿Quitar "${slug}" del directorio?\n\nEsto NO borra su proyecto de Firebase ni sus productos/clientes/pedidos — solo hace que el link con ese slug deje de funcionar.`)) return;
+    if (!confirm(`¿Quitar "${slug}" del directorio?\n\nEsto NO borra su proyecto de Firebase ni sus datos — solo hace que el link con ese slug deje de funcionar.`)) return;
     try {
         await db.collection("clientes").doc(slug).delete();
         if (editandoSlug === slug) limpiarFormCliente();
@@ -230,6 +252,7 @@ async function borrarCliente(slug) {
 async function guardarCliente() {
     const nuevoSlug = document.getElementById("cSlug").value.trim().toLowerCase().replace(/[^a-z0-9-]/g, '-');
     const storeName = document.getElementById("cNombre").value.trim();
+    const tipo = document.getElementById("cTipo").value;
     if (!nuevoSlug || !storeName) return alert("Completá nombre y slug");
 
     const firebaseConfig = {
@@ -247,15 +270,16 @@ async function guardarCliente() {
 
     try {
         // Si es alta nueva, o si cambió el slug, verificamos que no pisemos
-        // sin querer otra tienda que ya use ese slug.
+        // sin querer otro registro que ya use ese slug.
         if (!esEdicion || cambioSlug) {
             const existe = await db.collection("clientes").doc(nuevoSlug).get();
-            if (existe.exists) return alert("Ya existe una tienda con ese slug. Elegí otro.");
+            if (existe.exists) return alert("Ya existe un registro con ese slug. Elegí otro.");
         }
 
         const previo = esEdicion ? clientes.find(c => c.id === editandoSlug) : null;
         const datos = {
             storeName,
+            tipo,
             firebaseConfig,
             activo: previo ? previo.activo !== false : true,
             creado: previo ? (previo.creado || Date.now()) : Date.now(),
@@ -273,7 +297,7 @@ async function guardarCliente() {
             await db.collection("clientes").doc(nuevoSlug).set(datos);
         }
 
-        alert(`✅ Tienda guardada. Link: ${location.origin}${location.pathname.replace('master-admin.html', 'index.html')}?slug=${nuevoSlug}`);
+        alert(`✅ Guardado. Link: ${linkDe({ id: nuevoSlug, tipo })}`);
         limpiarFormCliente();
     } catch (e) {
         console.error(e);
