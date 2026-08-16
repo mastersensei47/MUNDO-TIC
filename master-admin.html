@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="robots" content="noindex, nofollow">
-    <title>Panel Master — Directorio de tiendas</title>
+    <title>Panel Master — Directorio de negocios</title>
 
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script>
@@ -28,7 +28,7 @@
 <div id="loginMaster" style="display:none; min-height:100vh; align-items:center; justify-content:center; padding:20px;">
     <div class="master-card" style="max-width:420px; width:100%; text-align:center;">
         <h2 style="margin-bottom:5px;">Panel Master</h2>
-        <p style="opacity:0.6; font-size:13px; margin-bottom:25px;">Directorio de tiendas — acceso restringido</p>
+        <p style="opacity:0.6; font-size:13px; margin-bottom:25px;">Directorio de negocios — acceso restringido</p>
 
         <div id="loginPaso">
             <div class="form-group"><input id="uInp" placeholder="Tu email"></div>
@@ -55,13 +55,20 @@
 <div id="panelMaster" style="display:none;">
     <div class="master-wrap">
         <div class="flex-between" style="margin-bottom:25px; align-items:center;">
-            <h2 style="margin:0;">Directorio de tiendas</h2>
+            <h2 style="margin:0;">Directorio de negocios</h2>
             <button onclick="logout()" style="background:var(--danger); color:white; border:none; padding:10px 18px; border-radius:12px; font-weight:700; cursor:pointer;">Cerrar sesión</button>
         </div>
 
         <div class="master-card" id="formCliente">
-            <h3 id="formClienteTitulo" style="margin-top:0;">Agregar tienda nueva</h3>
+            <h3 id="formClienteTitulo" style="margin-top:0;">Agregar registro nuevo</h3>
             <div class="form-group"><label>Nombre del comercio</label><input id="cNombre" placeholder="Ej: Kiosco Don Juan"></div>
+            <div class="form-group">
+                <label>Tipo de aplicación</label>
+                <select id="cTipo">
+                    <option value="tienda">🛒 Tienda online</option>
+                    <option value="reparaciones">🔧 Taller de reparaciones</option>
+                </select>
+            </div>
             <div class="form-group"><label>Slug (va en la URL, sin espacios)</label><input id="cSlug" placeholder="Ej: kiosco-don-juan"></div>
             <p style="opacity:0.5; font-size:12px; margin:15px 0 10px;">Credenciales de Firebase del proyecto <strong>de este cliente</strong> (Firebase Console → Configuración del proyecto → Tus apps → Config):</p>
             <div class="form-group"><label>apiKey</label><input id="cApiKey"></div>
@@ -70,13 +77,13 @@
             <div class="form-group"><label>storageBucket</label><input id="cStorageBucket"></div>
             <div class="form-group"><label>messagingSenderId</label><input id="cMessagingSenderId"></div>
             <div class="form-group"><label>appId</label><input id="cAppId"></div>
-            <button id="btnGuardarCliente" class="btn-add" style="background:var(--success);" onclick="guardarCliente()">GUARDAR TIENDA</button>
+            <button id="btnGuardarCliente" class="btn-add" style="background:var(--success);" onclick="guardarCliente()">GUARDAR</button>
             <button id="btnCancelarEdicion" onclick="cancelarEdicion()" style="display:none; background:none; border:1px solid rgba(255,255,255,0.2); color:white; padding:14px; border-radius:12px; font-weight:700; width:100%; margin-top:10px; cursor:pointer;">Cancelar edición</button>
         </div>
 
         <div class="master-card">
             <div class="flex-between" style="align-items:center; margin-bottom:15px;">
-                <h3 style="margin:0;">Tiendas dadas de alta</h3>
+                <h3 style="margin:0;">Registros dados de alta</h3>
                 <span id="clientesCount" style="opacity:0.5; font-size:13px;"></span>
             </div>
             <div class="form-group"><input id="masterSearch" placeholder="Buscar por nombre o slug..." oninput="renderClientes()"></div>
