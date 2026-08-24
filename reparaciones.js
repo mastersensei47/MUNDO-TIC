@@ -48,10 +48,45 @@ async function bootstrap() {
         if (nombreEl) nombreEl.innerText = "🔧 " + (storeName || "Reparaciones");
         document.title = (storeName || "Reparaciones") + " — Control de Reparaciones";
 
+        generarManifestDinamico(storeName || "Reparaciones");
+        registrarServiceWorker();
+
         init();
     } catch (e) {
         console.error("Error al inicializar:", e);
         mostrarErrorSlug("No pudimos cargar esta herramienta. Probá de nuevo en unos minutos.");
+    }
+}
+
+// Mismo patrón que la tienda: un manifest.json por taller, generado al
+// vuelo (no puede ser un archivo estático distinto por cliente).
+function generarManifestDinamico(nombre) {
+    try {
+        const manifest = {
+            name: nombre,
+            short_name: nombre.slice(0, 12),
+            start_url: `${location.origin}${location.pathname}${location.search}`,
+            scope: `${location.origin}${location.pathname}`,
+            display: "standalone",
+            background_color: "#0f172a",
+            theme_color: "#3b82f6",
+            icons: [
+                { src: "log.png", sizes: "192x192", type: "image/png", purpose: "any" },
+                { src: "log.png", sizes: "512x512", type: "image/png", purpose: "any" }
+            ]
+        };
+        const url = URL.createObjectURL(new Blob([JSON.stringify(manifest)], { type: "application/json" }));
+        let link = document.querySelector('link[rel="manifest"]');
+        if (!link) { link = document.createElement("link"); link.rel = "manifest"; document.head.appendChild(link); }
+        link.href = url;
+    } catch (e) {
+        console.warn("No se pudo generar el manifest:", e);
+    }
+}
+
+function registrarServiceWorker() {
+    if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("service-worker.js").catch(e => console.warn("Service worker no registrado:", e));
     }
 }
 
@@ -140,10 +175,11 @@ async function confirmarAdminVerificado() {
         await db.collection("admins").doc(auth.currentUser.uid).set({
             email: auth.currentUser.email, creado: Date.now()
         });
-        alert("✅ ¡Listo! Ya tenés acceso.");
+        alert("✅ ¡Listo! Ya tenés acceso. La página se va a recargar para entrar.");
+        location.reload(); // fuerza a re-resolver la sesión ahora que ya sos admin
     } catch (e) {
         console.error(e);
-        alert("Ese email no está autorizado. Verificá el campo allowedAdminEmail en config/setup de este proyecto.");
+        alert("Ese email (" + auth.currentUser.email + ") no está autorizado. Verificá que sea EXACTAMENTE igual al campo allowedAdminEmail en config/setup de este proyecto (mayúsculas/espacios incluidos).");
     }
 }
 
