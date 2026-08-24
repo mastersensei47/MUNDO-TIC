@@ -101,11 +101,18 @@ function init() {
                 mostrarApp();
                 cargarReparaciones();
             } else {
+                const emailUsado = user.email;
                 await auth.signOut();
+                alert(
+                    `Iniciaste sesión con "${emailUsado}" correctamente, pero esa cuenta no está autorizada como administrador de este taller.\n\n` +
+                    `Revisá en Firestore → config/setup → allowedAdminEmail que sea EXACTAMENTE ese mismo email (mayúsculas, espacios y todo tienen que coincidir).\n\n` +
+                    `Si nunca hiciste "¿Primera vez? Configurar acceso" con este email, hacelo ahora.`
+                );
                 mostrarLoginNormal();
             }
         } catch (e) {
             console.error(e);
+            alert("No pudimos verificar tu cuenta de administrador. Código de error: " + (e.code || e.message || e) + "\n\nProbá de nuevo en un momento, o revisá que las reglas de Firestore (firestore.reparaciones.rules) estén publicadas en este proyecto.");
             mostrarLoginNormal();
         }
     });
@@ -137,9 +144,17 @@ async function doLogin() {
     if (!email || !pass) return alert("Completá email y contraseña");
     try {
         await auth.signInWithEmailAndPassword(email, pass);
+        // Si el login funciona, el observador onAuthStateChanged (en init())
+        // se encarga de mostrar la app o explicar por qué no puede.
     } catch (e) {
         console.error(e);
-        alert("Email o contraseña incorrectos.");
+        if (e.code === 'auth/user-not-found' || e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential') {
+            alert("Email o contraseña incorrectos.");
+        } else if (e.code === 'auth/too-many-requests') {
+            alert("Demasiados intentos fallidos. Esperá unos minutos y probá de nuevo.");
+        } else {
+            alert("No pudimos iniciar sesión. Código de error: " + (e.code || e.message || e));
+        }
     }
 }
 
