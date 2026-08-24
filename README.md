@@ -32,6 +32,8 @@ master-admin.html            Panel para dar de alta negocios nuevos en el direct
 master-admin.js               Lógica del panel master
 firestore.master.rules        Reglas de seguridad del proyecto MASTER (uno solo)
 log.png                       Logo de referencia/placeholder
+manifest.json                 Respaldo genérico de PWA (cada tienda genera el suyo al vuelo)
+service-worker.js             Habilita el modo PWA instalable (compartido, red-primero)
 ```
 
 Cada negocio se distingue por su slug Y su tipo de aplicación. La marca,
@@ -222,7 +224,7 @@ firebase deploy
 También funciona cualquier hosting estático (Netlify, GitHub Pages,
 Vercel, etc.) — subí toda la carpeta (`index.html`, `style.css`, `app.js`,
 `config.js`, `master-admin.html`, `master-admin.js`, `reparaciones.html`,
-`reparaciones.js`, `log.png`) tal cual.
+`reparaciones.js`, `manifest.json`, `service-worker.js`, `log.png`) tal cual.
 
 ---
 
@@ -382,6 +384,92 @@ Pestaña **CONFIGURACIÓN** en el panel admin — edita el documento
   detrás prende/apaga los dos interruptores relacionados, para no tener
   que coordinarlos a mano.
 
+## Gestión del administrador (ampliaciones)
+
+- **Categorías editables**: en CONFIGURACIÓN, bloque "Categorías" — agregar,
+  renombrar, reordenar (⬆️⬇️) y borrar, todo desde el panel. Ya no hace
+  falta tocar Firestore para esto.
+- **Imágenes sin restricción de formato**: los campos de imagen (productos
+  y slider) aceptan cualquier URL que termine mostrando una imagen — jpg,
+  png, webp, gif, lo que sea. Nunca hubo una validación real de ".jpg" en
+  el código (era solo el texto de ejemplo del campo, ya corregido); si te
+  pareció que no aceptaba otros formatos, probablemente el link pegado no
+  era un "link directo" a la imagen. Por eso ahora hay un botón **"📤 Subir
+  imagen aquí"** al lado de cada campo, que abre postimg.cc — subís la
+  foto ahí y copiás el "Direct link" (el que termina en la imagen sola),
+  no el link de la página ni el de una galería.
+- **Alerta de stock bajo**: en PRODUCTOS, cualquier artículo con menos de
+  3 unidades (`UMBRAL_STOCK_BAJO` en `app.js`, editable) se resalta en
+  rojo con un aviso "⚠️ STOCK BAJO". No aplica a productos con variantes
+  (cada variante tiene su propio stock, visible al editarlo).
+- **"Solo minorista" reforzado**: antes solo se ocultaba el link de
+  registro; ahora el registro de clientes mayoristas queda bloqueado
+  también del lado del código, por si quedaba algún camino para llegar
+  igual al formulario.
+
+**Sobre "resetear contraseña" de un cliente mayorista — limitación real:**
+Firebase no permite que un administrador cambie la contraseña de OTRO
+usuario desde el navegador; eso requiere un backend propio con permisos de
+Admin SDK (Cloud Functions + plan pago), algo que este proyecto evita a
+propósito. Por eso, en vez de un botón que finja hacer algo que no puede
+hacer, agregué un botón 🔑 en cada cliente activo que explica el único
+camino que sí funciona sin backend: borrar esa cuenta desde Firebase
+Console → Authentication (te da el email interno exacto para buscarla), y
+que el cliente se registre de nuevo con una contraseña nueva — como ya es
+un cliente conocido, aprobarlo de nuevo es un solo clic.
+
+## Modo PWA (instalable en el celular)
+
+El sitio ahora se puede "Agregar a la pantalla de inicio" desde el celular
+y abrirse como si fuera una app, con su propio ícono y sin la barra del
+navegador. Como todas las tiendas comparten el mismo despliegue, el
+`manifest.json` de cada una se genera **al vuelo** con su nombre, colores
+y logo (ver `generarManifestDinamico()` en `app.js`) — el archivo
+`manifest.json` que ves en la carpeta es solo un respaldo genérico.
+
+Incluye un `service-worker.js` compartido con estrategia **"red primero"**:
+mientras haya conexión, siempre trae la versión más nueva de todo (nunca
+sirve algo viejo desde el caché por accidente) — el caché solo se usa como
+respaldo si el celular se queda sin señal. Esto es intencional: este
+proyecto se actualiza seguido, y un caché más agresivo terminaría
+mostrando código desactualizado.
+
+> Para que el ícono se vea bien nítido, lo ideal es que `logoUrl` apunte a
+> una imagen cuadrada (ej. 512x512px). Si el logo no es cuadrado igual
+> funciona, pero puede verse recortado en algunos celulares.
+
+También aplica a `reparaciones.html` — el dueño del taller puede instalarlo
+en su celular de la misma forma.
+
+## Imágenes con carga progresiva (lazy loading)
+
+Todas las imágenes del catálogo, el detalle de producto, las sugerencias
+de búsqueda y los listados del panel admin usan `loading="lazy"` — el
+navegador retrasa la descarga de las que todavía no están a la vista, así
+el catálogo se siente más rápido incluso con muchos productos o conexiones
+lentas. Es nativo del navegador, no hace falta ninguna librería.
+
+> Conversión automática a WebP o compresión de imágenes al subirlas queda
+> pendiente — requiere procesar la imagen en algún lado (backend, o un
+> servicio externo), no es algo que se pueda hacer solo con HTML/JS en el
+> navegador del cliente. Ver "Ideas para más adelante".
+
+## Generador de banners para redes
+
+Botón **🎨** en cada producto (pestaña PRODUCTOS) — genera un banner
+vertical (formato Historia/Estado) con la foto, nombre y precio del
+producto, usando los colores de la tienda. Se descarga como `.png`, listo
+para subir a Instagram o WhatsApp.
+
+> **Nota técnica honesta:** para poder *descargar* el banner (no solo
+> verlo), el navegador exige que la imagen del producto venga de un
+> servicio que permita compartirla entre sitios (CORS). La gran mayoría de
+> los hosts de imágenes gratuitos conocidos (postimg.cc, Imgur, etc.) lo
+> permiten sin configuración extra. Si un producto puntual usa una imagen
+> de un servicio que no lo permite, el botón de descarga va a fallar con
+> un aviso claro — la solución más simple en ese caso es volver a subir
+> esa foto a postimg.cc y actualizar el link del producto.
+
 ## Panel de diseño (pestaña DISEÑO)
 
 Otra pestaña nueva en el panel admin, para ajustes visuales más de fondo:
@@ -504,9 +592,8 @@ categories: [
 
 ## Ideas para más adelante (no incluidas todavía)
 
-- Pantalla en el panel admin para editar `categories` sin tocar Firestore
-  a mano (nombre de tienda, contacto, pausa/banner, medios de pago, logo,
-  tema y diseño ya se editan desde el panel).
+- Compresión/conversión automática a WebP al subir imágenes (necesitaría
+  procesar la imagen en algún lado — backend o servicio externo).
 - Página de checkout dedicada como alternativa al carrito lateral/modal.
 - Cobro real con Mercado Pago (Checkout Pro) — hoy "Mercado Pago" como
   medio de pago es solo informativo, el cliente igual coordina el pago por
