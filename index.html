@@ -6,6 +6,12 @@
     <meta name="google" content="notranslate">
     <title>Tienda</title>
 
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#3b82f6">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="log.png">
+
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
@@ -143,8 +149,10 @@
                     <textarea id="fVariantes" rows="4" placeholder="S | 5&#10;M | 8&#10;L | 0"></textarea>
                 </div>
                 <div class="form-group">
-                    <label>Imágenes (una URL por línea)</label>
-                    <textarea id="fImagenes" rows="5" placeholder="https://url1.jpg&#10;https://url2.jpg"></textarea>
+                    <label>Imágenes (una URL por línea) — cualquier formato sirve: jpg, png, webp, gif, etc.</label>
+                    <textarea id="fImagenes" rows="5" placeholder="https://ejemplo.com/foto1&#10;https://ejemplo.com/foto2"></textarea>
+                    <a href="https://postimg.cc/" target="_blank" style="display:inline-block; margin-top:8px; background:var(--accent); color:white; padding:8px 16px; border-radius:10px; text-decoration:none; font-size:13px; font-weight:700;">📤 Subir imagen aquí</a>
+                    <p style="opacity:0.5; font-size:11px; margin-top:6px;">Subís la foto ahí, y copiás el link que dice "Direct link" (el que termina mostrando la imagen sola) — no el de la página o la galería.</p>
                 </div>
                 <div class="form-group"><label>Descripción</label><textarea id="fDesc" rows="5"></textarea></div>
                 <div class="form-group"><label>Características</label><textarea id="fCaract" rows="5"></textarea></div>
@@ -171,7 +179,11 @@
 
         <div id="t-slider" style="display:none;">
             <div class="admin-form-box">
-                <div class="form-group"><label>URL de imagen del slider</label><input id="sliderUrl" placeholder="https://..."></div>
+                <div class="form-group">
+                    <label>URL de imagen del slider — cualquier formato sirve</label>
+                    <input id="sliderUrl" placeholder="https://...">
+                    <a href="https://postimg.cc/" target="_blank" style="display:inline-block; margin-top:8px; background:var(--accent); color:white; padding:8px 16px; border-radius:10px; text-decoration:none; font-size:13px; font-weight:700;">📤 Subir imagen aquí</a>
+                </div>
                 <button class="btn-add" style="background:var(--success)" onclick="addHeroImage()">AGREGAR AL SLIDER</button>
             </div>
             <div id="admListSlider"></div>
@@ -257,6 +269,14 @@
                 <div class="form-group">
                     <label>Código del mapa (Google Maps → Compartir → Insertar un mapa → Copiar HTML)</label>
                     <textarea id="cfgMapaIframe" rows="4" placeholder='&lt;iframe src="https://www.google.com/maps/embed?pb=..." width="600" height="450"&gt;&lt;/iframe&gt;'></textarea>
+                </div>
+
+                <h4 style="margin-top:30px; opacity:0.7;">Categorías</h4>
+                <div id="categoriasEditor"></div>
+                <div style="display:flex; gap:8px; margin-top:12px; margin-bottom:20px;">
+                    <input id="catNuevoIcono" placeholder="🔧" style="width:60px; flex:none;">
+                    <input id="catNuevoLabel" placeholder="Nombre de la categoría nueva" style="flex:1;">
+                    <button onclick="agregarCategoriaEditor()" style="background:var(--accent); color:white; border:none; padding:0 18px; border-radius:12px; font-weight:700; cursor:pointer;">+ Agregar</button>
                 </div>
 
                 <button class="btn-add" style="background:var(--success)" onclick="guardarConfigTienda()">GUARDAR CONFIGURACIÓN</button>
@@ -363,6 +383,19 @@
             <button class="btn-add" style="background:var(--success);" onclick="confirmarAdminVerificado()">YA VERIFIQUÉ MI EMAIL</button>
         </div>
         <button onclick="closeAll()" style="background:none; border:2px solid rgba(255,255,255,0.3); color:white; padding:16px; border-radius:16px; font-weight:700; width:100%; margin-top:15px;">← Volver atrás</button>
+    </div>
+</div>
+
+<div class="modal" id="bannerModal" style="align-items:flex-start; overflow-y:auto;">
+    <div class="modal-content" style="max-width:420px; margin:30px auto; padding:25px; text-align:center;">
+        <div class="flex-between" style="margin-bottom:15px;">
+            <h3 style="margin:0;">🎨 Banner para redes</h3>
+            <button onclick="cerrarBannerModal()" style="background:none; border:none; color:white; font-size:26px; cursor:pointer;">✕</button>
+        </div>
+        <canvas id="bannerCanvas" style="width:100%; max-width:340px; border-radius:12px; background:#000;"></canvas>
+        <p id="bannerError" style="display:none; color:var(--danger); font-size:13px; margin-top:15px; text-align:left;"></p>
+        <button id="bannerDescargarBtn" class="btn-add" style="display:none; background:var(--success); margin-top:20px;" onclick="descargarBanner()">⬇️ DESCARGAR PNG</button>
+        <p style="opacity:0.5; font-size:12px; margin-top:15px;">Ideal para Historias de Instagram o Estados de WhatsApp.</p>
     </div>
 </div>
 
