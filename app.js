@@ -158,6 +158,8 @@ function init() {
         ["renderMapa", renderMapa],
         ["renderBanners", renderBanners],
         ["aplicarLayout", aplicarLayout],
+        ["generarManifestDinamico", generarManifestDinamico],
+        ["registrarServiceWorker", registrarServiceWorker],
         ["cargarFormConfig", cargarFormConfig],
     ];
     pasos.forEach(([nombre, fn]) => {
@@ -366,6 +368,50 @@ function aplicarLayout() {
     document.body.classList.toggle("glow-effect", !!l.glowEffect);
 }
 
+// ==================== PWA: MANIFEST DINÁMICO POR TIENDA ====================
+// manifest.json no puede ser "distinto por cliente" siendo un archivo
+// estático (todas las tiendas comparten el mismo despliegue). La solución:
+// generarlo al vuelo con los datos de ESTA tienda (nombre, colores, logo) y
+// reemplazar el <link rel="manifest"> por una versión en memoria (Blob).
+// Así cada tienda se instala en el celular con su propio nombre e ícono.
+function generarManifestDinamico() {
+    const manifest = {
+        name: STORE_CONFIG.storeName,
+        short_name: (STORE_CONFIG.storeName || "Tienda").slice(0, 12),
+        start_url: `${location.origin}${location.pathname}${location.search}`,
+        scope: `${location.origin}${location.pathname}`,
+        display: "standalone",
+        background_color: STORE_CONFIG.theme.bg || "#0f172a",
+        theme_color: STORE_CONFIG.theme.accent || "#3b82f6",
+        icons: [
+            { src: STORE_CONFIG.logoUrl || "log.png", sizes: "192x192", type: "image/png", purpose: "any" },
+            { src: STORE_CONFIG.logoUrl || "log.png", sizes: "512x512", type: "image/png", purpose: "any" }
+        ]
+    };
+    const url = URL.createObjectURL(new Blob([JSON.stringify(manifest)], { type: "application/json" }));
+    let link = document.querySelector('link[rel="manifest"]');
+    if (!link) {
+        link = document.createElement("link");
+        link.rel = "manifest";
+        document.head.appendChild(link);
+    }
+    link.href = url;
+
+    let meta = document.querySelector('meta[name="theme-color"]');
+    if (!meta) {
+        meta = document.createElement("meta");
+        meta.name = "theme-color";
+        document.head.appendChild(meta);
+    }
+    meta.content = STORE_CONFIG.theme.accent || "#3b82f6";
+}
+
+function registrarServiceWorker() {
+    if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("service-worker.js").catch(e => console.warn("Service worker no registrado:", e));
+    }
+}
+
 function renderCategorias() {
     const bar = document.getElementById("catBar");
     let html = `<div class="cat-item active" onclick="setCat(this, '')">🌐 Todos</div>`;
@@ -381,6 +427,73 @@ function renderCategoriasSelect() {
     sel.innerHTML = (STORE_CONFIG.categories || []).map(c =>
         `<option value="${c.id}">${c.icon || ''} ${c.label}</option>`
     ).join("");
+}
+
+// ==================== EDITOR DE CATEGORÍAS (panel admin → CONFIGURACIÓN) ====================
+// Trabaja sobre una copia local (categoriasEditando) y recién se guarda de
+// verdad en Firestore al tocar "GUARDAR CONFIGURACIÓN" — así se puede
+// reordenar/probar sin ir escribiendo en la base a cada click.
+
+let categoriasEditando = [];
+
+function slugCategoria(texto) {
+    return normalizarTexto(texto).replace(/[^a-z0-9]+/g, '-').replace(/(^-+|-+$)/g, '') || ('cat-' + Date.now());
+}
+
+function cargarCategoriasEditor() {
+    categoriasEditando = JSON.parse(JSON.stringify(STORE_CONFIG.categories || []));
+    renderCategoriasEditor();
+}
+
+function renderCategoriasEditor() {
+    const cont = document.getElementById("categoriasEditor");
+    if (!cont) return;
+    if (categoriasEditando.length === 0) {
+        cont.innerHTML = '<p style="opacity:0.4; padding:10px 0;">Todavía no hay categorías cargadas.</p>';
+        return;
+    }
+    cont.innerHTML = categoriasEditando.map((c, i) => `
+        <div class="admin-item" style="padding:10px; gap:8px;">
+            <input value="${(c.icon || '').replace(/"/g, '&quot;')}" onchange="actualizarCategoria(${i}, 'icon', this.value)" placeholder="🔧" style="width:50px; text-align:center; flex:none;">
+            <input value="${(c.label || '').replace(/"/g, '&quot;')}" onchange="actualizarCategoria(${i}, 'label', this.value)" placeholder="Nombre" style="flex:1;">
+            <button onclick="moverCategoria(${i}, -1)" ${i === 0 ? 'disabled' : ''} style="background:none; border:none; cursor:pointer; font-size:16px; opacity:${i === 0 ? '0.3' : '1'};">⬆️</button>
+            <button onclick="moverCategoria(${i}, 1)" ${i === categoriasEditando.length - 1 ? 'disabled' : ''} style="background:none; border:none; cursor:pointer; font-size:16px; opacity:${i === categoriasEditando.length - 1 ? '0.3' : '1'};">⬇️</button>
+            <button onclick="borrarCategoriaEditor(${i})" style="background:none; border:none; color:var(--danger); cursor:pointer; font-size:16px;">🗑️</button>
+        </div>
+    `).join('');
+}
+
+function actualizarCategoria(i, campo, valor) {
+    if (!categoriasEditando[i]) return;
+    categoriasEditando[i][campo] = valor;
+}
+
+function agregarCategoriaEditor() {
+    const icono = document.getElementById("catNuevoIcono").value.trim();
+    const label = document.getElementById("catNuevoLabel").value.trim();
+    if (!label) return alert("Escribí un nombre para la categoría");
+    let id = slugCategoria(label);
+    // Evita chocar con un id ya existente (ej: dos categorías "Ofertas")
+    if (categoriasEditando.some(c => c.id === id)) id += '-' + Math.floor(Math.random() * 1000);
+    categoriasEditando.push({ id, icon: icono, label });
+    document.getElementById("catNuevoIcono").value = "";
+    document.getElementById("catNuevoLabel").value = "";
+    renderCategoriasEditor();
+}
+
+function moverCategoria(i, dir) {
+    const j = i + dir;
+    if (j < 0 || j >= categoriasEditando.length) return;
+    [categoriasEditando[i], categoriasEditando[j]] = [categoriasEditando[j], categoriasEditando[i]];
+    renderCategoriasEditor();
+}
+
+function borrarCategoriaEditor(i) {
+    const cat = categoriasEditando[i];
+    if (!cat) return;
+    if (!confirm(`¿Eliminar la categoría "${cat.label}"? Los productos que ya la tengan asignada no se borran, pero van a dejar de verse agrupados bajo esa categoría hasta que los reasignes.`)) return;
+    categoriasEditando.splice(i, 1);
+    renderCategoriasEditor();
 }
 
 function mostrarPerfilVacio() {
@@ -499,7 +612,7 @@ function render() {
             <div class="product-card" data-id="${p.id}" onclick="if(!event.target.closest('.btn-add')) showProductDetail('${p.id}')">
                 ${p.promo ? `<div class="promo-badge">${p.promo}</div>` : ''}
                 <div class="img-box">
-                    <img src="${firstImg}" alt="${p.nombre}">
+                    <img src="${firstImg}" alt="${p.nombre}" loading="lazy">
                 </div>
                 <div class="info-box">
                     <div class="prod-title">${p.nombre}</div>
@@ -555,7 +668,7 @@ function actualizarSugerencias() {
     box.innerHTML = candidatos.map(p => {
         const img = (p.imagenes && p.imagenes[0]) ? p.imagenes[0] : (p.imagen || 'https://via.placeholder.com/40');
         return `<div class="suggestion-item" onmousedown="elegirSugerencia('${p.id}')">
-            <img src="${img}" alt="">
+            <img src="${img}" alt="" loading="lazy">
             <span>${p.nombre}</span>
         </div>`;
     }).join('');
@@ -590,7 +703,7 @@ async function showProductDetail(id) {
     imgs.forEach((url, index) => {
         const thumb = document.createElement('div');
         thumb.className = `thumb ${index === 0 ? 'active' : ''}`;
-        thumb.innerHTML = `<img src="${url}" alt="">`;
+        thumb.innerHTML = `<img src="${url}" alt="" loading="lazy">`;
         thumb.onclick = () => {
             document.getElementById('detailImg').src = url;
             document.querySelectorAll('.thumb').forEach(t => t.classList.remove('active'));
@@ -870,6 +983,9 @@ async function verMisPedidos() {
 }
 
 async function registrarUsuario() {
+    if (!STORE_CONFIG.features.userRegistration) {
+        return alert("Esta tienda no acepta registro de cuentas mayoristas en este momento.");
+    }
     const u = document.getElementById("rU").value.trim();
     const p = document.getElementById("rP").value.trim();
     const t = document.getElementById("rT").value.trim();
@@ -935,19 +1051,17 @@ async function confirmarAdminVerificado() {
         await db.collection("admins").doc(auth.currentUser.uid).set({
             email: auth.currentUser.email, creado: Date.now()
         });
-        alert("✅ ¡Listo! Ya sos administrador de esta tienda.");
-        closeAll();
-        document.getElementById("setupPaso1").style.display = "block";
-        document.getElementById("setupPaso2").style.display = "none";
-        document.getElementById("setupEmail").value = "";
-        document.getElementById("setupPass").value = "";
+        alert("✅ ¡Listo! Ya sos administrador de esta tienda. La página se va a recargar para activarlo.");
+        location.reload(); // fuerza a re-resolver esAdmin ahora que el documento ya existe
     } catch (e) {
         console.error(e);
-        alert("Ese email no está autorizado como administrador de esta tienda. Verificá con quien configuró el sitio que sea exactamente el mismo email cargado en Firestore.");
+        alert("Ese email (" + auth.currentUser.email + ") no está autorizado como administrador de esta tienda. Verificá que sea EXACTAMENTE igual al campo allowedAdminEmail en config/setup de este proyecto.");
     }
 }
 
 // ==================== PANEL ADMIN — PRODUCTOS ====================
+
+const UMBRAL_STOCK_BAJO = 3; // productos con menos unidades que esto se resaltan en rojo
 
 function renderAdmP() {
     const list = document.getElementById("admListP");
@@ -955,15 +1069,20 @@ function renderAdmP() {
         ? `<p style="text-align:center; padding:40px; opacity:0.4;">Aún no hay productos.</p>`
         : prods.map(p => {
             const firstImg = p.imagenes && p.imagenes.length > 0 ? p.imagenes[0] : (p.imagen || 'https://via.placeholder.com/70');
+            // Para productos con variantes, la alerta de stock general no aplica
+            // (cada variante tiene su propio stock, visible al editar el producto).
+            const stockBajo = !p.tieneVariantes && typeof p.stock === 'number' && p.stock < UMBRAL_STOCK_BAJO;
             return `
-            <div class="admin-item">
-                <img src="${firstImg}" class="admin-item-img" alt="${p.nombre}">
+            <div class="admin-item" style="${stockBajo ? 'border-left:4px solid var(--danger); background:rgba(239,68,68,0.08);' : ''}">
+                <img src="${firstImg}" class="admin-item-img" alt="${p.nombre}" loading="lazy">
                 <div style="flex:1;">
                     <b>${p.nombre}</b><br>
-                    <small>${STORE_CONFIG.currency}${p.precio} (May: ${STORE_CONFIG.currency}${p.precio_may || p.precio})${p.tieneVariantes ? ' | Con variantes' : ` | Stock: ${p.stock}`}</small><br>
+                    <small>${STORE_CONFIG.currency}${p.precio} (May: ${STORE_CONFIG.currency}${p.precio_may || p.precio})${p.tieneVariantes ? ' | Con variantes' : ` | Stock: ${p.stock}`}</small>
+                    ${stockBajo ? ' <span style="color:var(--danger); font-weight:800; font-size:11px;">⚠️ STOCK BAJO</span>' : ''}<br>
                     <span style="background:#334155; color:white; padding:2px 8px; border-radius:9999px; font-size:11px;">${p.categoria}</span>
                 </div>
                 <div>
+                    <button onclick="abrirGeneradorBanner('${p.id}')" title="Crear banner para redes" style="font-size:18px; margin-right:8px; cursor:pointer; background:none; border:none;">🎨</button>
                     <button onclick="editP('${p.id}')" style="font-size:18px; margin-right:8px; cursor:pointer; background:none; border:none;">✏️</button>
                     <button onclick="del('productos','${p.id}')" style="color:var(--danger); font-size:18px; cursor:pointer; background:none; border:none;">🗑️</button>
                 </div>
@@ -1085,6 +1204,24 @@ async function editP(id) {
 
 // ==================== PANEL ADMIN — CLIENTES ====================
 
+// Firebase NO deja que un admin cambie o resetee la contraseña de OTRO
+// usuario desde el navegador (eso requeriría un backend propio con el
+// Admin SDK, algo que este proyecto evita a propósito por costo/
+// complejidad — ver README.md). Lo único que se puede hacer sin backend
+// es esto: darle al admin el "usuario interno" exacto para que borre esa
+// cuenta desde la consola de Firebase, y que el cliente se registre de
+// nuevo con una contraseña nueva.
+function ayudaContrasenaOlvidada(username) {
+    const emailInterno = toAuthEmail(username);
+    const mensaje =
+        `No es posible resetear la contraseña de otro usuario desde acá — Firebase no lo permite sin un servidor propio.\n\n` +
+        `Solución en 3 pasos:\n` +
+        `1) Firebase Console → Authentication → Users → buscá:\n   ${emailInterno}\n   → Eliminar ese usuario.\n\n` +
+        `2) Volvé a este panel y borrá también su perfil con el 🗑️ de al lado.\n\n` +
+        `3) Avisale al cliente que se registre de nuevo (mismo usuario "${username}", contraseña nueva a elección) y aprobalo otra vez — como ya es un cliente conocido, es cuestión de un click.`;
+    alert(mensaje);
+}
+
 function renderAdmU() {
     const list = document.getElementById("admListU");
     const pen = users.filter(u => !u.activo);
@@ -1118,7 +1255,10 @@ function renderAdmU() {
                     <span style="background:#10b981; color:white; padding:2px 10px; border-radius:9999px; font-size:11px; font-weight:700;">ACTIVO</span>
                 </div>
             </div>
-            <button onclick="del('usuarios','${u.id}')" style="color:var(--danger); font-size:22px; align-self:center; background:none; border:none; cursor:pointer;">🗑️</button>
+            <div style="display:flex; flex-direction:column; gap:6px; align-self:center;">
+                <button onclick="ayudaContrasenaOlvidada('${u.user}')" title="Olvidó su contraseña" style="background:none; border:none; font-size:18px; cursor:pointer;">🔑</button>
+                <button onclick="del('usuarios','${u.id}')" style="color:var(--danger); font-size:18px; background:none; border:none; cursor:pointer;">🗑️</button>
+            </div>
         </div>
     `).join("");
     list.innerHTML = html;
@@ -1168,6 +1308,134 @@ function exportarPedidosCSV() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+}
+
+// ==================== GENERADOR DE BANNERS PARA REDES (Canvas) ====================
+// Dibuja un banner vertical (formato historia) con la foto, nombre y precio
+// del producto. Nota técnica importante: si la imagen del producto viene de
+// un servicio de hosting que no envía cabeceras CORS, el navegador bloquea
+// la descarga por seguridad ("lienzo contaminado") — no es un bug de acá,
+// es una protección del navegador. Con postimg.cc, Imgur y la mayoría de
+// los hosts de imágenes gratuitos conocidos funciona bien.
+
+function abrirGeneradorBanner(productId) {
+    const p = prods.find(x => x.id === productId);
+    if (!p) return;
+    const firstImg = (p.imagenes && p.imagenes[0]) || p.imagen;
+    if (!firstImg) return alert("Este producto no tiene ninguna imagen cargada todavía.");
+
+    document.getElementById("bannerDescargarBtn").style.display = "none";
+    document.getElementById("bannerError").style.display = "none";
+    document.getElementById("bannerModal").style.display = "flex";
+    dibujarBanner(p, firstImg);
+}
+
+function cerrarBannerModal() {
+    document.getElementById("bannerModal").style.display = "none";
+}
+
+function dibujarBanner(p, urlImagen) {
+    const canvas = document.getElementById("bannerCanvas");
+    const ctx = canvas.getContext("2d");
+    canvas.width = 1080;
+    canvas.height = 1350;
+
+    const t = STORE_CONFIG.theme || {};
+    const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    grad.addColorStop(0, t.bg || "#0f172a");
+    grad.addColorStop(1, t.card || "#1e293b");
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    const img = new Image();
+    img.crossOrigin = "anonymous"; // necesario para poder exportar el canvas después
+    img.onload = () => {
+        const maxW = 880, maxH = 680;
+        let w = img.width, h = img.height;
+        const ratio = Math.min(maxW / w, maxH / h, 1);
+        w *= ratio; h *= ratio;
+        const x = (canvas.width - w) / 2;
+        const y = 130;
+
+        ctx.fillStyle = "#ffffff";
+        dibujarRectRedondeado(ctx, x - 24, y - 24, w + 48, h + 48, 28);
+        ctx.fill();
+        ctx.drawImage(img, x, y, w, h);
+
+        ctx.textAlign = "center";
+        ctx.fillStyle = t.text || "#ffffff";
+        ctx.font = "bold 58px Inter, sans-serif";
+        dibujarTextoConSalto(ctx, p.nombre || "", canvas.width / 2, y + h + 110, 920, 66);
+
+        ctx.fillStyle = t.accent || "#3b82f6";
+        ctx.font = "bold 96px Inter, sans-serif";
+        ctx.fillText(`${STORE_CONFIG.currency}${p.precio}`, canvas.width / 2, y + h + 250);
+
+        if (p.promo) {
+            ctx.fillStyle = t.promo || "#f59e0b";
+            dibujarRectRedondeado(ctx, canvas.width / 2 - 220, y + h + 285, 440, 76, 38);
+            ctx.fill();
+            ctx.fillStyle = "#000000";
+            ctx.font = "bold 34px Inter, sans-serif";
+            ctx.fillText(p.promo, canvas.width / 2, y + h + 334);
+        }
+
+        ctx.globalAlpha = 0.75;
+        ctx.fillStyle = t.text || "#ffffff";
+        ctx.font = "bold 38px Inter, sans-serif";
+        ctx.fillText(STORE_CONFIG.storeName || "", canvas.width / 2, canvas.height - 55);
+        ctx.globalAlpha = 1;
+
+        document.getElementById("bannerDescargarBtn").style.display = "inline-block";
+    };
+    img.onerror = () => {
+        document.getElementById("bannerError").innerText =
+            "No pudimos cargar esta imagen para armar el banner (puede ser un problema temporal de conexión con el hosting de la foto). Probá de nuevo o usá otra imagen para este producto.";
+        document.getElementById("bannerError").style.display = "block";
+    };
+    img.src = urlImagen;
+}
+
+function dibujarRectRedondeado(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+}
+
+function dibujarTextoConSalto(ctx, texto, x, y, maxWidth, lineHeight) {
+    const palabras = texto.split(' ');
+    let linea = '', lineas = [];
+    palabras.forEach(palabra => {
+        const prueba = linea + palabra + ' ';
+        if (ctx.measureText(prueba).width > maxWidth && linea) {
+            lineas.push(linea.trim());
+            linea = palabra + ' ';
+        } else {
+            linea = prueba;
+        }
+    });
+    lineas.push(linea.trim());
+    lineas.slice(0, 2).forEach((l, i) => ctx.fillText(l, x, y + i * lineHeight)); // máximo 2 líneas
+}
+
+function descargarBanner() {
+    const canvas = document.getElementById("bannerCanvas");
+    try {
+        const url = canvas.toDataURL("image/png");
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `banner-${STORE_CONFIG.storeId}-${Date.now()}.png`;
+        a.click();
+    } catch (e) {
+        console.error(e);
+        document.getElementById("bannerError").innerText =
+            "No pudimos descargar este banner: la imagen del producto viene de un servicio que no permite exportarla por una restricción de seguridad del navegador (CORS). Probá subiendo la foto a postimg.cc o Imgur, o hacé una captura de pantalla de este banner como alternativa.";
+        document.getElementById("bannerError").style.display = "block";
+    }
 }
 
 // ==================== PANEL ADMIN — ESTADÍSTICAS ====================
@@ -1260,7 +1528,7 @@ function renderAdmSlider() {
     }
     list.innerHTML = heroImages.map(h => `
         <div class="admin-item">
-            <img src="${h.url}" class="admin-item-img" alt="slide">
+            <img src="${h.url}" class="admin-item-img" alt="slide" loading="lazy">
             <div style="flex:1;"><b>Imagen ${h.order + 1}</b></div>
             <button onclick="deleteHeroImage('${h.id}')" style="color:var(--danger); font-size:18px; cursor:pointer; background:none; border:none;">🗑️</button>
         </div>
@@ -1375,6 +1643,8 @@ function cargarFormConfig() {
     document.getElementById("cfgMostrarMapa").checked = !!STORE_CONFIG.features.mostrarMapa;
     document.getElementById("cfgMapaIframe").value = STORE_CONFIG.mapaUrl || "";
 
+    cargarCategoriasEditor();
+
     const l = STORE_CONFIG.layout || {};
     document.getElementById("cfgCatalogView").value = l.catalogView || "grid2";
     document.getElementById("cfgHeaderSticky").checked = l.headerSticky !== false;
@@ -1445,7 +1715,8 @@ async function guardarConfigTienda() {
             cartStyle: document.getElementById("cfgCartStyle").value,
             glowEffect: document.getElementById("cfgGlowEffect").checked
         },
-        mapaUrl: mapaUrl
+        mapaUrl: mapaUrl,
+        categories: categoriasEditando
     };
 
     try {
@@ -1458,6 +1729,8 @@ async function guardarConfigTienda() {
         renderMapa();
         renderBanners();
         renderMetodoPagoSelector();
+        renderCategorias();
+        renderCategoriasSelect();
         render(); // por si cambió la vista de catálogo (grid/lista) o el modo minorista/mayorista
         alert(whatsapp ? "✅ Configuración guardada" : "✅ Configuración guardada.\n\n⚠️ Ojo: el WhatsApp para pedidos quedó vacío — el checkout no va a funcionar hasta que lo completes.");
     } catch (e) {
