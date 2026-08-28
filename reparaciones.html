@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Control de Reparaciones</title>
+    <title>Control de Trabajos</title>
 
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#3b82f6">
@@ -23,26 +23,51 @@
         }
         body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; min-height: 100vh; }
         .taller-wrap { max-width: 900px; margin: 0 auto; padding: 20px 16px 80px; }
-        .taller-card { background: var(--card); border-radius: var(--radius); padding: 20px; margin-bottom: 18px; }
-        .stat-box { background: var(--card); border-radius: var(--radius); padding: 18px; text-align: center; }
-        .stat-box small { opacity: 0.5; font-weight: 700; letter-spacing: 0.5px; }
-        .stat-box div { font-size: 24px; font-weight: 800; margin-top: 4px; }
-        .estado-pill { padding: 3px 10px; border-radius: 9999px; font-size: 11px; font-weight: 700; }
-        .rep-card { border-left: 4px solid var(--accent); }
+        .taller-card { background: var(--card); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; }
+
+        .stat-box { background: var(--card); border-radius: var(--radius); padding: 18px; text-align: center; transition: transform 0.2s ease; }
+        .stat-box:hover { transform: translateY(-3px); }
+        .stat-box small { opacity: 0.5; font-weight: 700; letter-spacing: 0.5px; font-size: 11px; }
+        .stat-box div.valor { font-size: 24px; font-weight: 800; margin-top: 4px; }
+
+        .estado-pill { padding: 3px 10px; border-radius: 9999px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+        .rep-card { border-left: 4px solid var(--accent); transition: transform 0.15s ease, box-shadow 0.15s ease; }
+        .rep-card:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(0,0,0,0.25); }
+
+        .urgente-badge {
+            display: inline-block; background: var(--danger); color: #fff; font-size: 10px; font-weight: 800;
+            padding: 3px 9px; border-radius: 9999px; margin-bottom: 6px; animation: pulseUrgente 1.6s infinite;
+        }
+        @keyframes pulseUrgente { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
+
+        .header-negocio { display: flex; align-items: center; gap: 12px; }
+        .header-negocio img, .header-negocio .icono-rubro {
+            width: 46px; height: 46px; border-radius: 14px; object-fit: cover; flex-shrink: 0;
+        }
+        .header-negocio .icono-rubro {
+            display: flex; align-items: center; justify-content: center; background: var(--card); font-size: 24px;
+        }
+        .header-negocio h2 { margin: 0; font-size: 19px; line-height: 1.2; }
+        .header-negocio small { opacity: 0.5; font-size: 12px; }
+
+        .icon-round-btn {
+            background: var(--card); border: none; color: var(--text); width: 42px; height: 42px;
+            border-radius: 12px; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center;
+        }
     </style>
 </head>
 <body>
 
 <div id="slugError" style="display:none; position:fixed; inset:0; background:var(--bg); z-index:99999; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:30px;">
-    <div style="font-size:50px; margin-bottom:20px;">🔧</div>
+    <div style="font-size:50px; margin-bottom:20px;">🛠️</div>
     <h2 style="margin-bottom:10px;">No pudimos abrir esta herramienta</h2>
     <p style="opacity:0.6; max-width:400px;"></p>
 </div>
 
 <div id="loginScreen" style="display:none; min-height:100vh; align-items:center; justify-content:center; padding:20px;">
     <div class="taller-card" style="max-width:420px; width:100%; text-align:center;">
-        <h2 style="margin-bottom:5px;">🔧 Control de Reparaciones</h2>
-        <p style="opacity:0.6; font-size:13px; margin-bottom:25px;">Acceso restringido al dueño del taller</p>
+        <h2 id="loginTitulo" style="margin-bottom:5px;">🛠️ Control de Trabajos</h2>
+        <p style="opacity:0.6; font-size:13px; margin-bottom:25px;">Acceso restringido al dueño del negocio</p>
 
         <div id="loginPaso">
             <div class="form-group"><input id="uInp" placeholder="Tu email"></div>
@@ -69,26 +94,40 @@
 <div id="appScreen" style="display:none;">
     <div class="taller-wrap">
         <div class="flex-between" style="margin:20px 0; align-items:center;">
-            <h2 id="tallerNombre" style="margin:0;">🔧 Reparaciones</h2>
-            <button onclick="logout()" style="background:var(--danger); color:white; border:none; padding:10px 18px; border-radius:12px; font-weight:700; cursor:pointer;">Salir</button>
+            <div class="header-negocio">
+                <img id="tallerLogoImg" src="" alt="Logo" style="display:none;">
+                <div id="tallerIconoRubro" class="icono-rubro">🛠️</div>
+                <div>
+                    <h2 id="tallerNombre">Mi negocio</h2>
+                    <small id="tallerSubtitulo">Control de Trabajos</small>
+                </div>
+            </div>
+            <div style="display:flex; gap:8px;">
+                <button class="icon-round-btn" onclick="abrirConfigTaller()" title="Configuración">⚙️</button>
+                <button class="icon-round-btn" onclick="logout()" title="Salir" style="color:var(--danger);">🚪</button>
+            </div>
         </div>
 
-        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px,1fr)); gap:12px; margin-bottom:20px;">
-            <div class="stat-box"><small>GANANCIA TOTAL</small><div id="statGanancia" style="color:var(--success);">$0</div></div>
-            <div class="stat-box"><small>PENDIENTES</small><div id="statPendientes" style="color:var(--promo);">0</div></div>
-            <div class="stat-box"><small>ESTE MES</small><div id="statMes">0</div></div>
-            <div class="stat-box"><small>GANANCIA DEL MES</small><div id="statGananciaMes" style="color:var(--success);">$0</div></div>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(130px,1fr)); gap:12px; margin-bottom:20px;">
+            <div class="stat-box"><small>GANANCIA TOTAL</small><div class="valor" id="statGanancia" style="color:var(--success);">$0</div></div>
+            <div class="stat-box"><small>PENDIENTES</small><div class="valor" id="statPendientes" style="color:var(--promo);">0</div></div>
+            <div class="stat-box"><small>ESTE MES</small><div class="valor" id="statMes">0</div></div>
+            <div class="stat-box"><small>GANANCIA DEL MES</small><div class="valor" id="statGananciaMes" style="color:var(--success);">$0</div></div>
+            <div class="stat-box"><small>🔥 URGENTES</small><div class="valor" id="statUrgentes" style="color:var(--danger);">0</div></div>
         </div>
 
-        <button class="btn-add" style="background:var(--success); margin-bottom:20px;" onclick="abrirFormNuevo()">+ NUEVA REPARACIÓN</button>
+        <div style="display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap;">
+            <button id="btnNuevo" class="btn-add" style="background:var(--success); flex:2; min-width:200px; margin-top:0;" onclick="abrirFormNuevo()">+ NUEVO REGISTRO</button>
+            <button class="btn-add" style="background:var(--accent); flex:1; min-width:140px; margin-top:0;" onclick="exportarReparacionesCSV()">📊 Exportar</button>
+        </div>
 
         <div class="taller-card">
-            <div class="form-group"><input id="buscador" placeholder="Buscar por cliente o equipo..." oninput="renderLista()"></div>
+            <div class="form-group"><input id="buscador" placeholder="Buscar por cliente..." oninput="renderLista()"></div>
             <div class="form-group" style="margin-bottom:0;">
                 <select id="filtroEstado" onchange="renderLista()">
                     <option value="">Todos los estados</option>
                     <option value="pendiente">Pendiente</option>
-                    <option value="en_reparacion">En reparación</option>
+                    <option value="en_reparacion">En proceso</option>
                     <option value="listo">Listo para retirar</option>
                     <option value="entregado">Entregado</option>
                 </select>
@@ -101,17 +140,17 @@
 
 <div class="modal" id="formModal" style="align-items:flex-start; overflow-y:auto;">
     <div class="modal-content" style="max-width:520px; margin:30px auto; padding:25px;">
-        <h3 id="formTitulo" style="margin-top:0;">Nueva reparación</h3>
+        <h3 id="formTitulo" style="margin-top:0;">Nuevo registro</h3>
         <input type="hidden" id="rId">
 
         <div class="form-group"><label>Cliente</label><input id="rCliente" placeholder="Nombre del cliente"></div>
         <div class="form-group"><label>Teléfono (opcional)</label><input id="rTelefono" placeholder="34241234567"></div>
-        <div class="form-group"><label>Equipo</label><input id="rEquipo" placeholder="Ej: iPhone 11, Samsung A32..."></div>
-        <div class="form-group"><label>Problema / trabajo realizado</label><textarea id="rProblema" rows="2" placeholder="Ej: Cambio de pantalla, no carga, etc."></textarea></div>
+        <div class="form-group"><label id="lblCampoObjeto">Equipo</label><input id="rEquipo" placeholder="Ej: iPhone 11, Samsung A32..."></div>
+        <div class="form-group"><label id="lblCampoTrabajo">Problema / trabajo realizado</label><textarea id="rProblema" rows="2" placeholder="Detalle del trabajo a realizar"></textarea></div>
 
         <div class="form-group">
-            <label>Repuestos / cambios usados (opcional) — uno por línea: Nombre | Costo</label>
-            <textarea id="rRepuestos" rows="3" placeholder="Pantalla iPhone 11 | 15000&#10;Batería | 8000"></textarea>
+            <label>Repuestos / materiales usados (opcional) — uno por línea: Nombre | Costo</label>
+            <textarea id="rRepuestos" rows="3" placeholder="Repuesto o material | 15000&#10;Otro insumo | 8000"></textarea>
         </div>
 
         <div class="form-group"><label>Costo de mano de obra</label><input id="rManoObra" type="number" placeholder="0"></div>
@@ -121,18 +160,63 @@
             <label>Estado</label>
             <select id="rEstado">
                 <option value="pendiente">Pendiente</option>
-                <option value="en_reparacion">En reparación</option>
+                <option value="en_reparacion">En proceso</option>
                 <option value="listo">Listo para retirar</option>
                 <option value="entregado">Entregado</option>
             </select>
         </div>
 
+        <div class="form-group">
+            <label>Prioridad</label>
+            <select id="rPrioridad">
+                <option value="normal">Normal</option>
+                <option value="urgente">🔥 Urgente</option>
+            </select>
+        </div>
+
+        <div class="form-group"><label>Fecha estimada de entrega (opcional)</label><input id="rFechaEstimada" type="date"></div>
+        <div class="form-group"><label>Garantía en días (opcional)</label><input id="rGarantiaDias" type="number" placeholder="Ej: 30"></div>
         <div class="form-group"><label>Notas (opcional)</label><textarea id="rNotas" rows="2"></textarea></div>
 
         <p id="rGananciaPreview" style="opacity:0.7; font-size:13px; margin-bottom:15px;"></p>
 
         <button class="btn-add" style="background:var(--success);" onclick="guardarReparacion()">GUARDAR</button>
         <button class="btn-add" style="background:none; color:white; margin-top:10px; opacity:0.6;" onclick="cerrarFormModal()">Cancelar</button>
+    </div>
+</div>
+
+<div class="modal" id="configModal" style="align-items:flex-start; overflow-y:auto;">
+    <div class="modal-content" style="max-width:480px; margin:30px auto; padding:25px;">
+        <h3 style="margin-top:0;">⚙️ Configuración del negocio</h3>
+
+        <div class="form-group"><label>Nombre del negocio</label><input id="cfgNombreNegocio" placeholder="Ej: CellMax"></div>
+        <div class="form-group">
+            <label>Rubro (ajusta el vocabulario de la app)</label>
+            <select id="cfgRubro">
+                <option value="celulares">📱 Celulares</option>
+                <option value="motos">🏍️ Motos</option>
+                <option value="autos">🚗 Autos</option>
+                <option value="electro">🔌 Electrodomésticos</option>
+                <option value="general">🛠️ General / Otro rubro</option>
+            </select>
+        </div>
+        <div class="form-group"><label>URL del logo (opcional — vacío = ícono del rubro)</label><input id="cfgLogoUrl" placeholder="https://..."></div>
+
+        <div class="form-group">
+            <label>Tema rápido (opcional — vista previa al instante)</label>
+            <select id="cfgTemaPreset" onchange="aplicarPresetTemaTaller()">
+                <option value="">— Elegir un tema... —</option>
+                <option value="oscuro">Oscuro</option>
+                <option value="claro">Claro</option>
+                <option value="taller">Industrial (naranja)</option>
+                <option value="verde">Verde taller</option>
+            </select>
+        </div>
+        <div class="form-group"><label>Color principal</label><input id="cfgAccentTaller" type="color" style="height:50px; padding:5px; cursor:pointer;" oninput="previsualizarColorTaller('--accent', this.value)"></div>
+        <div class="form-group"><label>Color de fondo</label><input id="cfgBgTaller" type="color" style="height:50px; padding:5px; cursor:pointer;" oninput="previsualizarColorTaller('--bg', this.value)"></div>
+
+        <button class="btn-add" style="background:var(--success);" onclick="guardarConfigTaller()">GUARDAR</button>
+        <button class="btn-add" style="background:none; color:white; margin-top:10px; opacity:0.6;" onclick="cerrarConfigTaller()">Cancelar</button>
     </div>
 </div>
 
