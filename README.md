@@ -183,30 +183,50 @@ para todos los clientes) y esta tienda ya responde en
 
 ---
 
-## Alta de un taller de reparaciones nuevo
+## Alta de un negocio nuevo con "Control de Trabajos" (`reparaciones.html`)
 
-Mismo patrón exacto que una tienda, pero con `reparaciones.rules` en vez de
-`firestore.rules`, y sin las tiendas mayoristas ni catálogo público (esta
-herramienta es 100% privada, solo la usa el dueño del taller):
+No es solo para celulares: sirve para **cualquier negocio que necesite
+llevar control de trabajos/servicios con costos y ganancia** — talleres de
+motos, autos, electrodomésticos, o cualquier otro rubro. El "rubro" que
+elijas solo ajusta el vocabulario (nombre de la app, ícono, cómo se llama
+el campo del objeto a reparar) — el motor de cálculo es el mismo para
+todos.
 
-1. Crear el proyecto de Firebase del taller (igual que el paso 1 de una tienda).
+Mismo patrón exacto que una tienda, pero con `firestore.reparaciones.rules`
+en vez de `firestore.rules`, y sin catálogo público ni clientes mayoristas
+(esta herramienta es 100% privada, solo la usa el dueño del negocio):
+
+1. Crear el proyecto de Firebase del negocio (igual que el paso 1 de una tienda).
 2. Habilitar Authentication → Email/Password.
 3. Crear Firestore en modo producción.
 4. Pegar `firestore.reparaciones.rules` (no `firestore.rules`, ese es de tiendas) → Publicar.
 5. Configuración del proyecto → Tus apps → copiar las 6 credenciales →
    registrarlo en `master-admin.html`, eligiendo **Tipo de aplicación: 🔧
-   Taller de reparaciones**.
-6. Firestore de ese taller → colección `config` → documento `setup` →
-   campo `allowedAdminEmail` = email del dueño del taller.
+   Taller / Control de trabajos**.
+6. Firestore de ese negocio → colección `config` → documento `setup` →
+   campo `allowedAdminEmail` = email del dueño.
 7. El dueño abre su link (`tusitio.com/reparaciones.html?slug=...`) → "¿Primera
    vez? Configurar acceso" → mismo flujo de email + contraseña + verificación
    que una tienda.
+8. Ya adentro, ícono ⚙️ (arriba a la derecha) → **elegir el rubro** (celulares
+   / motos / autos / electrodomésticos / general), nombre del negocio, logo
+   y colores. Esto se guarda en `config/taller` de su propio Firestore — no
+   hace falta tocarlo a mano salvo que quieras adelantarlo antes del primer
+   ingreso.
 
-Con eso ya puede cargar reparaciones: cliente, equipo, problema, repuestos
-usados (con su costo cada uno), mano de obra y precio cobrado — el costo
-total y la ganancia se calculan solos. Tiene estados (pendiente / en
-reparación / listo para retirar / entregado), buscador, filtro por estado,
-y estadísticas de ganancia total y del mes en curso.
+Con eso ya puede cargar registros: cliente, el objeto de trabajo (equipo,
+moto, vehículo, artefacto o ítem según el rubro elegido), detalle del
+trabajo, repuestos/materiales usados (con su costo cada uno), mano de
+obra y precio cobrado — el costo total y la ganancia se calculan solos.
+Además:
+
+- **Prioridad**: marcar un trabajo como 🔥 urgente lo resalta en la lista y
+  lo suma a un contador propio en las estadísticas.
+- **Fecha estimada de entrega** y **garantía en días** (ambos opcionales).
+- **Estados**: pendiente / en proceso / listo para retirar / entregado —
+  con buscador y filtro.
+- **Exportar a Excel**: botón que descarga un `.csv` con todos los registros.
+- Instalable como PWA en el celular del dueño, igual que la tienda.
 
 ## Cómo publicar el sitio (una sola vez para todo el sistema)
 
