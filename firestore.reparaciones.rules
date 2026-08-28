@@ -21,10 +21,21 @@ service cloud.firestore {
     // ------------------------------------------------------------------
     // REPARACIONES
     // A diferencia de la tienda, acá NO hay nada público: es una
-    // herramienta interna del taller, todo requiere ser el administrador.
+    // herramienta interna del negocio, todo requiere ser el administrador.
     // ------------------------------------------------------------------
     match /reparaciones/{id} {
       allow read, write: if esAdmin();
+    }
+
+    // ------------------------------------------------------------------
+    // CONFIG/TALLER — nombre del negocio, rubro, tema y logo.
+    // Lectura pública a propósito: así la pantalla de login ya se ve con
+    // la marca correcta antes de que el dueño inicie sesión (no expone
+    // nada sensible, solo textos y colores). Escritura solo admin.
+    // ------------------------------------------------------------------
+    match /config/taller {
+      allow read: if true;
+      allow write: if esAdmin();
     }
 
     // ------------------------------------------------------------------
