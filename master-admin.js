@@ -19,7 +19,7 @@ let editandoSlug = null; // null = alta nueva; string = editando ese slug origin
 // "reparaciones.html".
 const APP_TYPES = {
     tienda:       { label: "Tienda online",          archivo: "index.html",         icon: "🛒" },
-    reparaciones: { label: "Taller de reparaciones",  archivo: "reparaciones.html",  icon: "🔧" }
+    reparaciones: { label: "Taller / Control de trabajos",  archivo: "reparaciones.html",  icon: "🔧" }
 };
 
 function init() {
