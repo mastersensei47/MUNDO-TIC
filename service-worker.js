@@ -8,7 +8,7 @@
 // código desactualizado — exactamente el tipo de bug que ya tuvimos una vez.
 // ============================================================================
 
-const CACHE_VERSION = "v2-rubros-pwa";
+const CACHE_VERSION = "v4-pwa-fast";
 const CACHE_NAME = `plataforma-cache-${CACHE_VERSION}`;
 
 self.addEventListener("install", () => {
@@ -24,17 +24,23 @@ self.addEventListener("activate", (event) => {
     self.clients.claim();
 });
 
-self.addEventListener("fetch", (event) => {
-    // Solo GET: nunca interceptar escrituras a Firestore ni nada por el estilo.
-    if (event.request.method !== "GET") return;
+self.addEventListener("message", (event) => {
+    if (event.data && event.data.type === "SKIP_WAITING") self.skipWaiting();
+});
 
+self.addEventListener("fetch", (event) => {
+    if (event.request.method !== "GET") return;
+    const url = new URL(event.request.url);
+    // No cache for Firebase/CDNs/external images: prevents stale data and
+    // avoids filling the cache with huge third-party resources.
+    if (url.origin !== self.location.origin) return;
     event.respondWith(
-        fetch(event.request)
-            .then((response) => {
+        fetch(event.request).then(response => {
+            if (response && response.ok) {
                 const clone = response.clone();
                 caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone)).catch(() => {});
-                return response;
-            })
-            .catch(() => caches.match(event.request)) // sin conexión: usar lo último que quedó guardado
+            }
+            return response;
+        }).catch(() => caches.match(event.request))
     );
 });
