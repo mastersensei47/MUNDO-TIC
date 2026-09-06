@@ -575,3 +575,27 @@ body.cart-style-modal #cartDrawer.active {
 
 /* --- Ocultar el campo de precio mayorista en el form de producto (modo "solo minorista") --- */
 body.precio-mayorista-oculto .precio-mayorista-field { display: none; }
+
+/* ===== Mejoras panel admin / galería / PWA ===== */
+.admin-product-search {
+    display:flex; align-items:center; gap:10px; margin:0 0 15px;
+}
+.admin-product-search input { flex:1; min-width:0; }
+.admin-search-count { font-size:12px; opacity:.55; white-space:nowrap; }
+.admin-help { opacity:.55; font-size:11px; margin:6px 0 10px; line-height:1.45; }
+.image-url-list { display:flex; flex-direction:column; gap:9px; }
+.image-url-row { display:flex; align-items:center; gap:8px; }
+.image-url-row input { flex:1; min-width:0; }
+.image-url-row button {
+    width:48px; height:48px; flex:0 0 48px; border:1px solid rgba(239,68,68,.45);
+    background:rgba(239,68,68,.10); color:var(--danger); border-radius:12px;
+    font-size:21px; cursor:pointer;
+}
+.image-url-row .image-number { width:28px; flex:0 0 28px; text-align:center; opacity:.45; font-size:12px; font-weight:800; }
+.image-add-btn { background:var(--accent); margin-top:10px; width:auto !important; }
+.image-host-btn { display:inline-block; margin-top:8px; background:var(--card); color:var(--text); border:1px solid rgba(255,255,255,.1); padding:10px 15px; border-radius:10px; text-decoration:none; font-size:13px; font-weight:800; }
+.pwa-install-btn { border-radius:12px !important; font-size:20px !important; }
+@media (max-width:600px) {
+    .admin-product-search { align-items:stretch; flex-direction:column; }
+    .admin-search-count { align-self:flex-end; }
+}
