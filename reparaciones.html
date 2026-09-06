@@ -54,6 +54,15 @@
             background: var(--card); border: none; color: var(--text); width: 42px; height: 42px;
             border-radius: 12px; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center;
         }
+        .rubro-check { display:flex; align-items:center; gap:10px; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.07); padding:11px 12px; border-radius:12px; cursor:pointer; }
+        .rubro-check input { width:18px; height:18px; accent-color:var(--accent); flex-shrink:0; }
+        .rubros-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:8px; margin-top:10px; }
+        .rubro-chip { display:inline-flex; align-items:center; gap:6px; padding:7px 10px; border-radius:999px; background:rgba(59,130,246,.14); border:1px solid rgba(59,130,246,.25); font-size:12px; font-weight:700; margin:3px; }
+        .custom-rubro-row { display:flex; justify-content:space-between; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid rgba(255,255,255,.07); }
+        .custom-rubro-row small { display:block; opacity:.55; font-size:11px; margin-top:3px; }
+        .custom-rubro-row button { border:0; background:rgba(255,255,255,.06); color:var(--text); padding:7px 9px; border-radius:9px; cursor:pointer; margin-left:4px; }
+        .install-app-btn { display:none; align-items:center; justify-content:center; gap:7px; width:100%; margin-top:10px; }
+        @media(max-width:560px){ .rubros-grid{grid-template-columns:1fr;} .custom-rubro-row{align-items:flex-start;} }
     </style>
 </head>
 <body>
@@ -100,6 +109,7 @@
                 <div>
                     <h2 id="tallerNombre">Mi negocio</h2>
                     <small id="tallerSubtitulo">Control de Trabajos</small>
+                    <div id="rubrosActivosTexto" style="opacity:.5;font-size:10px;margin-top:4px;max-width:600px;"></div>
                 </div>
             </div>
             <div style="display:flex; gap:8px;">
@@ -119,6 +129,7 @@
         <div style="display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap;">
             <button id="btnNuevo" class="btn-add" style="background:var(--success); flex:2; min-width:200px; margin-top:0;" onclick="abrirFormNuevo()">+ NUEVO REGISTRO</button>
             <button class="btn-add" style="background:var(--accent); flex:1; min-width:140px; margin-top:0;" onclick="exportarReparacionesCSV()">📊 Exportar</button>
+            <button id="btnInstalarApp" class="btn-add install-app-btn" style="background:#7c3aed;" onclick="instalarApp()">📲 INSTALAR COMO APP</button>
         </div>
 
         <div class="taller-card">
@@ -191,14 +202,22 @@
 
         <div class="form-group"><label>Nombre del negocio</label><input id="cfgNombreNegocio" placeholder="Ej: CellMax"></div>
         <div class="form-group">
-            <label>Rubro (ajusta el vocabulario de la app)</label>
-            <select id="cfgRubro">
-                <option value="celulares">📱 Celulares</option>
-                <option value="motos">🏍️ Motos</option>
-                <option value="autos">🚗 Autos</option>
-                <option value="electro">🔌 Electrodomésticos</option>
-                <option value="general">🛠️ General / Otro rubro</option>
-            </select>
+            <label>Rubros del negocio</label>
+            <small style="display:block;opacity:.55;margin:4px 0 8px;">Podés combinar varios rubros. El primero seleccionado define el vocabulario principal del formulario.</small>
+            <div id="selectorRubros" class="rubros-grid"></div>
+            <div id="rubrosActivosPreview" style="margin-top:8px;"></div>
+        </div>
+
+        <div class="form-group" style="background:rgba(255,255,255,.035);padding:15px;border-radius:14px;">
+            <label>➕ Agregar rubro personalizado</label>
+            <div class="rubros-grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));">
+                <input id="nuevoRubroNombre" placeholder="Nombre del rubro">
+                <input id="nuevoRubroIcono" placeholder="Ícono (ej: 🛠️)">
+                <input id="nuevoRubroObjeto" placeholder="Qué recibe (ej: Equipo)">
+                <input id="nuevoRubroTrabajo" placeholder="Qué se hace (ej: Servicio)">
+            </div>
+            <button type="button" class="btn-add" style="background:var(--accent);margin-top:10px;" onclick="crearRubroPersonalizado()">+ AGREGAR RUBRO</button>
+            <div id="rubrosPersonalizadosLista" style="margin-top:12px;"></div>
         </div>
         <div class="form-group"><label>URL del logo (opcional — vacío = ícono del rubro)</label><input id="cfgLogoUrl" placeholder="https://..."></div>
 
