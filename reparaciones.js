@@ -19,12 +19,26 @@ let editandoId = null;
 // ==================== RUBROS Y TEMAS ====================
 
 const RUBRO_PRESETS = {
-    celulares: { icono: "📱", tituloApp: "Control de Reparaciones", campoObjeto: "Equipo", placeholderObjeto: "Ej: iPhone 11, Samsung A32...", campoTrabajo: "Problema / trabajo realizado", accionNueva: "Nueva reparación" },
-    motos:     { icono: "🏍️", tituloApp: "Control de Taller", campoObjeto: "Moto", placeholderObjeto: "Ej: Honda Wave 110 — patente ABC123", campoTrabajo: "Trabajo realizado", accionNueva: "Nuevo trabajo" },
-    autos:     { icono: "🚗", tituloApp: "Control de Taller", campoObjeto: "Vehículo", placeholderObjeto: "Ej: Fiat Cronos — patente AB123CD", campoTrabajo: "Trabajo realizado", accionNueva: "Nuevo trabajo" },
-    electro:   { icono: "🔌", tituloApp: "Control de Servicio Técnico", campoObjeto: "Artefacto", placeholderObjeto: "Ej: Heladera Whirlpool, Lavarropas...", campoTrabajo: "Falla / trabajo realizado", accionNueva: "Nuevo servicio" },
-    general:   { icono: "🛠️", tituloApp: "Control de Trabajos", campoObjeto: "Ítem / Producto", placeholderObjeto: "Descripción del producto o trabajo", campoTrabajo: "Detalle del trabajo", accionNueva: "Nuevo trabajo" }
+    pc_notebooks: { icono: "💻", nombre: "Servicio técnico de PC y notebooks", tituloApp: "Control de Servicio Técnico", campoObjeto: "Equipo", placeholderObjeto: "Ej: PC gamer, notebook Lenovo...", campoTrabajo: "Falla / trabajo realizado", accionNueva: "Nuevo servicio" },
+    consolas: { icono: "🎮", nombre: "Reparación de consolas de videojuegos", tituloApp: "Control de Reparaciones", campoObjeto: "Consola", placeholderObjeto: "Ej: PS5, Xbox Series, Nintendo Switch...", campoTrabajo: "Falla / trabajo realizado", accionNueva: "Nueva reparación" },
+    audio_tv: { icono: "📺", nombre: "Servicio técnico de audio y TV", tituloApp: "Control de Servicio Técnico", campoObjeto: "Equipo", placeholderObjeto: "Ej: Smart TV, parlante, equipo de audio...", campoTrabajo: "Falla / trabajo realizado", accionNueva: "Nuevo servicio" },
+    bicicletas: { icono: "🚲", nombre: "Bicicleterías", tituloApp: "Control de Taller", campoObjeto: "Bicicleta", placeholderObjeto: "Ej: MTB rodado 29, bicicleta urbana...", campoTrabajo: "Trabajo realizado", accionNueva: "Nuevo trabajo" },
+    electricos: { icono: "🛴", nombre: "Reparación de monopatines y vehículos eléctricos", tituloApp: "Control de Taller", campoObjeto: "Vehículo eléctrico", placeholderObjeto: "Ej: Monopatín Xiaomi, bici eléctrica...", campoTrabajo: "Falla / trabajo realizado", accionNueva: "Nuevo trabajo" },
+    refrigeracion: { icono: "❄️", nombre: "Técnicos en refrigeración y aires acondicionados", tituloApp: "Control de Servicio Técnico", campoObjeto: "Equipo", placeholderObjeto: "Ej: Aire acondicionado, heladera, freezer...", campoTrabajo: "Falla / trabajo realizado", accionNueva: "Nuevo servicio" },
+    herramientas: { icono: "🔧", nombre: "Reparación de herramientas eléctricas", tituloApp: "Control de Reparaciones", campoObjeto: "Herramienta", placeholderObjeto: "Ej: Taladro, amoladora, atornillador...", campoTrabajo: "Falla / trabajo realizado", accionNueva: "Nueva reparación" },
+    jardineria: { icono: "🌿", nombre: "Mantenimiento de maquinaria de jardinería", tituloApp: "Control de Taller", campoObjeto: "Máquina", placeholderObjeto: "Ej: Cortadora, motosierra, bordeadora...", campoTrabajo: "Mantenimiento / trabajo realizado", accionNueva: "Nuevo trabajo" },
+    zapateria: { icono: "👞", nombre: "Zapaterías y marroquinerías", tituloApp: "Control de Trabajos", campoObjeto: "Artículo", placeholderObjeto: "Ej: Zapatillas, botas, cartera, bolso...", campoTrabajo: "Arreglo / trabajo realizado", accionNueva: "Nuevo trabajo" },
+    sastreria: { icono: "🧵", nombre: "Sastrerías y modistas", tituloApp: "Control de Trabajos", campoObjeto: "Prenda", placeholderObjeto: "Ej: Traje, vestido, pantalón...", campoTrabajo: "Arreglo / trabajo realizado", accionNueva: "Nuevo trabajo" },
+    relojeria: { icono: "⌚", nombre: "Relojerías y joyerías", tituloApp: "Control de Trabajos", campoObjeto: "Artículo", placeholderObjeto: "Ej: Reloj, cadena, anillo, pulsera...", campoTrabajo: "Reparación / trabajo realizado", accionNueva: "Nuevo trabajo" },
+    celulares: { icono: "📱", nombre: "Reparación de celulares y tablets", tituloApp: "Control de Reparaciones", campoObjeto: "Equipo", placeholderObjeto: "Ej: iPhone 11, Samsung A32, iPad...", campoTrabajo: "Problema / trabajo realizado", accionNueva: "Nueva reparación" },
+    motos: { icono: "🏍️", nombre: "Mecánica de motos", tituloApp: "Control de Taller", campoObjeto: "Moto", placeholderObjeto: "Ej: Honda Wave 110 — patente ABC123", campoTrabajo: "Trabajo realizado", accionNueva: "Nuevo trabajo" },
+    autos: { icono: "🚗", nombre: "Mecánica de autos", tituloApp: "Control de Taller", campoObjeto: "Vehículo", placeholderObjeto: "Ej: Fiat Cronos — patente AB123CD", campoTrabajo: "Trabajo realizado", accionNueva: "Nuevo trabajo" },
+    electro: { icono: "🔌", nombre: "Reparación de electrodomésticos", tituloApp: "Control de Servicio Técnico", campoObjeto: "Artefacto", placeholderObjeto: "Ej: Heladera Whirlpool, lavarropas...", campoTrabajo: "Falla / trabajo realizado", accionNueva: "Nuevo servicio" },
+    barberia: { icono: "💈", nombre: "Barbería", tituloApp: "Control de Servicios", campoObjeto: "Servicio", placeholderObjeto: "Ej: Corte, barba, corte + barba...", campoTrabajo: "Servicio realizado", accionNueva: "Nuevo servicio" },
+    general: { icono: "🛠️", nombre: "General / personalizado", tituloApp: "Control de Trabajos", campoObjeto: "Ítem / Producto", placeholderObjeto: "Descripción del producto o trabajo", campoTrabajo: "Detalle del trabajo", accionNueva: "Nuevo trabajo" }
 };
+
+const RUBRO_LISTA = Object.entries(RUBRO_PRESETS).filter(([k]) => k !== 'general').map(([id, p]) => ({ id, ...p }));
 
 const TEMA_DEFAULT = { bg: "#0f172a", card: "#1e293b", text: "#f1f5f9", accent: "#3b82f6", success: "#10b981", promo: "#f59e0b", danger: "#ef4444", radius: "18px" };
 
@@ -37,11 +51,24 @@ const TEMA_PRESETS = {
     verde:  { bg: "#0a0f0a", card: "#131f13", text: "#e8f5e9", accent: "#22c55e", success: "#16a34a", promo: "#eab308", danger: "#ef4444" }
 };
 
-let TALLER_CONFIG = { rubro: "general", nombreNegocio: "", logoUrl: "", theme: { ...TEMA_DEFAULT } };
+let TALLER_CONFIG = { rubro: "general", rubrosSeleccionados: ["general"], rubrosPersonalizados: [], nombreNegocio: "", logoUrl: "", theme: { ...TEMA_DEFAULT } };
 let presetTemaTallerSeleccionado = null;
+let deferredInstallPrompt = null;
+
+function todosLosRubros() {
+    return [...RUBRO_LISTA, ...(TALLER_CONFIG.rubrosPersonalizados || []).map(r => ({ ...r, personalizado: true }))];
+}
 
 function presetRubro() {
-    return RUBRO_PRESETS[TALLER_CONFIG.rubro] || RUBRO_PRESETS.general;
+    const id = TALLER_CONFIG.rubro || (TALLER_CONFIG.rubrosSeleccionados || [])[0] || "general";
+    return RUBRO_PRESETS[id] || (TALLER_CONFIG.rubrosPersonalizados || []).find(r => r.id === id) || RUBRO_PRESETS.general;
+}
+
+function rubrosActivos() {
+    const ids = TALLER_CONFIG.rubrosSeleccionados && TALLER_CONFIG.rubrosSeleccionados.length
+        ? TALLER_CONFIG.rubrosSeleccionados
+        : [TALLER_CONFIG.rubro || 'general'];
+    return ids.map(id => RUBRO_PRESETS[id] || (TALLER_CONFIG.rubrosPersonalizados || []).find(r => r.id === id)).filter(Boolean);
 }
 
 // Igual que el "conEl" de la tienda: aplica una función a un elemento SOLO
@@ -96,8 +123,14 @@ async function bootstrap() {
             console.warn("No se pudo leer config/taller, se usan valores por defecto:", e);
         }
 
+        const rubroLegacy = datosTaller.rubro || "general";
+        const seleccionados = Array.isArray(datosTaller.rubrosSeleccionados) && datosTaller.rubrosSeleccionados.length
+            ? datosTaller.rubrosSeleccionados
+            : [rubroLegacy];
         TALLER_CONFIG = {
-            rubro: datosTaller.rubro || "general",
+            rubro: rubroLegacy,
+            rubrosSeleccionados: seleccionados,
+            rubrosPersonalizados: Array.isArray(datosTaller.rubrosPersonalizados) ? datosTaller.rubrosPersonalizados : [],
             nombreNegocio: datosTaller.nombreNegocio || storeName || "Mi negocio",
             logoUrl: datosTaller.logoUrl || "",
             theme: { ...TEMA_DEFAULT, ...(datosTaller.theme || {}) }
@@ -108,6 +141,7 @@ async function bootstrap() {
             ["aplicarTextosRubro", aplicarTextosRubro],
             ["generarManifestDinamico", generarManifestDinamico],
             ["registrarServiceWorker", registrarServiceWorker],
+            ["prepararInstalacionPWA", prepararInstalacionPWA],
         ];
         pasos.forEach(([nombre, fn]) => {
             try { fn(); } catch (e) { console.error(`bootstrap(): falló ${nombre}()`, e); }
@@ -132,8 +166,10 @@ function aplicarTextosRubro() {
     document.title = TALLER_CONFIG.nombreNegocio + " — " + p.tituloApp;
 
     conElRep("loginTitulo", el => el.innerText = `${p.icono} ${p.tituloApp}`);
-    conElRep("tallerSubtitulo", el => el.innerText = p.tituloApp);
+    const activos = rubrosActivos();
+    conElRep("tallerSubtitulo", el => el.innerText = activos.length > 1 ? `${p.tituloApp} · ${activos.length} rubros` : p.tituloApp);
     conElRep("tallerNombre", el => el.innerText = TALLER_CONFIG.nombreNegocio);
+    conElRep("rubrosActivosTexto", el => el.innerText = activos.map(r => `${r.icono} ${r.nombre || r.tituloApp}`).join(" · "));
 
     conElRep("lblCampoObjeto", el => el.innerText = p.campoObjeto);
     conElRep("rEquipo", el => el.placeholder = p.placeholderObjeto);
@@ -152,11 +188,13 @@ function generarManifestDinamico() {
     try {
         const p = presetRubro();
         const manifest = {
-            name: TALLER_CONFIG.nombreNegocio,
-            short_name: TALLER_CONFIG.nombreNegocio.slice(0, 12),
+            id: `${location.origin}${location.pathname}${location.search}`,
+            name: TALLER_CONFIG.nombreNegocio + " — Control de Trabajos",
+            short_name: (TALLER_CONFIG.nombreNegocio || "Taller").slice(0, 20),
             start_url: `${location.origin}${location.pathname}${location.search}`,
             scope: `${location.origin}${location.pathname}`,
             display: "standalone",
+            orientation: "portrait-primary",
             background_color: TALLER_CONFIG.theme.bg || "#0f172a",
             theme_color: TALLER_CONFIG.theme.accent || "#3b82f6",
             icons: [
@@ -181,6 +219,32 @@ function registrarServiceWorker() {
     if ("serviceWorker" in navigator) {
         navigator.serviceWorker.register("service-worker.js").catch(e => console.warn("Service worker no registrado:", e));
     }
+}
+
+function prepararInstalacionPWA() {
+    window.addEventListener("beforeinstallprompt", (event) => {
+        event.preventDefault();
+        deferredInstallPrompt = event;
+        conElRep("btnInstalarApp", el => el.style.display = "inline-flex");
+    });
+    window.addEventListener("appinstalled", () => {
+        deferredInstallPrompt = null;
+        conElRep("btnInstalarApp", el => el.style.display = "none");
+        alert("✅ La app quedó instalada en tu dispositivo.");
+    });
+    const esStandalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+    if (esStandalone) conElRep("btnInstalarApp", el => el.style.display = "none");
+}
+
+async function instalarApp() {
+    if (deferredInstallPrompt) {
+        deferredInstallPrompt.prompt();
+        await deferredInstallPrompt.userChoice;
+        deferredInstallPrompt = null;
+        conElRep("btnInstalarApp", el => el.style.display = "none");
+        return;
+    }
+    alert("En Android/Chrome: abrí el menú del navegador y elegí 'Instalar aplicación' o 'Agregar a pantalla de inicio'. En iPhone/iPad: Safari → Compartir → 'Agregar a pantalla de inicio'.");
 }
 
 function init() {
@@ -303,18 +367,107 @@ function cerrarConfigTaller() {
 
 function cargarFormConfigTaller() {
     const el = document.getElementById("cfgNombreNegocio");
-    if (!el) return; // el modal todavía no está en el DOM (no debería pasar)
+    if (!el) return;
     el.value = TALLER_CONFIG.nombreNegocio || "";
-    document.getElementById("cfgRubro").value = TALLER_CONFIG.rubro || "general";
+    renderSelectorRubros();
     document.getElementById("cfgLogoUrl").value = TALLER_CONFIG.logoUrl || "";
     document.getElementById("cfgTemaPreset").value = "";
     document.getElementById("cfgAccentTaller").value = TALLER_CONFIG.theme.accent || "#3b82f6";
     document.getElementById("cfgBgTaller").value = TALLER_CONFIG.theme.bg || "#0f172a";
     presetTemaTallerSeleccionado = null;
+    renderRubrosPersonalizados();
 }
 
-// Vista previa en vivo, igual que en la tienda: se ve el cambio al toque,
-// pero recién queda guardado de verdad al tocar "GUARDAR".
+function renderSelectorRubros() {
+    const cont = document.getElementById("selectorRubros");
+    if (!cont) return;
+    const activos = new Set(TALLER_CONFIG.rubrosSeleccionados || [TALLER_CONFIG.rubro || "general"]);
+    cont.innerHTML = todosLosRubros().map(r => `
+        <label class="rubro-check">
+            <input type="checkbox" value="${r.id}" ${activos.has(r.id) ? "checked" : ""} onchange="actualizarRubrosSeleccionados()">
+            <span>${r.icono} ${r.nombre}</span>
+        </label>`).join('');
+    const generalActivo = activos.has('general');
+    if (generalActivo && activos.size > 1) {
+        const cb = cont.querySelector('input[value="general"]');
+        if (cb) cb.checked = false;
+    }
+}
+
+function actualizarRubrosSeleccionados() {
+    const cont = document.getElementById("selectorRubros");
+    if (!cont) return;
+    let ids = [...cont.querySelectorAll('input[type="checkbox"]:checked')].map(x => x.value);
+    if (!ids.length) {
+        ids = ["general"];
+        const cb = cont.querySelector('input[value="general"]');
+        if (cb) cb.checked = true;
+    }
+    if (ids.length > 1 && ids.includes('general')) {
+        ids = ids.filter(x => x !== 'general');
+        const cb = cont.querySelector('input[value="general"]');
+        if (cb) cb.checked = false;
+    }
+    TALLER_CONFIG.rubrosSeleccionados = ids;
+    TALLER_CONFIG.rubro = ids[0];
+    aplicarTextosRubro();
+    renderRubrosActivosPreview();
+}
+
+function renderRubrosActivosPreview() {
+    const cont = document.getElementById("rubrosActivosPreview");
+    if (!cont) return;
+    const activos = rubrosActivos();
+    cont.innerHTML = activos.map(r => `<span class="rubro-chip">${r.icono} ${r.nombre}</span>`).join('');
+}
+
+function crearRubroPersonalizado() {
+    const nombre = (document.getElementById("nuevoRubroNombre")?.value || '').trim();
+    const icono = (document.getElementById("nuevoRubroIcono")?.value || '🛠️').trim() || '🛠️';
+    const campoObjeto = (document.getElementById("nuevoRubroObjeto")?.value || 'Ítem / Producto').trim() || 'Ítem / Producto';
+    const campoTrabajo = (document.getElementById("nuevoRubroTrabajo")?.value || 'Detalle del trabajo').trim() || 'Detalle del trabajo';
+    if (!nombre) return alert('Poné un nombre para el rubro.');
+    const id = 'custom_' + Date.now();
+    TALLER_CONFIG.rubrosPersonalizados.push({ id, nombre, icono, tituloApp: 'Control de Trabajos', campoObjeto, placeholderObjeto: `Ej: ${campoObjeto.toLowerCase()}...`, campoTrabajo, accionNueva: 'Nuevo trabajo' });
+    TALLER_CONFIG.rubrosSeleccionados = [...new Set([...(TALLER_CONFIG.rubrosSeleccionados || []), id])].filter(x => x !== 'general');
+    TALLER_CONFIG.rubro = TALLER_CONFIG.rubrosSeleccionados[0] || id;
+    ['nuevoRubroNombre','nuevoRubroIcono','nuevoRubroObjeto','nuevoRubroTrabajo'].forEach(id2 => { const x=document.getElementById(id2); if(x) x.value=''; });
+    renderSelectorRubros();
+    renderRubrosPersonalizados();
+    renderRubrosActivosPreview();
+    aplicarTextosRubro();
+}
+
+function eliminarRubroPersonalizado(id) {
+    if (!confirm('¿Eliminar este rubro personalizado? Los trabajos ya guardados no se borran.')) return;
+    TALLER_CONFIG.rubrosPersonalizados = (TALLER_CONFIG.rubrosPersonalizados || []).filter(r => r.id !== id);
+    TALLER_CONFIG.rubrosSeleccionados = (TALLER_CONFIG.rubrosSeleccionados || []).filter(x => x !== id);
+    if (!TALLER_CONFIG.rubrosSeleccionados.length) TALLER_CONFIG.rubrosSeleccionados = ['general'];
+    TALLER_CONFIG.rubro = TALLER_CONFIG.rubrosSeleccionados[0];
+    renderSelectorRubros(); renderRubrosPersonalizados(); renderRubrosActivosPreview(); aplicarTextosRubro();
+}
+
+function editarRubroPersonalizado(id) {
+    const r = (TALLER_CONFIG.rubrosPersonalizados || []).find(x => x.id === id);
+    if (!r) return;
+    const nombre = prompt('Nombre del rubro:', r.nombre);
+    if (nombre === null) return;
+    const icono = prompt('Ícono/emoji:', r.icono) || r.icono;
+    const campoObjeto = prompt('Nombre del objeto/equipo:', r.campoObjeto) || r.campoObjeto;
+    const campoTrabajo = prompt('Nombre del trabajo/servicio:', r.campoTrabajo) || r.campoTrabajo;
+    r.nombre = nombre.trim() || r.nombre; r.icono = icono.trim() || r.icono; r.campoObjeto = campoObjeto.trim() || r.campoObjeto; r.campoTrabajo = campoTrabajo.trim() || r.campoTrabajo;
+    r.placeholderObjeto = `Ej: ${r.campoObjeto.toLowerCase()}...`;
+    renderSelectorRubros(); renderRubrosPersonalizados(); renderRubrosActivosPreview(); aplicarTextosRubro();
+}
+
+function renderRubrosPersonalizados() {
+    const cont = document.getElementById("rubrosPersonalizadosLista");
+    if (!cont) return;
+    const arr = TALLER_CONFIG.rubrosPersonalizados || [];
+    cont.innerHTML = arr.length ? arr.map(r => `<div class="custom-rubro-row"><span>${r.icono} <b>${r.nombre}</b><small>${r.campoObjeto} · ${r.campoTrabajo}</small></span><span><button type="button" onclick="editarRubroPersonalizado('${r.id}')">✏️</button><button type="button" onclick="eliminarRubroPersonalizado('${r.id}')">🗑️</button></span></div>`).join('') : '<small style="opacity:.5;">Todavía no agregaste rubros personalizados.</small>';
+}
+
+// Vista previa en vivo: se ve el cambio al toque, pero queda guardado recién al tocar GUARDAR.
 function previsualizarColorTaller(variableCSS, valor) {
     document.documentElement.style.setProperty(variableCSS, valor);
 }
@@ -330,25 +483,21 @@ function aplicarPresetTemaTaller() {
 
 async function guardarConfigTaller() {
     const nombreNegocio = document.getElementById("cfgNombreNegocio").value.trim() || TALLER_CONFIG.nombreNegocio;
-    const rubro = document.getElementById("cfgRubro").value;
+    const rubrosSeleccionados = (TALLER_CONFIG.rubrosSeleccionados || []).length ? TALLER_CONFIG.rubrosSeleccionados : ["general"];
+    const rubro = rubrosSeleccionados[0];
     const logoUrl = document.getElementById("cfgLogoUrl").value.trim();
     const themeBase = presetTemaTallerSeleccionado || TALLER_CONFIG.theme;
     const theme = { ...themeBase, accent: document.getElementById("cfgAccentTaller").value, bg: document.getElementById("cfgBgTaller").value };
-
-    const datos = { nombreNegocio, rubro, logoUrl, theme };
+    const datos = { nombreNegocio, rubro, rubrosSeleccionados, rubrosPersonalizados: TALLER_CONFIG.rubrosPersonalizados || [], logoUrl, theme };
     try {
         await db.collection("config").doc("taller").set(datos, { merge: true });
         TALLER_CONFIG = { ...TALLER_CONFIG, ...datos };
         presetTemaTallerSeleccionado = null;
-        aplicarTemaTaller();
-        aplicarTextosRubro();
-        renderLista();
+        aplicarTemaTaller(); aplicarTextosRubro(); renderLista();
+        generarManifestDinamico();
         alert("✅ Configuración guardada");
         cerrarConfigTaller();
-    } catch (e) {
-        console.error(e);
-        alert("Error al guardar: " + (e.message || e));
-    }
+    } catch (e) { console.error(e); alert("Error al guardar: " + (e.message || e)); }
 }
 
 // ==================== REPARACIONES/TRABAJOS: CARGA Y CÁLCULOS ====================
