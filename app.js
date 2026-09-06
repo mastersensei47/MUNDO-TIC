@@ -20,7 +20,12 @@ let db, auth, STORE_CONFIG;
 let clienteApp, masterApp;
 
 function leerSlug() {
-    return new URLSearchParams(location.search).get("slug");
+    const urlSlug = new URLSearchParams(location.search).get("slug");
+    if (urlSlug) {
+        try { localStorage.setItem("tu_tienda_ultimo_slug", urlSlug); } catch (_) {}
+        return urlSlug;
+    }
+    try { return localStorage.getItem("tu_tienda_ultimo_slug"); } catch (_) { return null; }
 }
 
 function mostrarErrorSlug(mensaje) {
@@ -138,6 +143,30 @@ function toAuthEmail(input) {
     return v.toLowerCase().replace(/\s+/g, "") + "@" + STORE_CONFIG.storeId + ".tienda.local";
 }
 
+let unsubUsuariosAdmin = null;
+let unsubPedidosAdmin = null;
+
+function detenerListenersAdmin() {
+    if (typeof unsubUsuariosAdmin === "function") unsubUsuariosAdmin();
+    if (typeof unsubPedidosAdmin === "function") unsubPedidosAdmin();
+    unsubUsuariosAdmin = null;
+    unsubPedidosAdmin = null;
+}
+
+function cargarDatosAdmin() {
+    detenerListenersAdmin();
+    unsubUsuariosAdmin = db.collection("usuarios").onSnapshot(snap => {
+        users = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        renderAdmU();
+    }, err => console.warn("usuarios:", err.code || err));
+
+    unsubPedidosAdmin = db.collection("pedidos").orderBy("fecha", "desc").onSnapshot(snap => {
+        orders = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        renderAdmO();
+        renderAdmStats();
+    }, err => console.warn("pedidos:", err.code || err));
+}
+
 function init() {
     // Fix autofill: algunos navegadores autocompletan este campo con el
     // email guardado (ej: el del admin) a pesar de autocomplete="off".
@@ -158,8 +187,8 @@ function init() {
         ["renderMapa", renderMapa],
         ["renderBanners", renderBanners],
         ["aplicarLayout", aplicarLayout],
-        ["generarManifestDinamico", generarManifestDinamico],
         ["registrarServiceWorker", registrarServiceWorker],
+        ["prepararInstalacionPWA", prepararInstalacionPWA],
         ["cargarFormConfig", cargarFormConfig],
     ];
     pasos.forEach(([nombre, fn]) => {
@@ -172,6 +201,9 @@ function init() {
         esAdmin = false;
         isMay = false;
         usuarioLogueado = null;
+        detenerListenersAdmin();
+        const logout = document.getElementById("logoutBtn");
+        if (logout) logout.style.display = "none";
 
         if (!user) {
             mostrarPerfilVacio();
@@ -183,7 +215,8 @@ function init() {
             const adminDoc = await db.collection("admins").doc(user.uid).get();
             if (adminDoc.exists) {
                 esAdmin = true;
-                document.getElementById("logoutBtn").style.display = "block";
+                if (logout) logout.style.display = "block";
+                cargarDatosAdmin();
                 render();
                 return;
             }
@@ -207,38 +240,24 @@ function init() {
         render();
     });
 
-    // Cargar productos en tiempo real desde Firebase
+    // Productos y slider son los únicos datos que necesita la parte pública.
+    // Usuarios y pedidos se cargan recién cuando hay un administrador.
     db.collection("productos").onSnapshot(snap => {
         prods = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        // Asegurar que exista el array de imagenes y el stock por defecto si no existen
         prods.forEach(p => {
-            if (!p.imagenes) p.imagenes = p.imagen ? [p.imagen] : [];
+            const base = Array.isArray(p.imagenes) ? p.imagenes : (p.imagen ? [p.imagen] : []);
+            p.imagenes = [...new Set(base.map(u => String(u || '').trim()).filter(Boolean))];
             if (typeof p.stock === 'undefined') p.stock = 10;
         });
         render();
-        renderAdmP();
-    });
+        if (esAdmin) renderAdmP();
+    }, err => console.warn("productos:", err.code || err));
 
-    // Cargar usuarios (las reglas de seguridad solo dejan leer la colección
-    // completa al administrador; para cualquier otra persona esto queda vacío)
-    db.collection("usuarios").onSnapshot(snap => {
-        users = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        renderAdmU();
-    }, err => console.warn("usuarios:", err.code));
-
-    // Cargar pedidos (idem, solo lectura para el administrador)
-    db.collection("pedidos").orderBy("fecha", "desc").onSnapshot(snap => {
-        orders = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        renderAdmO();
-        renderAdmStats();
-    }, err => console.warn("pedidos:", err.code));
-
-    // Cargar slider hero
     db.collection("hero").orderBy("order").onSnapshot(snap => {
         heroImages = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         renderHeroSlider();
-        renderAdmSlider();
-    });
+        if (esAdmin) renderAdmSlider();
+    }, err => console.warn("hero:", err.code || err));
 }
 
 // ==================== APLICAR CONFIG.JS AL DOM ====================
@@ -374,42 +393,44 @@ function aplicarLayout() {
 // generarlo al vuelo con los datos de ESTA tienda (nombre, colores, logo) y
 // reemplazar el <link rel="manifest"> por una versión en memoria (Blob).
 // Así cada tienda se instala en el celular con su propio nombre e ícono.
-function generarManifestDinamico() {
-    const manifest = {
-        name: STORE_CONFIG.storeName,
-        short_name: (STORE_CONFIG.storeName || "Tienda").slice(0, 12),
-        start_url: `${location.origin}${location.pathname}${location.search}`,
-        scope: `${location.origin}${location.pathname}`,
-        display: "standalone",
-        background_color: STORE_CONFIG.theme.bg || "#0f172a",
-        theme_color: STORE_CONFIG.theme.accent || "#3b82f6",
-        icons: [
-            { src: STORE_CONFIG.logoUrl || "log.png", sizes: "192x192", type: "image/png", purpose: "any" },
-            { src: STORE_CONFIG.logoUrl || "log.png", sizes: "512x512", type: "image/png", purpose: "any" }
-        ]
-    };
-    const url = URL.createObjectURL(new Blob([JSON.stringify(manifest)], { type: "application/json" }));
-    let link = document.querySelector('link[rel="manifest"]');
-    if (!link) {
-        link = document.createElement("link");
-        link.rel = "manifest";
-        document.head.appendChild(link);
-    }
-    link.href = url;
-
-    let meta = document.querySelector('meta[name="theme-color"]');
-    if (!meta) {
-        meta = document.createElement("meta");
-        meta.name = "theme-color";
-        document.head.appendChild(meta);
-    }
-    meta.content = STORE_CONFIG.theme.accent || "#3b82f6";
-}
-
 function registrarServiceWorker() {
     if ("serviceWorker" in navigator) {
-        navigator.serviceWorker.register("service-worker.js").catch(e => console.warn("Service worker no registrado:", e));
+        navigator.serviceWorker.register("service-worker.js", { scope: "./" })
+            .then(reg => { if (reg.waiting) reg.waiting.postMessage({ type: "SKIP_WAITING" }); })
+            .catch(e => console.warn("Service worker no registrado:", e));
     }
+}
+
+let deferredInstallPrompt = null;
+
+function prepararInstalacionPWA() {
+    const btn = document.getElementById("btnInstalarApp");
+    if (!btn) return;
+    window.addEventListener("beforeinstallprompt", event => {
+        event.preventDefault();
+        deferredInstallPrompt = event;
+        btn.style.display = "inline-flex";
+    });
+    window.addEventListener("appinstalled", () => {
+        deferredInstallPrompt = null;
+        btn.style.display = "none";
+    });
+    if (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) {
+        btn.style.display = "none";
+    }
+}
+
+async function instalarApp() {
+    try { localStorage.setItem("tu_tienda_pwa_start", location.pathname + location.search); } catch (_) {}
+    if (deferredInstallPrompt) {
+        deferredInstallPrompt.prompt();
+        await deferredInstallPrompt.userChoice;
+        deferredInstallPrompt = null;
+        const btn = document.getElementById("btnInstalarApp");
+        if (btn) btn.style.display = "none";
+        return;
+    }
+    alert("Chrome/Edge: si esta página cumple los requisitos de instalación, abrí el menú ⋮ y elegí 'Instalar aplicación'. Si no aparece, verificá que estés entrando por HTTPS y recargá la página una vez.");
 }
 
 function renderCategorias() {
@@ -690,11 +711,8 @@ async function showProductDetail(id) {
     currentDetailQty = 1;
     document.getElementById('detailQtyInput').value = 1;
 
-    const imgs = (p.imagenes && p.imagenes.length > 0)
-        ? [...p.imagenes]
-        : (p.imagen ? [p.imagen] : ['https://via.placeholder.com/600?text=Sin+imagen']);
-
-    if (imgs.length === 1) imgs.push(imgs[0]);
+    const imgs = normalizarImagenesLista((p.imagenes && p.imagenes.length > 0) ? [...p.imagenes] : (p.imagen ? [p.imagen] : []));
+    if (!imgs.length) imgs.push('https://via.placeholder.com/600?text=Sin+imagen');
 
     document.getElementById('detailImg').src = imgs[0];
     const thumbsContainer = document.getElementById('thumbnails');
@@ -1065,29 +1083,35 @@ const UMBRAL_STOCK_BAJO = 3; // productos con menos unidades que esto se resalta
 
 function renderAdmP() {
     const list = document.getElementById("admListP");
-    list.innerHTML = prods.length === 0
-        ? `<p style="text-align:center; padding:40px; opacity:0.4;">Aún no hay productos.</p>`
-        : prods.map(p => {
+    if (!list) return;
+    const q = normalizarTexto((document.getElementById("adminProductSearch")?.value || "").trim());
+    const filtered = q ? prods.filter(p => {
+        const hay = [p.nombre, p.categoria, p.descripcion, p.caracteristicas, p.ficha].map(normalizarTexto).join(" ");
+        return hay.includes(q);
+    }) : prods;
+    const count = document.getElementById("adminProductCount");
+    if (count) count.textContent = q ? `${filtered.length} de ${prods.length}` : `${prods.length} productos`;
+    list.innerHTML = filtered.length === 0
+        ? `<p style="text-align:center; padding:40px; opacity:0.4;">No se encontraron productos.</p>`
+        : filtered.map(p => {
             const firstImg = p.imagenes && p.imagenes.length > 0 ? p.imagenes[0] : (p.imagen || 'https://via.placeholder.com/70');
-            // Para productos con variantes, la alerta de stock general no aplica
-            // (cada variante tiene su propio stock, visible al editar el producto).
             const stockBajo = !p.tieneVariantes && typeof p.stock === 'number' && p.stock < UMBRAL_STOCK_BAJO;
             return `
             <div class="admin-item" style="${stockBajo ? 'border-left:4px solid var(--danger); background:rgba(239,68,68,0.08);' : ''}">
                 <img src="${firstImg}" class="admin-item-img" alt="${p.nombre}" loading="lazy">
-                <div style="flex:1;">
+                <div style="flex:1; min-width:0;">
                     <b>${p.nombre}</b><br>
                     <small>${STORE_CONFIG.currency}${p.precio} (May: ${STORE_CONFIG.currency}${p.precio_may || p.precio})${p.tieneVariantes ? ' | Con variantes' : ` | Stock: ${p.stock}`}</small>
                     ${stockBajo ? ' <span style="color:var(--danger); font-weight:800; font-size:11px;">⚠️ STOCK BAJO</span>' : ''}<br>
-                    <span style="background:#334155; color:white; padding:2px 8px; border-radius:9999px; font-size:11px;">${p.categoria}</span>
+                    <span style="background:#334155; color:white; padding:2px 8px; border-radius:9999px; font-size:11px;">${p.categoria || 'sin categoría'}</span>
                 </div>
                 <div>
                     <button onclick="abrirGeneradorBanner('${p.id}')" title="Crear banner para redes" style="font-size:18px; margin-right:8px; cursor:pointer; background:none; border:none;">🎨</button>
-                    <button onclick="editP('${p.id}')" style="font-size:18px; margin-right:8px; cursor:pointer; background:none; border:none;">✏️</button>
-                    <button onclick="del('productos','${p.id}')" style="color:var(--danger); font-size:18px; cursor:pointer; background:none; border:none;">🗑️</button>
+                    <button onclick="editP('${p.id}')" title="Editar" style="font-size:18px; margin-right:8px; cursor:pointer; background:none; border:none;">✏️</button>
+                    <button onclick="del('productos','${p.id}')" title="Eliminar" style="color:var(--danger); font-size:18px; cursor:pointer; background:none; border:none;">🗑️</button>
                 </div>
-            </div>
-        `}).join("");
+            </div>`;
+        }).join("");
 }
 
 async function saveP() {
@@ -1095,8 +1119,7 @@ async function saveP() {
     const nom = document.getElementById("fNom").value.trim();
     if (!nom) return alert("El nombre del producto es obligatorio");
 
-    const imagenesRaw = document.getElementById("fImagenes").value.trim();
-    const imagenes = imagenesRaw ? imagenesRaw.split('\n').map(u => u.trim()).filter(u => u) : [];
+    const imagenes = obtenerImagenesProducto();
 
     // Variantes: una por línea, formato "Nombre | Stock" (ej: "M | 8")
     const variantesRaw = document.getElementById("fVariantes").value.trim();
@@ -1157,7 +1180,7 @@ function limpiarP() {
     document.getElementById("fPro").value = "";
     if (document.getElementById("fCat").options.length) document.getElementById("fCat").selectedIndex = 0;
     document.getElementById("fVariantes").value = "";
-    document.getElementById("fImagenes").value = "";
+    cargarImagenesProducto([]);
     document.getElementById("fDesc").value = "";
     document.getElementById("fCaract").value = "";
     document.getElementById("fFicha").value = "";
@@ -1174,10 +1197,10 @@ async function editP(id) {
     document.getElementById("fPro").value = p.promo || "";
     document.getElementById("fCat").value = p.categoria || "";
 
-    // Manejar el array de imagenes de Firebase
+    // Cargar la galería en filas independientes y eliminar URLs repetidas.
     let imagesToFill = p.imagenes || [];
     if (imagesToFill.length === 0 && p.imagen) imagesToFill = [p.imagen];
-    document.getElementById("fImagenes").value = imagesToFill.join('\n');
+    cargarImagenesProducto(imagesToFill);
 
     document.getElementById("fDesc").value = p.descripcion || "";
     document.getElementById("fCaract").value = p.caracteristicas || "";
@@ -1962,7 +1985,7 @@ document.addEventListener("keydown", (e) => {
     }
 });
 
-window.onload = bootstrap;
+if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", bootstrap); else bootstrap();
 
 // Refuerzo extra del fix de autofill: cuando se vuelve a esta página con el
 // botón "atrás" del navegador, algunos navegadores restauran el HTML desde
