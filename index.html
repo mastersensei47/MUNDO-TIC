@@ -6,17 +6,19 @@
     <meta name="google" content="notranslate">
     <title>Tienda</title>
 
-    <link rel="manifest" href="manifest.json">
+    <link rel="manifest" href="manifest-tienda.json">
     <meta name="theme-color" content="#3b82f6">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="log.png">
 
-    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js" defer></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js" defer></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js" defer></script>
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
@@ -43,6 +45,7 @@
         <button class="icon-btn" onclick="toggleTheme()">🌓</button>
         <button class="icon-btn" onclick="openModal('loginModal')">👤</button>
         <button class="icon-btn" onclick="verificarAdmin()">⚙️</button>
+        <button id="btnInstalarApp" class="icon-btn pwa-install-btn" onclick="instalarApp()" title="Instalar como aplicación" style="display:none;">📲</button>
         <div id="cartIconBtn" class="icon-btn" onclick="toggleCart()" style="cursor:pointer; position:relative;">
             🛒 <b id="cartCount" style="background:var(--danger); font-size:10px; padding:2px 7px; border-radius:12px; position:absolute; top:2px; right:2px;">0</b>
         </div>
@@ -149,16 +152,22 @@
                     <textarea id="fVariantes" rows="4" placeholder="S | 5&#10;M | 8&#10;L | 0"></textarea>
                 </div>
                 <div class="form-group">
-                    <label>Imágenes (una URL por línea) — cualquier formato sirve: jpg, png, webp, gif, etc.</label>
-                    <textarea id="fImagenes" rows="5" placeholder="https://ejemplo.com/foto1&#10;https://ejemplo.com/foto2"></textarea>
-                    <a href="https://postimg.cc/" target="_blank" style="display:inline-block; margin-top:8px; background:var(--accent); color:white; padding:8px 16px; border-radius:10px; text-decoration:none; font-size:13px; font-weight:700;">📤 Subir imagen aquí</a>
-                    <p style="opacity:0.5; font-size:11px; margin-top:6px;">Subís la foto ahí, y copiás el link que dice "Direct link" (el que termina mostrando la imagen sola) — no el de la página o la galería.</p>
+                    <label>Galería de imágenes</label>
+                    <p class="admin-help">Agregá una URL por fila. Podés eliminar, reordenar y sumar imágenes sin tener que editar todo el bloque.</p>
+                    <div id="imagenesProducto" class="image-url-list"></div>
+                    <button type="button" class="btn-add image-add-btn" onclick="agregarImagenProducto()">+ AGREGAR IMAGEN</button>
+                    <a href="https://postimg.cc/" target="_blank" rel="noopener" class="image-host-btn">📤 SUBIR IMAGEN</a>
+                    <p class="admin-help">En Postimages copiá el <b>Direct link</b>. No copies el enlace de la página o de la galería.</p>
                 </div>
                 <div class="form-group"><label>Descripción</label><textarea id="fDesc" rows="5"></textarea></div>
                 <div class="form-group"><label>Características</label><textarea id="fCaract" rows="5"></textarea></div>
                 <div class="form-group"><label>Ficha técnica</label><textarea id="fFicha" rows="5"></textarea></div>
                 <button class="btn-add" style="background:var(--success)" onclick="saveP()">GUARDAR PRODUCTO</button>
                 <button class="btn-add" style="background:none; color:white; margin-top:10px; border:1px solid rgba(255,255,255,0.1);" onclick="limpiarP()">Limpiar</button>
+            </div>
+            <div class="admin-product-search">
+                <input id="adminProductSearch" type="search" placeholder="🔎 Buscar un producto por nombre o categoría..." autocomplete="off" oninput="renderAdmP()">
+                <span id="adminProductCount" class="admin-search-count"></span>
             </div>
             <div id="admListP"></div>
         </div>
@@ -469,7 +478,7 @@
     </div>
 </div>
 
-<script src="config.js"></script>
-<script src="app.js"></script>
+<script src="config.js" defer></script>
+<script src="app.js" defer></script>
 </body>
 </html>
