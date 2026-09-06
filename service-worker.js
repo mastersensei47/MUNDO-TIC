@@ -8,7 +8,7 @@
 // código desactualizado — exactamente el tipo de bug que ya tuvimos una vez.
 // ============================================================================
 
-const CACHE_VERSION = "v1";
+const CACHE_VERSION = "v2-rubros-pwa";
 const CACHE_NAME = `plataforma-cache-${CACHE_VERSION}`;
 
 self.addEventListener("install", () => {
