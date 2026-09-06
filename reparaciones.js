@@ -79,7 +79,12 @@ function conElRep(id, fn) {
 }
 
 function leerSlug() {
-    return new URLSearchParams(location.search).get("slug");
+    const urlSlug = new URLSearchParams(location.search).get("slug");
+    if (urlSlug) {
+        try { localStorage.setItem("tu_taller_ultimo_slug", urlSlug); } catch (_) {}
+        return urlSlug;
+    }
+    try { return localStorage.getItem("tu_taller_ultimo_slug"); } catch (_) { return null; }
 }
 
 function mostrarErrorSlug(mensaje) {
@@ -139,7 +144,6 @@ async function bootstrap() {
         const pasos = [
             ["aplicarTemaTaller", aplicarTemaTaller],
             ["aplicarTextosRubro", aplicarTextosRubro],
-            ["generarManifestDinamico", generarManifestDinamico],
             ["registrarServiceWorker", registrarServiceWorker],
             ["prepararInstalacionPWA", prepararInstalacionPWA],
         ];
@@ -184,67 +188,40 @@ function aplicarTextosRubro() {
 
 // Mismo patrón que la tienda: un manifest.json por negocio, generado al
 // vuelo (no puede ser un archivo estático distinto por cliente).
-function generarManifestDinamico() {
-    try {
-        const p = presetRubro();
-        const manifest = {
-            id: `${location.origin}${location.pathname}${location.search}`,
-            name: TALLER_CONFIG.nombreNegocio + " — Control de Trabajos",
-            short_name: (TALLER_CONFIG.nombreNegocio || "Taller").slice(0, 20),
-            start_url: `${location.origin}${location.pathname}${location.search}`,
-            scope: `${location.origin}${location.pathname}`,
-            display: "standalone",
-            orientation: "portrait-primary",
-            background_color: TALLER_CONFIG.theme.bg || "#0f172a",
-            theme_color: TALLER_CONFIG.theme.accent || "#3b82f6",
-            icons: [
-                { src: TALLER_CONFIG.logoUrl || "log.png", sizes: "192x192", type: "image/png", purpose: "any" },
-                { src: TALLER_CONFIG.logoUrl || "log.png", sizes: "512x512", type: "image/png", purpose: "any" }
-            ]
-        };
-        const url = URL.createObjectURL(new Blob([JSON.stringify(manifest)], { type: "application/json" }));
-        let link = document.querySelector('link[rel="manifest"]');
-        if (!link) { link = document.createElement("link"); link.rel = "manifest"; document.head.appendChild(link); }
-        link.href = url;
-
-        let meta = document.querySelector('meta[name="theme-color"]');
-        if (!meta) { meta = document.createElement("meta"); meta.name = "theme-color"; document.head.appendChild(meta); }
-        meta.content = TALLER_CONFIG.theme.accent || "#3b82f6";
-    } catch (e) {
-        console.warn("No se pudo generar el manifest:", e);
-    }
-}
-
 function registrarServiceWorker() {
     if ("serviceWorker" in navigator) {
-        navigator.serviceWorker.register("service-worker.js").catch(e => console.warn("Service worker no registrado:", e));
+        navigator.serviceWorker.register("service-worker.js", { scope: "./" })
+            .then(reg => { if (reg.waiting) reg.waiting.postMessage({ type: "SKIP_WAITING" }); })
+            .catch(e => console.warn("Service worker no registrado:", e));
     }
 }
 
 function prepararInstalacionPWA() {
-    window.addEventListener("beforeinstallprompt", (event) => {
+    const btn = document.getElementById("btnInstalarApp");
+    if (!btn) return;
+    window.addEventListener("beforeinstallprompt", event => {
         event.preventDefault();
         deferredInstallPrompt = event;
-        conElRep("btnInstalarApp", el => el.style.display = "inline-flex");
+        btn.style.display = "inline-flex";
     });
     window.addEventListener("appinstalled", () => {
         deferredInstallPrompt = null;
-        conElRep("btnInstalarApp", el => el.style.display = "none");
-        alert("✅ La app quedó instalada en tu dispositivo.");
+        btn.style.display = "none";
     });
-    const esStandalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
-    if (esStandalone) conElRep("btnInstalarApp", el => el.style.display = "none");
+    if (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) btn.style.display = "none";
 }
 
 async function instalarApp() {
+    try { localStorage.setItem("tu_taller_ultimo_slug", new URLSearchParams(location.search).get("slug") || localStorage.getItem("tu_taller_ultimo_slug") || ""); } catch (_) {}
     if (deferredInstallPrompt) {
         deferredInstallPrompt.prompt();
         await deferredInstallPrompt.userChoice;
         deferredInstallPrompt = null;
-        conElRep("btnInstalarApp", el => el.style.display = "none");
+        const btn = document.getElementById("btnInstalarApp");
+        if (btn) btn.style.display = "none";
         return;
     }
-    alert("En Android/Chrome: abrí el menú del navegador y elegí 'Instalar aplicación' o 'Agregar a pantalla de inicio'. En iPhone/iPad: Safari → Compartir → 'Agregar a pantalla de inicio'.");
+    alert("Chrome/Edge: abrí el menú ⋮ y elegí 'Instalar aplicación' si aparece. Si no aparece, verificá que estés usando HTTPS y recargá la página una vez.");
 }
 
 function init() {
@@ -494,7 +471,6 @@ async function guardarConfigTaller() {
         TALLER_CONFIG = { ...TALLER_CONFIG, ...datos };
         presetTemaTallerSeleccionado = null;
         aplicarTemaTaller(); aplicarTextosRubro(); renderLista();
-        generarManifestDinamico();
         alert("✅ Configuración guardada");
         cerrarConfigTaller();
     } catch (e) { console.error(e); alert("Error al guardar: " + (e.message || e)); }
@@ -757,4 +733,4 @@ function exportarReparacionesCSV() {
     });
 });
 
-window.onload = bootstrap;
+if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", bootstrap); else bootstrap();
