@@ -8,7 +8,7 @@
 // código desactualizado — exactamente el tipo de bug que ya tuvimos una vez.
 // ============================================================================
 
-const CACHE_VERSION = "v11-store-bootstrap-fix";
+const CACHE_VERSION = "v13-multistore-routing";
 const CACHE_NAME = `plataforma-cache-${CACHE_VERSION}`;
 
 self.addEventListener("install", () => {
@@ -47,8 +47,23 @@ self.addEventListener("fetch", (event) => {
         return;
     }
 
-    // Recursos propios: caché primero + actualización en segundo plano.
-    // Las visitas posteriores no tienen que esperar la red para CSS/JS/imágenes.
+    // Código propio: red primero para no entregar app.js/reparaciones.js viejos.
+    const path = url.pathname.toLowerCase();
+    const esCodigo = /\.(js|css)$/.test(path);
+    if (esCodigo) {
+        event.respondWith(
+            fetch(event.request).then(response => {
+                if (response && response.ok) {
+                    const clone = response.clone();
+                    caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone)).catch(() => {});
+                }
+                return response;
+            }).catch(() => caches.match(event.request))
+        );
+        return;
+    }
+
+    // Imágenes y demás recursos: caché primero + actualización en segundo plano.
     event.respondWith(
         caches.match(event.request).then(cached => {
             const network = fetch(event.request).then(response => {
