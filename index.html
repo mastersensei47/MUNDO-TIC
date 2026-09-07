@@ -9,17 +9,9 @@
     <link rel="manifest" href="manifest-tienda.json">
     <meta name="theme-color" content="#3b82f6">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Tienda">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <script>
-        // Capturamos el evento PWA antes de cargar Firebase/EmailJS.
-        // Algunos Chromium pueden emitir beforeinstallprompt muy temprano.
-        window.__tuTiendaInstallPrompt = null;
-        window.addEventListener("beforeinstallprompt", function (event) {
-            event.preventDefault();
-            window.__tuTiendaInstallPrompt = event;
-            window.dispatchEvent(new Event("tu-tienda-install-ready"));
-        });
-    </script>
     <link rel="apple-touch-icon" href="log.png">
 
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js" defer></script>
