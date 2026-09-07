@@ -1,8 +1,8 @@
 {
-  "name": "Tienda Online",
-  "short_name": "Tienda",
-  "id": "./index.html",
-  "start_url": "./index.html",
+  "name": "Control de Trabajos",
+  "short_name": "Taller",
+  "id": "./reparaciones.html",
+  "start_url": "./reparaciones.html",
   "scope": "./",
   "display": "standalone",
   "background_color": "#0f172a",
