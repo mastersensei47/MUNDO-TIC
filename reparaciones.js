@@ -144,6 +144,7 @@ async function bootstrap() {
         const pasos = [
             ["aplicarTemaTaller", aplicarTemaTaller],
             ["aplicarTextosRubro", aplicarTextosRubro],
+            ["prepararManifestPWA", prepararManifestPWA],
             ["registrarServiceWorker", registrarServiceWorker],
             ["prepararInstalacionPWA", prepararInstalacionPWA],
         ];
@@ -188,6 +189,28 @@ function aplicarTextosRubro() {
 
 // Mismo patrón que la tienda: un manifest.json por negocio, generado al
 // vuelo (no puede ser un archivo estático distinto por cliente).
+function prepararManifestPWA() {
+    const link = document.querySelector('link[rel="manifest"]');
+    if (!link || !TALLER_CONFIG) return;
+    try {
+        const manifest = {
+            name: TALLER_CONFIG.nombreNegocio || "Control de Trabajos",
+            short_name: (TALLER_CONFIG.nombreNegocio || "Taller").slice(0, 32),
+            id: location.pathname + location.search,
+            start_url: location.pathname + location.search,
+            scope: location.pathname.replace(/[^/]+$/, "") || "./",
+            display: "standalone", orientation: "portrait-primary",
+            background_color: TALLER_CONFIG.theme?.bg || "#0f172a",
+            theme_color: TALLER_CONFIG.theme?.accent || "#3b82f6",
+            icons: [
+                { src: "icon-192.png", sizes: "192x192", type: "image/png", purpose: "any maskable" },
+                { src: "icon-512.png", sizes: "512x512", type: "image/png", purpose: "any maskable" }
+            ]
+        };
+        link.href = URL.createObjectURL(new Blob([JSON.stringify(manifest)], { type: "application/manifest+json" }));
+    } catch (e) { console.warn("No se pudo generar el manifest dinámico del taller:", e); }
+}
+
 function registrarServiceWorker() {
     if ("serviceWorker" in navigator) {
         navigator.serviceWorker.register("service-worker.js", { scope: "./" })
@@ -199,29 +222,26 @@ function registrarServiceWorker() {
 function prepararInstalacionPWA() {
     const btn = document.getElementById("btnInstalarApp");
     if (!btn) return;
+    const standalone = (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone === true;
+    if (standalone) { btn.style.display = "none"; return; }
+    btn.style.display = "inline-flex";
     window.addEventListener("beforeinstallprompt", event => {
-        event.preventDefault();
-        deferredInstallPrompt = event;
-        btn.style.display = "inline-flex";
+        event.preventDefault(); deferredInstallPrompt = event; btn.style.display = "inline-flex";
     });
-    window.addEventListener("appinstalled", () => {
-        deferredInstallPrompt = null;
-        btn.style.display = "none";
-    });
-    if (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) btn.style.display = "none";
+    window.addEventListener("appinstalled", () => { deferredInstallPrompt = null; btn.style.display = "none"; });
 }
 
 async function instalarApp() {
     try { localStorage.setItem("tu_taller_ultimo_slug", new URLSearchParams(location.search).get("slug") || localStorage.getItem("tu_taller_ultimo_slug") || ""); } catch (_) {}
     if (deferredInstallPrompt) {
         deferredInstallPrompt.prompt();
-        await deferredInstallPrompt.userChoice;
+        try { await deferredInstallPrompt.userChoice; } catch (_) {}
         deferredInstallPrompt = null;
-        const btn = document.getElementById("btnInstalarApp");
-        if (btn) btn.style.display = "none";
+        const btn = document.getElementById("btnInstalarApp"); if (btn) btn.style.display = "none";
         return;
     }
-    alert("Chrome/Edge: abrí el menú ⋮ y elegí 'Instalar aplicación' si aparece. Si no aparece, verificá que estés usando HTTPS y recargá la página una vez.");
+    if (/iphone|ipad|ipod/i.test(navigator.userAgent)) return alert("En iPhone/iPad: tocá Compartir (□↑) en Safari y elegí 'Agregar a pantalla de inicio'.");
+    alert("Abrí el menú del navegador y buscá 'Instalar aplicación' o 'Agregar a pantalla principal'.");
 }
 
 function init() {
