@@ -5,7 +5,10 @@
   "start_url": "./reparaciones.html",
   "scope": "./",
   "display": "standalone",
-  "orientation": "portrait-primary",
+  "display_override": [
+    "standalone",
+    "minimal-ui"
+  ],
   "background_color": "#0f172a",
   "theme_color": "#3b82f6",
   "icons": [
@@ -21,5 +24,9 @@
       "type": "image/png",
       "purpose": "any maskable"
     }
-  ]
+  ],
+  "prefer_related_applications": false,
+  "lang": "es",
+  "dir": "ltr",
+  "orientation": "portrait-primary"
 }
