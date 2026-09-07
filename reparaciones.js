@@ -79,12 +79,9 @@ function conElRep(id, fn) {
 }
 
 function leerSlug() {
-    const urlSlug = new URLSearchParams(location.search).get("slug");
-    if (urlSlug) {
-        try { localStorage.setItem("tu_taller_ultimo_slug", urlSlug); } catch (_) {}
-        return urlSlug;
-    }
-    try { return localStorage.getItem("tu_taller_ultimo_slug"); } catch (_) { return null; }
+    const raw = new URLSearchParams(location.search).get("slug");
+    const slug = (raw || "").trim().toLowerCase();
+    return slug || null;
 }
 
 function mostrarErrorSlug(mensaje) {
@@ -96,9 +93,19 @@ function mostrarErrorSlug(mensaje) {
 }
 
 
-function obtenerFirebaseAppTaller(nombre, config) {
-    try { return firebase.app(nombre); }
-    catch (_) { return firebase.initializeApp(config, nombre); }
+async function obtenerFirebaseAppTaller(nombre, config) {
+    try {
+        const existente = firebase.app(nombre);
+        const proyectoActual = existente && existente.options ? existente.options.projectId : null;
+        const proyectoNuevo = config && config.projectId ? config.projectId : null;
+        if (proyectoActual && proyectoNuevo && proyectoActual !== proyectoNuevo) {
+            await existente.delete();
+            return firebase.initializeApp(config, nombre);
+        }
+        return existente;
+    } catch (_) {
+        return firebase.initializeApp(config, nombre);
+    }
 }
 
 function crearFirestoreTaller(app) {
@@ -144,42 +151,32 @@ function guardarCacheTaller(slug, data) {
 async function bootstrap() {
     const slug = leerSlug();
     if (!slug) return mostrarErrorSlug("Falta indicar el negocio en el link (falta ?slug=... en la URL).");
-    if (!(await esperarFirebaseTaller())) {
+    if (!(await esperarFirebaseTaller(80))) {
         return mostrarErrorSlug("No pudimos iniciar Firebase. Recargá la página y probá nuevamente.");
     }
 
-    const cache = leerCacheTaller(slug);
-    let firebaseConfig = cache && cache.firebaseConfig ? cache.firebaseConfig : null;
-    let datosTaller = cache && cache.config ? cache.config : {};
-    let storeName = cache && cache.storeName ? cache.storeName : "Mi negocio";
-
     try {
-        masterApp = obtenerFirebaseAppTaller("master", MASTER_FIREBASE_CONFIG);
+        // MASTER -> clientes/{slug}.
+        masterApp = await obtenerFirebaseAppTaller("master", MASTER_FIREBASE_CONFIG);
         const masterDb = crearFirestoreTaller(masterApp);
+        const clienteDoc = await masterDb.collection("clientes").doc(slug).get({ source: "server" });
 
-        try {
-            const clienteDoc = await masterDb.collection("clientes").doc(slug).get();
-            if (!clienteDoc.exists || clienteDoc.data().activo === false) {
-                return mostrarErrorSlug("No encontramos este negocio. Verificá el link.");
-            }
-            const clienteData = clienteDoc.data() || {};
-            firebaseConfig = clienteData.firebaseConfig || null;
-            storeName = clienteData.storeName || storeName;
-            if (!firebaseConfig || !firebaseConfig.projectId) {
-                return mostrarErrorSlug("Este negocio todavía no está configurado del todo.");
-            }
-            guardarCacheTaller(slug, { ...(cache || {}), firebaseConfig, storeName, config: datosTaller });
-        } catch (masterError) {
-            console.warn("No se pudo consultar el directorio Master; se intentará con caché.", masterError);
-            if (!firebaseConfig || !firebaseConfig.projectId) throw masterError;
+        if (!clienteDoc.exists) return mostrarErrorSlug(`No existe el negocio "${slug}" en el directorio MASTER.`);
+        const clienteData = clienteDoc.data() || {};
+        if (clienteData.activo === false) return mostrarErrorSlug("Este negocio está inactivo.");
+
+        const firebaseConfig = clienteData.firebaseConfig;
+        if (!firebaseConfig || !firebaseConfig.apiKey || !firebaseConfig.projectId || !firebaseConfig.appId) {
+            return mostrarErrorSlug("El registro MASTER no tiene un firebaseConfig completo para este negocio.");
         }
 
-        clienteApp = obtenerFirebaseAppTaller("cliente", firebaseConfig);
+        // Firebase PROPIO del negocio. Todos los datos del taller se leen acá.
+        clienteApp = await obtenerFirebaseAppTaller("cliente", firebaseConfig);
         db = crearFirestoreTaller(clienteApp);
         auth = firebase.auth(clienteApp);
 
-        // Arranque inmediato con la configuración guardada; después se actualiza
-        // en segundo plano desde config/taller.
+        const cfgDoc = await db.collection("config").doc("taller").get();
+        const datosTaller = cfgDoc.exists ? cfgDoc.data() : {};
         const rubroLegacy = datosTaller.rubro || "general";
         const seleccionados = Array.isArray(datosTaller.rubrosSeleccionados) && datosTaller.rubrosSeleccionados.length
             ? datosTaller.rubrosSeleccionados : [rubroLegacy];
@@ -187,10 +184,16 @@ async function bootstrap() {
             rubro: rubroLegacy,
             rubrosSeleccionados: seleccionados,
             rubrosPersonalizados: Array.isArray(datosTaller.rubrosPersonalizados) ? datosTaller.rubrosPersonalizados : [],
-            nombreNegocio: datosTaller.nombreNegocio || storeName || "Mi negocio",
+            nombreNegocio: datosTaller.nombreNegocio || clienteData.storeName || "Mi negocio",
             logoUrl: datosTaller.logoUrl || "",
             theme: { ...TEMA_DEFAULT, ...(datosTaller.theme || {}) }
         };
+
+        try {
+            localStorage.setItem("tu_taller_cache_" + slug, JSON.stringify({
+                config: datosTaller, firebaseConfig, storeName: clienteData.storeName || "", cachedAt: Date.now()
+            }));
+        } catch (_) {}
 
         const pasos = [
             ["aplicarTemaTaller", aplicarTemaTaller],
@@ -205,25 +208,28 @@ async function bootstrap() {
 
         init();
 
-        // Actualización silenciosa de la configuración del taller.
-        db.collection("config").doc("taller").get().then(cfgDoc => {
-            const fresh = cfgDoc.exists ? cfgDoc.data() : {};
-            const current = leerCacheTaller(slug) || {};
-            guardarCacheTaller(slug, { ...current, config: fresh, firebaseConfig, storeName });
+        db.collection("config").doc("taller").get().then(cfg => {
+            if (!cfg.exists) return;
+            const fresh = cfg.data() || {};
+            try {
+                localStorage.setItem("tu_taller_cache_" + slug, JSON.stringify({
+                    config: fresh, firebaseConfig, storeName: clienteData.storeName || "", cachedAt: Date.now()
+                }));
+            } catch (_) {}
             const rubro = fresh.rubro || "general";
             const activos = Array.isArray(fresh.rubrosSeleccionados) && fresh.rubrosSeleccionados.length ? fresh.rubrosSeleccionados : [rubro];
             TALLER_CONFIG = {
                 rubro,
                 rubrosSeleccionados: activos,
                 rubrosPersonalizados: Array.isArray(fresh.rubrosPersonalizados) ? fresh.rubrosPersonalizados : [],
-                nombreNegocio: fresh.nombreNegocio || storeName || "Mi negocio",
+                nombreNegocio: fresh.nombreNegocio || clienteData.storeName || "Mi negocio",
                 logoUrl: fresh.logoUrl || "",
                 theme: { ...TEMA_DEFAULT, ...(fresh.theme || {}) }
             };
             aplicarTemaTaller();
             aplicarTextosRubro();
             prepararManifestPWA();
-        }).catch(e => console.warn("No se pudo actualizar config/taller; se conserva la configuración inicial:", e));
+        }).catch(e => console.warn("No se pudo actualizar config/taller:", e));
     } catch (e) {
         console.error("Error al inicializar Control de Trabajos:", e);
         mostrarErrorSlug(errorFirebaseTaller(e));
