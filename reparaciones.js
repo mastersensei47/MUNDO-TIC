@@ -54,6 +54,7 @@ const TEMA_PRESETS = {
 let TALLER_CONFIG = { rubro: "general", rubrosSeleccionados: ["general"], rubrosPersonalizados: [], nombreNegocio: "", logoUrl: "", theme: { ...TEMA_DEFAULT } };
 let presetTemaTallerSeleccionado = null;
 let deferredInstallPrompt = null;
+let pwaListenersPreparados = false;
 
 function todosLosRubros() {
     return [...RUBRO_LISTA, ...(TALLER_CONFIG.rubrosPersonalizados || []).map(r => ({ ...r, personalizado: true }))];
@@ -76,6 +77,19 @@ function rubrosActivos() {
 function conElRep(id, fn) {
     const el = document.getElementById(id);
     if (el) fn(el);
+}
+
+function crearFirestore(app) {
+    const firestore = firebase.firestore(app);
+    try {
+        const ua = navigator.userAgent || "";
+        if (/OPR\//i.test(ua) || /Opera/i.test(ua)) {
+            firestore.settings({ experimentalForceLongPolling: true });
+        }
+    } catch (e) {
+        console.warn("No se pudo configurar el transporte de Firestore:", e);
+    }
+    return firestore;
 }
 
 function leerSlug() {
@@ -101,7 +115,7 @@ async function bootstrap() {
 
     try {
         masterApp = firebase.initializeApp(MASTER_FIREBASE_CONFIG, "master");
-        const masterDb = firebase.firestore(masterApp);
+        const masterDb = crearFirestore(masterApp);
         const clienteDoc = await masterDb.collection("clientes").doc(slug).get();
 
         if (!clienteDoc.exists || clienteDoc.data().activo === false) {
@@ -113,7 +127,7 @@ async function bootstrap() {
         }
 
         clienteApp = firebase.initializeApp(firebaseConfig, "cliente");
-        db = firebase.firestore(clienteApp);
+        db = crearFirestore(clienteApp);
         auth = firebase.auth(clienteApp);
 
         // Configuración propia de este negocio (rubro, nombre, tema, logo).
@@ -191,25 +205,13 @@ function aplicarTextosRubro() {
 // vuelo (no puede ser un archivo estático distinto por cliente).
 function prepararManifestPWA() {
     const link = document.querySelector('link[rel="manifest"]');
-    if (!link || !TALLER_CONFIG) return;
-    try {
-        const manifest = {
-            name: TALLER_CONFIG.nombreNegocio || "Control de Trabajos",
-            short_name: (TALLER_CONFIG.nombreNegocio || "Taller").slice(0, 32),
-            id: location.pathname + location.search,
-            start_url: location.pathname + location.search,
-            scope: location.pathname.replace(/[^/]+$/, "") || "./",
-            display: "standalone", orientation: "portrait-primary",
-            background_color: TALLER_CONFIG.theme?.bg || "#0f172a",
-            theme_color: TALLER_CONFIG.theme?.accent || "#3b82f6",
-            icons: [
-                { src: "icon-192.png", sizes: "192x192", type: "image/png", purpose: "any maskable" },
-                { src: "icon-512.png", sizes: "512x512", type: "image/png", purpose: "any maskable" }
-            ]
-        };
-        link.href = URL.createObjectURL(new Blob([JSON.stringify(manifest)], { type: "application/manifest+json" }));
-    } catch (e) { console.warn("No se pudo generar el manifest dinámico del taller:", e); }
+    if (!link) return;
+    // GitHub Pages no puede generar un manifest distinto por cada slug.
+    // Usamos el manifest estático del taller, del mismo origen. El slug se
+    // conserva en localStorage y se recupera al abrir la app instalada.
+    link.href = new URL("manifest-taller.json", location.href).href;
 }
+
 
 function registrarServiceWorker() {
     if ("serviceWorker" in navigator) {
@@ -225,6 +227,8 @@ function prepararInstalacionPWA() {
     const standalone = (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone === true;
     if (standalone) { btn.style.display = "none"; return; }
     btn.style.display = "inline-flex";
+    if (pwaListenersPreparados) return;
+    pwaListenersPreparados = true;
     window.addEventListener("beforeinstallprompt", event => {
         event.preventDefault(); deferredInstallPrompt = event; btn.style.display = "inline-flex";
     });
@@ -752,5 +756,11 @@ function exportarReparacionesCSV() {
         if (e.target && e.target.id === id) actualizarGananciaPreview();
     });
 });
+
+// Preparar PWA inmediatamente para no perder beforeinstallprompt mientras
+// Firebase termina de resolver el negocio.
+try { prepararManifestPWA(); } catch (_) {}
+try { registrarServiceWorker(); } catch (_) {}
+try { prepararInstalacionPWA(); } catch (_) {}
 
 if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", bootstrap); else bootstrap();
