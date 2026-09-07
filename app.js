@@ -519,11 +519,12 @@ function aplicarLayout() {
 
 // ==================== PWA / INSTALACIÓN ====================
 function aplicarManifestPWA() {
-    const link = document.querySelector('link[rel="manifest"]');
-    if (!link) return;
-    // Siempre usamos el manifest real servido desde GitHub Pages. No se genera
-    // ningún Blob dinámico porque los navegadores pueden ignorarlo para PWA.
-    link.href = new URL("manifest-tienda.json", location.href).href;
+    // El manifest ya queda enlazado de forma estática en el <head> de
+    // index.html (<link rel="manifest" href="manifest-tienda.json">) y NO
+    // se debe tocar por JS después de la carga inicial: reescribir el href
+    // (aunque sea al mismo archivo) confunde la detección de instalabilidad
+    // de Chrome/Edge/Opera y hace que el instalador automático nunca se
+    // dispare. Por eso esta función ya no modifica el <link>.
 }
 
 function registrarServiceWorker() {
