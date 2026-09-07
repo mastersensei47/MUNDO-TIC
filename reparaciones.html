@@ -7,6 +7,15 @@
 
     <link rel="manifest" href="manifest-taller.json">
     <meta name="theme-color" content="#3b82f6">
+    <script>
+        // Captura temprana del instalador PWA antes de Firebase.
+        window.__tuTallerInstallPrompt = null;
+        window.addEventListener("beforeinstallprompt", function (event) {
+            event.preventDefault();
+            window.__tuTallerInstallPrompt = event;
+            window.dispatchEvent(new Event("tu-taller-install-ready"));
+        });
+    </script>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <link rel="apple-touch-icon" href="icon-192.png">
 
