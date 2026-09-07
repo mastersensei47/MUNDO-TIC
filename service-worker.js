@@ -8,7 +8,7 @@
 // código desactualizado — exactamente el tipo de bug que ya tuvimos una vez.
 // ============================================================================
 
-const CACHE_VERSION = "v4-pwa-fast";
+const CACHE_VERSION = "v5-pwa-fast";
 const CACHE_NAME = `plataforma-cache-${CACHE_VERSION}`;
 
 self.addEventListener("install", () => {
@@ -31,16 +31,34 @@ self.addEventListener("message", (event) => {
 self.addEventListener("fetch", (event) => {
     if (event.request.method !== "GET") return;
     const url = new URL(event.request.url);
-    // No cache for Firebase/CDNs/external images: prevents stale data and
-    // avoids filling the cache with huge third-party resources.
     if (url.origin !== self.location.origin) return;
+
+    // Navegación: red primero para no servir HTML viejo.
+    if (event.request.mode === "navigate") {
+        event.respondWith(
+            fetch(event.request).then(response => {
+                if (response && response.ok) {
+                    const clone = response.clone();
+                    caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone)).catch(() => {});
+                }
+                return response;
+            }).catch(() => caches.match(event.request))
+        );
+        return;
+    }
+
+    // Recursos propios: caché primero + actualización en segundo plano.
+    // Las visitas posteriores no tienen que esperar la red para CSS/JS/imágenes.
     event.respondWith(
-        fetch(event.request).then(response => {
-            if (response && response.ok) {
-                const clone = response.clone();
-                caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone)).catch(() => {});
-            }
-            return response;
-        }).catch(() => caches.match(event.request))
+        caches.match(event.request).then(cached => {
+            const network = fetch(event.request).then(response => {
+                if (response && response.ok) {
+                    const clone = response.clone();
+                    caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone)).catch(() => {});
+                }
+                return response;
+            }).catch(() => cached);
+            return cached || network;
+        })
     );
 });
