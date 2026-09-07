@@ -62,58 +62,48 @@ const CONFIG_DEFAULTS = {
     notifications: { emailEnabled: false, emailJsServiceId: "", emailJsTemplateId: "", emailJsPublicKey: "", adminEmail: "" }
 };
 
+function leerCacheTienda(slug) {
+    try {
+        const raw = localStorage.getItem("tu_tienda_cache_" + slug);
+        return raw ? JSON.parse(raw) : null;
+    } catch (_) { return null; }
+}
+function guardarCacheTienda(slug, data) {
+    try { localStorage.setItem("tu_tienda_cache_" + slug, JSON.stringify(data)); } catch (_) {}
+}
+
+function construirStoreConfig(slug, datosTienda) {
+    datosTienda = datosTienda || {};
+    return {
+        ...CONFIG_DEFAULTS,
+        ...datosTienda,
+        features: { ...CONFIG_DEFAULTS.features, ...(datosTienda.features || {}) },
+        theme: { ...CONFIG_DEFAULTS.theme, ...(datosTienda.theme || {}) },
+        notifications: { ...CONFIG_DEFAULTS.notifications, ...(datosTienda.notifications || {}) },
+        pagos: { ...CONFIG_DEFAULTS.pagos, ...(datosTienda.pagos || {}) },
+        layout: { ...CONFIG_DEFAULTS.layout, ...(datosTienda.layout || {}) },
+        storeId: slug
+    };
+}
+
 async function bootstrap() {
     const slug = leerSlug();
     if (!slug) {
         return mostrarErrorSlug("Falta indicar la tienda en el link (falta ?slug=... en la URL). Pedile el link completo a quien te lo compartió.");
     }
 
-    const cacheKey = `tu_tienda_cache_${slug}`;
-    let cache = null;
-    try { cache = JSON.parse(localStorage.getItem(cacheKey) || "null"); } catch (_) {}
+    const cache = leerCacheTienda(slug);
+    let firebaseConfig = cache && cache.firebaseConfig ? cache.firebaseConfig : null;
+    let datosTienda = cache && cache.config ? cache.config : {};
 
-    const aplicarConfigTienda = (datosTienda) => {
-        datosTienda = datosTienda || {};
-        STORE_CONFIG = {
-            ...CONFIG_DEFAULTS,
-            ...datosTienda,
-            features: { ...CONFIG_DEFAULTS.features, ...(datosTienda.features || {}) },
-            theme: { ...CONFIG_DEFAULTS.theme, ...(datosTienda.theme || {}) },
-            notifications: { ...CONFIG_DEFAULTS.notifications, ...(datosTienda.notifications || {}) },
-            pagos: { ...CONFIG_DEFAULTS.pagos, ...(datosTienda.pagos || {}) },
-            layout: { ...CONFIG_DEFAULTS.layout, ...(datosTienda.layout || {}) },
-            storeId: slug
-        };
-    };
-
-    const guardarCache = (firebaseConfig, datosTienda) => {
-        try {
-            localStorage.setItem(cacheKey, JSON.stringify({
-                firebaseConfig,
-                datosTienda: datosTienda || {},
-                savedAt: Date.now()
-            }));
-        } catch (_) {}
-    };
-
-    let masterDb = null;
-    let firebaseConfig = cache?.firebaseConfig || null;
-    let datosTienda = cache?.datosTienda || {};
-    let cacheUsed = !!firebaseConfig;
-
-    // Con caché válida arrancamos la tienda enseguida y actualizamos datos en
-    // segundo plano. En una primera visita, esperamos al directorio master.
     try {
-        masterApp = firebase.initializeApp(MASTER_FIREBASE_CONFIG, "master");
-        masterDb = firebase.firestore(masterApp);
-    } catch (e) {
-        console.warn("No se pudo inicializar el directorio master:", e);
-    }
-
-    if (!firebaseConfig) {
-        try {
-            if (!masterDb) throw new Error("MASTER_FIREBASE_UNAVAILABLE");
+        // Si ya visitaste esta tienda, usamos la configuración guardada para
+        // arrancar inmediatamente. Luego validamos/actualizamos en segundo plano.
+        if (!firebaseConfig) {
+            masterApp = firebase.initializeApp(MASTER_FIREBASE_CONFIG, "master");
+            const masterDb = firebase.firestore(masterApp);
             const clienteDoc = await masterDb.collection("clientes").doc(slug).get();
+
             if (!clienteDoc.exists || clienteDoc.data().activo === false) {
                 return mostrarErrorSlug("No encontramos esta tienda. Verificá el link, o consultá con el negocio.");
             }
@@ -121,55 +111,51 @@ async function bootstrap() {
             if (!firebaseConfig || !firebaseConfig.projectId) {
                 return mostrarErrorSlug("Esta tienda todavía no está configurada del todo. Volvé a intentar más tarde.");
             }
-        } catch (e) {
-            console.error("No se pudo resolver la tienda desde el directorio master:", e);
-            return mostrarErrorSlug(`No pudimos cargar esta tienda. ${e?.code ? `Código: ${e.code}. ` : ""}Probá de nuevo en unos minutos.`);
+            guardarCacheTienda(slug, { firebaseConfig, config: datosTienda });
+        } else {
+            // Actualización silenciosa del directorio.
+            try {
+                masterApp = firebase.initializeApp(MASTER_FIREBASE_CONFIG, "master");
+                const masterDb = firebase.firestore(masterApp);
+                masterDb.collection("clientes").doc(slug).get().then(doc => {
+                    if (doc.exists && doc.data().activo !== false && doc.data().firebaseConfig) {
+                        const freshConfig = doc.data().firebaseConfig;
+                        const current = leerCacheTienda(slug) || {};
+                        guardarCacheTienda(slug, { ...current, firebaseConfig: freshConfig });
+                    }
+                }).catch(() => {});
+            } catch (_) {}
         }
-    }
 
-    try {
         clienteApp = firebase.initializeApp(firebaseConfig, "cliente");
         db = firebase.firestore(clienteApp);
         auth = firebase.auth(clienteApp);
-    } catch (e) {
-        console.error("No se pudo conectar al Firebase de la tienda:", e);
-        return mostrarErrorSlug(`No pudimos abrir esta tienda. ${e?.code ? `Código: ${e.code}. ` : ""}Revisá la configuración de Firebase de este negocio.`);
-    }
 
-    // Si tenemos configuración guardada, se muestra sin bloquear por red.
-    aplicarConfigTienda(datosTienda);
-    init();
+        // Pintar sin esperar una segunda lectura de Firestore.
+        STORE_CONFIG = construirStoreConfig(slug, datosTienda);
+        init();
 
-    // Actualización en segundo plano para no bloquear el primer render.
-    (async () => {
-        try {
-            if (masterDb) {
-                const clienteDoc = await masterDb.collection("clientes").doc(slug).get();
-                if (clienteDoc.exists && clienteDoc.data().activo !== false) {
-                    const freshFirebaseConfig = clienteDoc.data().firebaseConfig;
-                    if (freshFirebaseConfig?.projectId) firebaseConfig = freshFirebaseConfig;
-                }
-            }
-            const cfgDoc = await db.collection("config").doc("tienda").get();
-            datosTienda = cfgDoc.exists ? cfgDoc.data() : {};
-            guardarCache(firebaseConfig, datosTienda);
-            aplicarConfigTienda(datosTienda);
+        // La config real se actualiza en segundo plano.
+        db.collection("config").doc("tienda").get().then(cfgDoc => {
+            const fresh = cfgDoc.exists ? cfgDoc.data() : {};
+            const current = leerCacheTienda(slug) || {};
+            guardarCacheTienda(slug, { ...current, config: fresh });
+            STORE_CONFIG = construirStoreConfig(slug, fresh);
+
             aplicarTema();
             aplicarBranding();
             renderCategorias();
             renderCategoriasSelect();
-            updateCartUI();
-            renderMapa();
             renderBanners();
             aplicarLayout();
+            aplicarManifestPWA();
+            renderHeroSlider();
             cargarFormConfig();
-            prepararManifestPWA();
-            render();
-        } catch (e) {
-            console.warn("No se pudo actualizar la configuración en segundo plano:", e);
-            if (!cacheUsed) guardarCache(firebaseConfig, datosTienda);
-        }
-    })();
+        }).catch(e => console.warn("No se pudo actualizar config/tienda:", e));
+    } catch (e) {
+        console.error("Error al inicializar la tienda:", e);
+        mostrarErrorSlug("No pudimos cargar esta tienda. Probá de nuevo en unos minutos.");
+    }
 }
 
 let prods = [];
@@ -244,8 +230,8 @@ function init() {
         ["renderMapa", renderMapa],
         ["renderBanners", renderBanners],
         ["aplicarLayout", aplicarLayout],
+        ["aplicarManifestPWA", aplicarManifestPWA],
         ["registrarServiceWorker", registrarServiceWorker],
-        ["prepararManifestPWA", prepararManifestPWA],
         ["prepararInstalacionPWA", prepararInstalacionPWA],
         ["cargarFormConfig", cargarFormConfig],
     ];
@@ -275,9 +261,11 @@ function init() {
                 esAdmin = true;
                 if (logout) logout.style.display = "block";
                 cargarDatosAdmin();
-                render();
+                // Firebase puede haber entregado productos/hero antes de resolver Auth.
+                // Renderizamos el panel ahora que ya sabemos que es administrador.
                 renderAdmP();
                 renderAdmSlider();
+                render();
                 return;
             }
 
@@ -314,12 +302,14 @@ function init() {
     }, err => console.warn("productos:", err.code || err));
 
     db.collection("hero").onSnapshot(snap => {
-        heroImages = snap.docs.map((doc, index) => ({ id: doc.id, ...doc.data(), _index: index }))
-            .sort((a, b) => {
-                const ao = Number.isFinite(Number(a.order)) ? Number(a.order) : Number.MAX_SAFE_INTEGER;
-                const bo = Number.isFinite(Number(b.order)) ? Number(b.order) : Number.MAX_SAFE_INTEGER;
-                return ao - bo || String(a.id).localeCompare(String(b.id));
-            });
+        heroImages = snap.docs.map((doc, i) => {
+            const data = doc.data() || {};
+            return { id: doc.id, ...data, _fallbackOrder: i };
+        }).sort((a, b) => {
+            const ao = Number.isFinite(Number(a.order)) ? Number(a.order) : Number.MAX_SAFE_INTEGER;
+            const bo = Number.isFinite(Number(b.order)) ? Number(b.order) : Number.MAX_SAFE_INTEGER;
+            return ao - bo || a._fallbackOrder - b._fallbackOrder;
+        });
         renderHeroSlider();
         if (esAdmin) renderAdmSlider();
     }, err => console.warn("hero:", err.code || err));
@@ -452,35 +442,30 @@ function aplicarLayout() {
     document.body.classList.toggle("glow-effect", !!l.glowEffect);
 }
 
-// ==================== PWA: MANIFEST DINÁMICO POR TIENDA ====================
-// El manifest estático sirve como respaldo, pero reemplazamos el enlace por
-// uno generado con el slug/nombre/colores de la tienda actual. Así la app
-// instalada abre la tienda correcta y conserva su identidad.
-function prepararManifestPWA() {
+// ==================== PWA / INSTALACIÓN ====================
+function aplicarManifestPWA() {
     const link = document.querySelector('link[rel="manifest"]');
     if (!link || !STORE_CONFIG) return;
+    const slug = STORE_CONFIG.storeId || leerSlug() || "";
+    const manifest = {
+        name: STORE_CONFIG.storeName || "Tienda Online",
+        short_name: STORE_CONFIG.storeName || "Tienda",
+        id: location.origin + location.pathname + "?slug=" + encodeURIComponent(slug),
+        start_url: location.pathname + "?slug=" + encodeURIComponent(slug),
+        scope: "./",
+        display: "standalone",
+        background_color: (STORE_CONFIG.theme && STORE_CONFIG.theme.bg) || "#0f172a",
+        theme_color: (STORE_CONFIG.theme && STORE_CONFIG.theme.accent) || "#3b82f6",
+        icons: [
+            { src: new URL("icon-192.png", location.href).href, sizes: "192x192", type: "image/png", purpose: "any maskable" },
+            { src: new URL("icon-512.png", location.href).href, sizes: "512x512", type: "image/png", purpose: "any maskable" }
+        ]
+    };
     try {
-        const manifest = {
-            name: STORE_CONFIG.storeName || "Tienda Online",
-            short_name: (STORE_CONFIG.storeName || "Tienda").slice(0, 32),
-            id: location.pathname + location.search,
-            start_url: location.pathname + location.search,
-            scope: location.pathname.replace(/[^/]+$/, "") || "./",
-            display: "standalone",
-            orientation: "portrait-primary",
-            background_color: STORE_CONFIG.theme?.bg || "#0f172a",
-            theme_color: STORE_CONFIG.theme?.accent || "#3b82f6",
-            icons: [
-                { src: "icon-192.png", sizes: "192x192", type: "image/png", purpose: "any maskable" },
-                { src: "icon-512.png", sizes: "512x512", type: "image/png", purpose: "any maskable" }
-            ]
-        };
-        const blob = new Blob([JSON.stringify(manifest)], { type: "application/manifest+json" });
-        const href = URL.createObjectURL(blob);
-        link.href = href;
-    } catch (e) {
-        console.warn("No se pudo generar el manifest dinámico:", e);
-    }
+        if (window.__pwaManifestUrl) URL.revokeObjectURL(window.__pwaManifestUrl);
+        window.__pwaManifestUrl = URL.createObjectURL(new Blob([JSON.stringify(manifest)], {type:"application/manifest+json"}));
+        link.href = window.__pwaManifestUrl;
+    } catch (_) {}
 }
 
 function registrarServiceWorker() {
@@ -496,14 +481,14 @@ let deferredInstallPrompt = null;
 function prepararInstalacionPWA() {
     const btn = document.getElementById("btnInstalarApp");
     if (!btn) return;
-    const standalone = (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone === true;
+    const standalone = window.matchMedia && window.matchMedia("(display-mode: standalone)").matches;
     if (standalone) {
         btn.style.display = "none";
         return;
     }
-    // Mostramos el acceso aunque el navegador no entregue beforeinstallprompt
-    // (por ejemplo Safari/iOS). En esos casos el botón da instrucciones.
+    // En iOS no existe beforeinstallprompt, por eso el acceso se muestra igual.
     btn.style.display = "inline-flex";
+
     window.addEventListener("beforeinstallprompt", event => {
         event.preventDefault();
         deferredInstallPrompt = event;
@@ -519,38 +504,19 @@ async function instalarApp() {
     try { localStorage.setItem("tu_tienda_pwa_start", location.pathname + location.search); } catch (_) {}
     if (deferredInstallPrompt) {
         deferredInstallPrompt.prompt();
-        try { await deferredInstallPrompt.userChoice; } catch (_) {}
+        await deferredInstallPrompt.userChoice;
         deferredInstallPrompt = null;
         const btn = document.getElementById("btnInstalarApp");
         if (btn) btn.style.display = "none";
         return;
     }
-    const esIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
-    const esAndroid = /android/i.test(navigator.userAgent);
+    const ua = navigator.userAgent || "";
+    const esIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
     if (esIOS) {
-        return alert("Para instalar esta tienda en iPhone/iPad: tocá Compartir (□↑) en Safari y elegí 'Agregar a pantalla de inicio'.");
+        alert("Para agregar la tienda a tu iPhone/iPad: tocá Compartir (□↑) y elegí «Agregar a pantalla de inicio».");
+    } else {
+        alert("Para instalar la tienda: abrí el menú del navegador (⋮ o ☰) y elegí «Instalar aplicación» o «Agregar a pantalla de inicio».");
     }
-    if (esAndroid) {
-        return alert("Para instalar esta tienda: abrí el menú ⋮ de Chrome y elegí 'Instalar aplicación' o 'Agregar a pantalla principal'.");
-    }
-    alert("Para instalar esta tienda: abrí el menú del navegador y buscá 'Instalar aplicación'. La opción aparece cuando el navegador considera la página instalable.");
-}
-
-function renderCategorias() {
-    const bar = document.getElementById("catBar");
-    let html = `<div class="cat-item active" onclick="setCat(this, '')">🌐 Todos</div>`;
-    html += (STORE_CONFIG.categories || []).map(c =>
-        `<div class="cat-item" onclick="setCat(this, '${c.id}')">${c.icon || ''} ${c.label}</div>`
-    ).join("");
-    bar.innerHTML = html;
-}
-
-function renderCategoriasSelect() {
-    const sel = document.getElementById("fCat");
-    if (!sel) return;
-    sel.innerHTML = (STORE_CONFIG.categories || []).map(c =>
-        `<option value="${c.id}">${c.icon || ''} ${c.label}</option>`
-    ).join("");
 }
 
 // ==================== EDITOR DE CATEGORÍAS (panel admin → CONFIGURACIÓN) ====================
@@ -869,6 +835,16 @@ async function showProductDetail(id) {
     document.getElementById('detailFicha').innerHTML = p.ficha?.replace(/\n/g, '<br>') || '';
 
     // Ocultar secciones vacías del detalle (descripción / características / ficha)
+    const detailLinks = document.getElementById('detailLinks');
+    const detailLinksSection = document.getElementById('detailLinksSection');
+    const links = normalizarLinksProducto(p.linksDescarga || p.downloadLinks || p.enlaces || p.links || []);
+    if (detailLinks && detailLinksSection) {
+        detailLinks.innerHTML = links.length
+            ? links.map((link, i) => `<a class="download-link-btn" href="${link.url.replace(/"/g, '&quot;')}" target="_blank" rel="noopener noreferrer">⬇️ ${link.nombre || `Descarga ${i + 1}`}</a>`).join('')
+            : '';
+        detailLinksSection.style.display = links.length ? '' : 'none';
+    }
+
     document.querySelectorAll('#productDetailModal .detail-sections details').forEach(det => {
         const content = det.querySelector('.detail-content');
         det.style.display = (content && content.innerHTML.trim()) ? '' : 'none';
@@ -1217,6 +1193,57 @@ function renderAdmP() {
         }).join("");
 }
 
+function normalizarLinksProducto(links) {
+    if (!Array.isArray(links)) return [];
+    return links.map(link => {
+        if (typeof link === "string") return { nombre: "Link de descarga", url: link.trim() };
+        const x = link || {};
+        return {
+            nombre: String(x.nombre || x.name || x.titulo || "").trim(),
+            url: String(x.url || x.href || x.link || "").trim()
+        };
+    }).filter(x => x.url);
+}
+
+function obtenerLinksProducto() {
+    const cont = document.getElementById("linksDescargaProducto");
+    if (!cont) return [];
+    return [...cont.querySelectorAll(".download-link-row")].map(row => ({
+        nombre: row.querySelector(".download-link-name")?.value.trim() || "Link de descarga",
+        url: row.querySelector(".download-link-url")?.value.trim() || ""
+    })).filter(x => x.url);
+}
+
+function renderLinksProducto(links = []) {
+    const cont = document.getElementById("linksDescargaProducto");
+    if (!cont) return;
+    const lista = normalizarLinksProducto(links);
+    cont.innerHTML = "";
+    if (lista.length === 0) {
+        agregarLinkProducto();
+        return;
+    }
+    lista.forEach(link => agregarLinkProducto(link.nombre, link.url));
+}
+
+function agregarLinkProducto(nombre = "", url = "") {
+    const cont = document.getElementById("linksDescargaProducto");
+    if (!cont) return;
+    const row = document.createElement("div");
+    row.className = "download-link-row";
+    row.innerHTML = `
+        <input class="download-link-name" placeholder="Nombre (ej: Parte 1)" value="${String(nombre).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\"/g,'&quot;')}">
+        <input class="download-link-url" type="url" placeholder="URL de descarga" value="${String(url).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\"/g,'&quot;')}">
+        <button type="button" title="Eliminar link" aria-label="Eliminar link">✕</button>
+    `;
+    row.querySelector("button").addEventListener("click", () => {
+        row.remove();
+        const cont2 = document.getElementById("linksDescargaProducto");
+        if (cont2 && !cont2.querySelector(".download-link-row")) agregarLinkProducto();
+    });
+    cont.appendChild(row);
+}
+
 async function saveP() {
     const id = document.getElementById("fId").value;
     const nom = document.getElementById("fNom").value.trim();
@@ -1242,6 +1269,7 @@ async function saveP() {
         descripcion: document.getElementById("fDesc").value.trim(),
         caracteristicas: document.getElementById("fCaract").value.trim(),
         ficha: document.getElementById("fFicha").value.trim(),
+        linksDescarga: obtenerLinksProducto(),
         tieneVariantes: variantesParsed.length > 0
     };
 
@@ -1287,6 +1315,7 @@ function limpiarP() {
     document.getElementById("fDesc").value = "";
     document.getElementById("fCaract").value = "";
     document.getElementById("fFicha").value = "";
+    renderLinksProducto([]);
 }
 
 async function editP(id) {
@@ -1308,6 +1337,7 @@ async function editP(id) {
     document.getElementById("fDesc").value = p.descripcion || "";
     document.getElementById("fCaract").value = p.caracteristicas || "";
     document.getElementById("fFicha").value = p.ficha || "";
+    renderLinksProducto(p.linksDescarga || p.downloadLinks || p.enlaces || p.links || []);
 
     // Traer las variantes en vivo desde Firestore (no desde caché) para no
     // pisar por accidente el stock real con datos viejos al guardar.
@@ -1655,7 +1685,7 @@ function renderAdmSlider() {
     list.innerHTML = heroImages.map(h => `
         <div class="admin-item">
             <img src="${h.url}" class="admin-item-img" alt="slide" loading="lazy">
-            <div style="flex:1;"><b>Imagen ${Number.isFinite(Number(h.order)) ? Number(h.order) + 1 : ""}</b></div>
+            <div style="flex:1;"><b>Imagen ${h.order + 1}</b></div>
             <button onclick="deleteHeroImage('${h.id}')" style="color:var(--danger); font-size:18px; cursor:pointer; background:none; border:none;">🗑️</button>
         </div>
     `).join("");
@@ -1871,6 +1901,8 @@ function tab(id, e) {
     document.querySelectorAll("#t-prod, #t-user, #t-order, #t-slider, #t-stats, #t-config, #t-layout").forEach(el => el.style.display = "none");
     document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
     document.getElementById(id).style.display = "block";
+    if (id === "t-prod") renderAdmP();
+    if (id === "t-slider") renderAdmSlider();
     if (e && e.target) {
         e.target.classList.add("active");
     } else {
