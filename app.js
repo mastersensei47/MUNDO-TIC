@@ -86,68 +86,118 @@ function construirStoreConfig(slug, datosTienda) {
     };
 }
 
+function obtenerFirebaseApp(nombre, config) {
+    try {
+        return firebase.app(nombre);
+    } catch (_) {
+        return firebase.initializeApp(config, nombre);
+    }
+}
+
+function errorFirebaseDetalle(e) {
+    const code = e && e.code ? String(e.code) : "";
+    const msg = e && e.message ? String(e.message) : String(e || "Error desconocido");
+    console.error("Detalle Firebase:", { code, message: msg, error: e });
+
+    if (code === "permission-denied") {
+        return "Firebase rechazó el acceso al directorio de tiendas (permission-denied).";
+    }
+    if (code === "failed-precondition") {
+        return "Firebase indicó que falta una configuración o índice (failed-precondition).";
+    }
+    if (code === "unavailable" || code === "deadline-exceeded") {
+        return "Firebase no está disponible en este momento. Probá nuevamente en unos segundos.";
+    }
+    if (code === "app/duplicate-app") {
+        return "La aplicación de Firebase ya estaba inicializada. Recargá la página para continuar.";
+    }
+    if (code === "invalid-argument" || code === "app/invalid-app-options") {
+        return "La configuración de Firebase de esta tienda no es válida.";
+    }
+    return `No pudimos cargar esta tienda (${code || "error"}). Revisá la consola del navegador para ver el detalle.`;
+}
+
+async function esperarFirebase(maxIntentos = 20) {
+    for (let i = 0; i < maxIntentos; i++) {
+        if (typeof firebase !== "undefined" && typeof firebase.initializeApp === "function" && typeof MASTER_FIREBASE_CONFIG !== "undefined") {
+            return true;
+        }
+        await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    return false;
+}
+
 async function bootstrap() {
     const slug = leerSlug();
     if (!slug) {
         return mostrarErrorSlug("Falta indicar la tienda en el link (falta ?slug=... en la URL). Pedile el link completo a quien te lo compartió.");
     }
 
-    // Firebase puede tardar un instante en estar disponible porque sus scripts
-    // se cargan de forma diferida. En PC esto es más frecuente que en móvil.
-    if (typeof firebase === "undefined" || typeof MASTER_FIREBASE_CONFIG === "undefined") {
-        return setTimeout(bootstrap, 150);
+    if (!(await esperarFirebase())) {
+        console.error("Firebase/config no estuvieron disponibles a tiempo.");
+        return mostrarErrorSlug("No pudimos iniciar Firebase. Recargá la página y probá nuevamente.");
     }
 
     const cache = leerCacheTienda(slug);
-    let firebaseConfig = cache && cache.firebaseConfig ? cache.firebaseConfig : null;
-    let datosTienda = cache && cache.config ? cache.config : {};
+    const cacheConfig = cache && cache.firebaseConfig ? cache.firebaseConfig : null;
+    const cacheDatos = cache && cache.config ? cache.config : {};
+    let firebaseConfig = null;
+    let datosTienda = cacheDatos;
 
     try {
-        // Evita errores si la página vuelve desde bfcache o si Firebase ya fue
-        // inicializado por otra parte de la aplicación.
-        try { masterApp = firebase.app("master"); }
-        catch (_) { masterApp = firebase.initializeApp(MASTER_FIREBASE_CONFIG, "master"); }
-
+        // El directorio Master es la fuente de verdad. La caché solo queda
+        // como respaldo si Firebase Master no responde temporalmente.
+        masterApp = obtenerFirebaseApp("master", MASTER_FIREBASE_CONFIG);
         const masterDb = firebase.firestore(masterApp);
 
-        // Primera visita: necesitamos resolver slug -> firebaseConfig.
-        if (!firebaseConfig) {
+        try {
             const clienteDoc = await masterDb.collection("clientes").doc(slug).get();
 
             if (!clienteDoc.exists || clienteDoc.data().activo === false) {
                 return mostrarErrorSlug("No encontramos esta tienda. Verificá el link, o consultá con el negocio.");
             }
 
-            firebaseConfig = clienteDoc.data().firebaseConfig;
+            const clienteData = clienteDoc.data() || {};
+            firebaseConfig = clienteData.firebaseConfig || null;
+
             if (!firebaseConfig || !firebaseConfig.projectId) {
                 return mostrarErrorSlug("Esta tienda todavía no está configurada del todo. Volvé a intentar más tarde.");
             }
-            guardarCacheTienda(slug, { firebaseConfig, config: datosTienda });
-        } else {
-            // Actualización silenciosa del directorio.
-            masterDb.collection("clientes").doc(slug).get().then(doc => {
-                if (doc.exists && doc.data().activo !== false && doc.data().firebaseConfig) {
-                    const freshConfig = doc.data().firebaseConfig;
-                    const current = leerCacheTienda(slug) || {};
-                    guardarCacheTienda(slug, { ...current, firebaseConfig: freshConfig });
-                }
-            }).catch(e => console.warn("No se pudo actualizar el directorio master:", e));
+
+            // Guardamos la configuración nueva para poder abrir la tienda
+            // incluso si en una próxima visita hay un corte momentáneo.
+            guardarCacheTienda(slug, {
+                ...(cache || {}),
+                firebaseConfig,
+                config: cacheDatos
+            });
+        } catch (masterError) {
+            console.warn("No se pudo consultar el directorio Master; se intentará con caché.", masterError);
+            if (!cacheConfig || !cacheConfig.projectId) {
+                throw masterError;
+            }
+            firebaseConfig = cacheConfig;
         }
 
-        // Conecta al Firebase propio de la tienda.
-        try { clienteApp = firebase.app("cliente"); }
-        catch (_) { clienteApp = firebase.initializeApp(firebaseConfig, "cliente"); }
+        if (!firebaseConfig || !firebaseConfig.projectId) {
+            throw new Error("La tienda no tiene una configuración Firebase válida.");
+        }
+
+        // Evita errores app/duplicate-app si el navegador restaura la página
+        // desde bfcache o si bootstrap termina ejecutándose más de una vez.
+        clienteApp = obtenerFirebaseApp("cliente", firebaseConfig);
         db = firebase.firestore(clienteApp);
         auth = firebase.auth(clienteApp);
 
         STORE_CONFIG = construirStoreConfig(slug, datosTienda);
         init();
 
-        // La configuración visual se actualiza en segundo plano.
+        // La configuración visual real de la tienda se actualiza aparte. Si
+        // falla, la tienda sigue funcionando con los valores ya disponibles.
         db.collection("config").doc("tienda").get().then(cfgDoc => {
             const fresh = cfgDoc.exists ? cfgDoc.data() : {};
             const current = leerCacheTienda(slug) || {};
-            guardarCacheTienda(slug, { ...current, config: fresh });
+            guardarCacheTienda(slug, { ...current, config: fresh, firebaseConfig });
             STORE_CONFIG = construirStoreConfig(slug, fresh);
 
             aplicarTema();
@@ -159,21 +209,9 @@ async function bootstrap() {
             aplicarManifestPWA();
             renderHeroSlider();
             cargarFormConfig();
-        }).catch(e => console.warn("No se pudo actualizar config/tienda:", e));
+        }).catch(e => console.warn("No se pudo actualizar config/tienda; se conserva la configuración inicial:", e));
     } catch (e) {
-        console.error("Error al inicializar la tienda:", e);
-
-        let mensaje = "No pudimos cargar esta tienda. Probá de nuevo en unos minutos.";
-        if (e && (e.code === "permission-denied" || e.code === "PERMISSION_DENIED")) {
-            mensaje = "La tienda existe, pero el directorio de tiendas no permite el acceso público. Hay que publicar las reglas de Firestore del proyecto MASTER.";
-        } else if (e && e.code === "failed-precondition") {
-            mensaje = "Firebase necesita una configuración adicional para esta tienda. Revisá la configuración de Firestore del proyecto MASTER.";
-        } else if (e && e.code === "unavailable") {
-            mensaje = "No se pudo conectar con Firebase. Revisá tu conexión y probá nuevamente.";
-        } else if (e && e.message) {
-            mensaje += "\n\nDetalle: " + e.message;
-        }
-        mostrarErrorSlug(mensaje);
+        mostrarErrorSlug(errorFirebaseDetalle(e));
     }
 }
 
@@ -465,26 +503,12 @@ function aplicarLayout() {
 function aplicarManifestPWA() {
     const link = document.querySelector('link[rel="manifest"]');
     if (!link || !STORE_CONFIG) return;
-    const slug = STORE_CONFIG.storeId || leerSlug() || "";
-    const manifest = {
-        name: STORE_CONFIG.storeName || "Tienda Online",
-        short_name: STORE_CONFIG.storeName || "Tienda",
-        id: location.origin + location.pathname + "?slug=" + encodeURIComponent(slug),
-        start_url: location.pathname + "?slug=" + encodeURIComponent(slug),
-        scope: "./",
-        display: "standalone",
-        background_color: (STORE_CONFIG.theme && STORE_CONFIG.theme.bg) || "#0f172a",
-        theme_color: (STORE_CONFIG.theme && STORE_CONFIG.theme.accent) || "#3b82f6",
-        icons: [
-            { src: new URL("icon-192.png", location.href).href, sizes: "192x192", type: "image/png", purpose: "any maskable" },
-            { src: new URL("icon-512.png", location.href).href, sizes: "512x512", type: "image/png", purpose: "any maskable" }
-        ]
-    };
-    try {
-        if (window.__pwaManifestUrl) URL.revokeObjectURL(window.__pwaManifestUrl);
-        window.__pwaManifestUrl = URL.createObjectURL(new Blob([JSON.stringify(manifest)], {type:"application/manifest+json"}));
-        link.href = window.__pwaManifestUrl;
-    } catch (_) {}
+
+    // El manifest estático sigue siendo el respaldo compatible con GitHub Pages.
+    // Para no romper la instalación de la tienda actual, no lo reemplazamos por
+    // un Blob URL: varios navegadores de escritorio no vuelven a evaluar ese
+    // manifest después de cargar la página.
+    link.href = new URL("manifest-tienda.json", location.href).href;
 }
 
 function registrarServiceWorker() {
