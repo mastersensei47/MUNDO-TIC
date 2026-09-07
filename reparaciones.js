@@ -53,224 +53,61 @@ const TEMA_PRESETS = {
 
 let TALLER_CONFIG = { rubro: "general", rubrosSeleccionados: ["general"], rubrosPersonalizados: [], nombreNegocio: "", logoUrl: "", theme: { ...TEMA_DEFAULT } };
 let presetTemaTallerSeleccionado = null;
-let deferredInstallPrompt = null;
-let pwaListenersPreparados = false;
-
-function todosLosRubros() {
-    return [...RUBRO_LISTA, ...(TALLER_CONFIG.rubrosPersonalizados || []).map(r => ({ ...r, personalizado: true }))];
-}
-
-function presetRubro() {
-    const id = TALLER_CONFIG.rubro || (TALLER_CONFIG.rubrosSeleccionados || [])[0] || "general";
-    return RUBRO_PRESETS[id] || (TALLER_CONFIG.rubrosPersonalizados || []).find(r => r.id === id) || RUBRO_PRESETS.general;
-}
-
-function rubrosActivos() {
-    const ids = TALLER_CONFIG.rubrosSeleccionados && TALLER_CONFIG.rubrosSeleccionados.length
-        ? TALLER_CONFIG.rubrosSeleccionados
-        : [TALLER_CONFIG.rubro || 'general'];
-    return ids.map(id => RUBRO_PRESETS[id] || (TALLER_CONFIG.rubrosPersonalizados || []).find(r => r.id === id)).filter(Boolean);
-}
-
-// Igual que el "conEl" de la tienda: aplica una función a un elemento SOLO
-// si existe, para que un elemento faltante no rompa el resto en cadena.
-function conElRep(id, fn) {
-    const el = document.getElementById(id);
-    if (el) fn(el);
-}
-
-function crearFirestore(app) {
-    const firestore = firebase.firestore(app);
-    try {
-        const ua = navigator.userAgent || "";
-        if (/OPR\//i.test(ua) || /Opera/i.test(ua)) {
-            firestore.settings({ experimentalForceLongPolling: true });
-        }
-    } catch (e) {
-        console.warn("No se pudo configurar el transporte de Firestore:", e);
-    }
-    return firestore;
-}
-
-function leerSlug() {
-    const urlSlug = new URLSearchParams(location.search).get("slug");
-    if (urlSlug) {
-        try { localStorage.setItem("tu_taller_ultimo_slug", urlSlug); } catch (_) {}
-        return urlSlug;
-    }
-    try { return localStorage.getItem("tu_taller_ultimo_slug"); } catch (_) { return null; }
-}
-
-function mostrarErrorSlug(mensaje) {
-    const el = document.getElementById("slugError");
-    if (el) {
-        el.querySelector("p").innerText = mensaje;
-        el.style.display = "flex";
-    }
-}
-
-async function bootstrap() {
-    const slug = leerSlug();
-    if (!slug) return mostrarErrorSlug("Falta indicar el negocio en el link (falta ?slug=... en la URL).");
-
-    try {
-        masterApp = firebase.initializeApp(MASTER_FIREBASE_CONFIG, "master");
-        const masterDb = crearFirestore(masterApp);
-        const clienteDoc = await masterDb.collection("clientes").doc(slug).get();
-
-        if (!clienteDoc.exists || clienteDoc.data().activo === false) {
-            return mostrarErrorSlug("No encontramos este negocio. Verificá el link.");
-        }
-        const { firebaseConfig, storeName } = clienteDoc.data();
-        if (!firebaseConfig || !firebaseConfig.projectId) {
-            return mostrarErrorSlug("Este negocio todavía no está configurado del todo.");
-        }
-
-        clienteApp = firebase.initializeApp(firebaseConfig, "cliente");
-        db = crearFirestore(clienteApp);
-        auth = firebase.auth(clienteApp);
-
-        // Configuración propia de este negocio (rubro, nombre, tema, logo).
-        // Lectura pública a propósito (igual que config/tienda en la
-        // tienda): así la pantalla de login ya se ve con la marca correcta
-        // antes de que el dueño inicie sesión.
-        let datosTaller = {};
-        try {
-            const cfgDoc = await db.collection("config").doc("taller").get();
-            if (cfgDoc.exists) datosTaller = cfgDoc.data();
-        } catch (e) {
-            console.warn("No se pudo leer config/taller, se usan valores por defecto:", e);
-        }
-
-        const rubroLegacy = datosTaller.rubro || "general";
-        const seleccionados = Array.isArray(datosTaller.rubrosSeleccionados) && datosTaller.rubrosSeleccionados.length
-            ? datosTaller.rubrosSeleccionados
-            : [rubroLegacy];
-        TALLER_CONFIG = {
-            rubro: rubroLegacy,
-            rubrosSeleccionados: seleccionados,
-            rubrosPersonalizados: Array.isArray(datosTaller.rubrosPersonalizados) ? datosTaller.rubrosPersonalizados : [],
-            nombreNegocio: datosTaller.nombreNegocio || storeName || "Mi negocio",
-            logoUrl: datosTaller.logoUrl || "",
-            theme: { ...TEMA_DEFAULT, ...(datosTaller.theme || {}) }
-        };
-
-        const pasos = [
-            ["aplicarTemaTaller", aplicarTemaTaller],
-            ["aplicarTextosRubro", aplicarTextosRubro],
-            ["prepararManifestPWA", prepararManifestPWA],
-            ["registrarServiceWorker", registrarServiceWorker],
-            ["prepararInstalacionPWA", prepararInstalacionPWA],
-        ];
-        pasos.forEach(([nombre, fn]) => {
-            try { fn(); } catch (e) { console.error(`bootstrap(): falló ${nombre}()`, e); }
-        });
-
-        init();
-    } catch (e) {
-        console.error("Error al inicializar:", e);
-        mostrarErrorSlug("No pudimos cargar esta herramienta. Probá de nuevo en unos minutos.");
-    }
-}
-
-function aplicarTemaTaller() {
-    const root = document.documentElement;
-    Object.entries(TALLER_CONFIG.theme || {}).forEach(([k, v]) => root.style.setProperty(`--${k}`, v));
-}
-
-// Ajusta todos los textos/labels según el rubro elegido y muestra el
-// logo (o el ícono del rubro como respaldo si no hay logo cargado).
-function aplicarTextosRubro() {
-    const p = presetRubro();
-    document.title = TALLER_CONFIG.nombreNegocio + " — " + p.tituloApp;
-
-    conElRep("loginTitulo", el => el.innerText = `${p.icono} ${p.tituloApp}`);
-    const activos = rubrosActivos();
-    conElRep("tallerSubtitulo", el => el.innerText = activos.length > 1 ? `${p.tituloApp} · ${activos.length} rubros` : p.tituloApp);
-    conElRep("tallerNombre", el => el.innerText = TALLER_CONFIG.nombreNegocio);
-    conElRep("rubrosActivosTexto", el => el.innerText = activos.map(r => `${r.icono} ${r.nombre || r.tituloApp}`).join(" · "));
-
-    conElRep("lblCampoObjeto", el => el.innerText = p.campoObjeto);
-    conElRep("rEquipo", el => el.placeholder = p.placeholderObjeto);
-    conElRep("lblCampoTrabajo", el => el.innerText = p.campoTrabajo);
-    conElRep("btnNuevo", el => el.innerText = "+ " + p.accionNueva.toUpperCase());
-    conElRep("buscador", el => el.placeholder = `Buscar por cliente o ${p.campoObjeto.toLowerCase()}...`);
-
-    const tieneLogo = !!TALLER_CONFIG.logoUrl;
-    conElRep("tallerLogoImg", el => { el.style.display = tieneLogo ? "block" : "none"; if (tieneLogo) el.src = TALLER_CONFIG.logoUrl; });
-    conElRep("tallerIconoRubro", el => { el.style.display = tieneLogo ? "none" : "flex"; el.innerText = p.icono; });
-}
-
-// PWA / instalación multiplataforma.
-// El manifest es estático y del mismo origen; el slug se conserva en localStorage.
-function prepararManifestPWA() {
-    const link = document.querySelector('link[rel="manifest"]');
-    if (!link) return;
-    link.href = new URL("manifest-taller.json", location.href).href;
-}
-
-function registrarServiceWorker() {
-    if (!("serviceWorker" in navigator)) return;
-    navigator.serviceWorker.register("service-worker.js", { scope: "./" })
-        .then(reg => { if (reg.waiting) reg.waiting.postMessage({ type: "SKIP_WAITING" }); })
-        .catch(e => console.warn("Service worker no registrado:", e));
-}
-
-function actualizarBotonInstalacion() {
-    const btn = document.getElementById("btnInstalarApp");
-    if (!btn) return;
-    const standalone = !!(window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone === true;
-    btn.style.display = standalone ? "none" : "inline-flex";
-}
+let deferredInstallPrompt = window.__tuTallerInstallPrompt || null;
 
 function prepararInstalacionPWA() {
-    if (!pwaListenersPreparados) {
-        pwaListenersPreparados = true;
-        window.addEventListener("beforeinstallprompt", event => {
-            event.preventDefault();
-            deferredInstallPrompt = event;
-            actualizarBotonInstalacion();
-        });
-        window.addEventListener("appinstalled", () => {
-            deferredInstallPrompt = null;
-            const btn = document.getElementById("btnInstalarApp");
-            if (btn) btn.style.display = "none";
-        });
-    }
-    actualizarBotonInstalacion();
-}
+    const btn = document.getElementById("btnInstalarApp");
+    if (!btn) return;
+    const standalone = (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone === true;
+    if (standalone) { btn.style.display = "none"; return; }
 
-function detectarNavegadorTaller() {
-    const ua = navigator.userAgent || "";
-    if (/iPhone|iPad|iPod/i.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)) return "ios";
-    if (/Firefox\//i.test(ua)) return "firefox";
-    if (/Edg\//i.test(ua)) return "edge";
-    if (/OPR\//i.test(ua) || /Opera/i.test(ua)) return "opera";
-    if (/Chrome\//i.test(ua)) return "chrome";
-    if (/Safari\//i.test(ua)) return "safari";
-    return "otro";
+    const mostrar = () => { btn.style.display = "inline-flex"; };
+    if (deferredInstallPrompt) mostrar();
+
+    window.addEventListener("tu-taller-install-ready", () => {
+        deferredInstallPrompt = window.__tuTallerInstallPrompt || deferredInstallPrompt;
+        if (deferredInstallPrompt) mostrar();
+    });
+
+    window.addEventListener("beforeinstallprompt", event => {
+        event.preventDefault();
+        deferredInstallPrompt = event;
+        window.__tuTallerInstallPrompt = event;
+        mostrar();
+    });
+
+    window.addEventListener("appinstalled", () => {
+        deferredInstallPrompt = null;
+        window.__tuTallerInstallPrompt = null;
+        btn.style.display = "none";
+    });
 }
 
 async function instalarApp() {
-    try { localStorage.setItem("tu_taller_pwa_start", location.pathname + location.search); } catch (_) {}
+    try { localStorage.setItem("tu_taller_ultimo_slug", new URLSearchParams(location.search).get("slug") || localStorage.getItem("tu_taller_ultimo_slug") || ""); } catch (_) {}
+
     if (deferredInstallPrompt) {
         try {
-            deferredInstallPrompt.prompt();
-            await deferredInstallPrompt.userChoice;
-        } catch (_) {}
-        deferredInstallPrompt = null;
+            const promptEvent = deferredInstallPrompt;
+            deferredInstallPrompt = null;
+            window.__tuTallerInstallPrompt = null;
+            await promptEvent.prompt();
+            const btn = document.getElementById("btnInstalarApp");
+            if (btn) btn.style.display = "none";
+        } catch (e) { console.warn("No se pudo abrir el instalador PWA:", e); }
         return;
     }
-    const navegador = detectarNavegadorTaller();
-    if (navegador === "ios") {
-        alert("En iPhone/iPad: tocá Compartir (□↑) en Safari y elegí «Agregar a pantalla de inicio».");
-    } else if (navegador === "safari") {
-        alert("En Safari para Mac: usá Archivo > Agregar al Dock para instalar Control de Trabajos como aplicación web.");
-    } else if (navegador === "firefox") {
-        alert("Firefox no permite instalar esta PWA directamente desde un botón de la página. Para instalarla como aplicación, abrila con Chrome, Edge u Opera y elegí «Instalar aplicación».");
-    } else {
-        alert("Tu navegador todavía no habilitó la instalación automática. Abrí el menú del navegador y elegí «Instalar aplicación» o «Agregar a pantalla de inicio». Si no aparece, recargá la página una vez y volvé a intentarlo.");
+
+    const ua = navigator.userAgent || "";
+    if (/iphone|ipad|ipod/i.test(ua)) {
+        alert("En iPhone/iPad: tocá Compartir (□↑) y elegí «Agregar a pantalla de inicio».");
+        return;
     }
+    if (/firefox/i.test(ua)) {
+        alert("Firefox no permite abrir el instalador PWA desde este botón. En PC usá Chrome, Edge u Opera; en Android también podés usar Chrome/Edge/Opera.");
+        return;
+    }
+    alert("El navegador todavía no considera instalable esta página. Verificá que estés usando HTTPS y que no esté ya instalada. Si el icono de instalación no aparece en el menú del navegador, recargá una vez.");
 }
 
 function init() {
@@ -781,11 +618,5 @@ function exportarReparacionesCSV() {
         if (e.target && e.target.id === id) actualizarGananciaPreview();
     });
 });
-
-// Preparar PWA inmediatamente para no perder beforeinstallprompt mientras
-// Firebase termina de resolver el negocio.
-try { prepararManifestPWA(); } catch (_) {}
-try { registrarServiceWorker(); } catch (_) {}
-try { prepararInstalacionPWA(); } catch (_) {}
 
 if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", bootstrap); else bootstrap();
