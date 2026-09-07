@@ -10,14 +10,15 @@
     <meta name="theme-color" content="#3b82f6">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="apple-touch-icon" href="log.png">
 
-    <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js" defer></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js" defer></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js" defer></script>
 
+    <link rel="preconnect" href="https://www.gstatic.com">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -118,6 +119,10 @@
                     <summary>Ficha del producto</summary>
                     <div id="detailFicha" class="detail-content"></div>
                 </details>
+                <details id="detailLinksSection" style="display:none;">
+                    <summary>Links de descarga</summary>
+                    <div id="detailLinks" class="detail-content download-links-detail"></div>
+                </details>
             </div>
         </div>
     </div>
@@ -160,9 +165,26 @@
                     <a href="https://postimg.cc/" target="_blank" rel="noopener" class="image-host-btn">📤 SUBIR IMAGEN</a>
                     <p class="admin-help">En Postimages copiá el <b>Direct link</b>. No copies el enlace de la página o de la galería.</p>
                 </div>
-                <div class="form-group"><label>Descripción</label><textarea id="fDesc" rows="5"></textarea></div>
-                <div class="form-group"><label>Características</label><textarea id="fCaract" rows="5"></textarea></div>
-                <div class="form-group"><label>Ficha técnica</label><textarea id="fFicha" rows="5"></textarea></div>
+                <div class="form-group download-links-group">
+                    <label>Links de descarga</label>
+                    <p class="admin-help">Agregá cada enlace en su propia fila: nombre + URL.</p>
+                    <div id="linksDescargaProducto" class="download-links-list"></div>
+                    <button type="button" class="btn-add download-link-add-btn" onclick="agregarLinkProducto()">+ Agregar link</button>
+                </div>
+                <div class="admin-collapsible-grid">
+                    <details class="admin-section-details>
+                        <summary>Descripción</summary>
+                        <div class="admin-section-body"><textarea id="fDesc" rows="5" placeholder="Descripción del producto..."></textarea></div>
+                    </details>
+                    <details class="admin-section-details">
+                        <summary>Características</summary>
+                        <div class="admin-section-body"><textarea id="fCaract" rows="5" placeholder="Características principales..."></textarea></div>
+                    </details>
+                    <details class="admin-section-details">
+                        <summary>Ficha técnica</summary>
+                        <div class="admin-section-body"><textarea id="fFicha" rows="5" placeholder="Especificaciones técnicas..."></textarea></div>
+                    </details>
+                </div>
                 <button class="btn-add" style="background:var(--success)" onclick="saveP()">GUARDAR PRODUCTO</button>
                 <button class="btn-add" style="background:none; color:white; margin-top:10px; border:1px solid rgba(255,255,255,0.1);" onclick="limpiarP()">Limpiar</button>
             </div>
