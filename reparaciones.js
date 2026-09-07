@@ -55,59 +55,231 @@ let TALLER_CONFIG = { rubro: "general", rubrosSeleccionados: ["general"], rubros
 let presetTemaTallerSeleccionado = null;
 let deferredInstallPrompt = window.__tuTallerInstallPrompt || null;
 
+function todosLosRubros() {
+    return [...RUBRO_LISTA, ...(TALLER_CONFIG.rubrosPersonalizados || []).map(r => ({ ...r, personalizado: true }))];
+}
+
+function presetRubro() {
+    const id = TALLER_CONFIG.rubro || (TALLER_CONFIG.rubrosSeleccionados || [])[0] || "general";
+    return RUBRO_PRESETS[id] || (TALLER_CONFIG.rubrosPersonalizados || []).find(r => r.id === id) || RUBRO_PRESETS.general;
+}
+
+function rubrosActivos() {
+    const ids = TALLER_CONFIG.rubrosSeleccionados && TALLER_CONFIG.rubrosSeleccionados.length
+        ? TALLER_CONFIG.rubrosSeleccionados
+        : [TALLER_CONFIG.rubro || 'general'];
+    return ids.map(id => RUBRO_PRESETS[id] || (TALLER_CONFIG.rubrosPersonalizados || []).find(r => r.id === id)).filter(Boolean);
+}
+
+// Igual que el "conEl" de la tienda: aplica una función a un elemento SOLO
+// si existe, para que un elemento faltante no rompa el resto en cadena.
+function conElRep(id, fn) {
+    const el = document.getElementById(id);
+    if (el) fn(el);
+}
+
+function leerSlug() {
+    const urlSlug = new URLSearchParams(location.search).get("slug");
+    if (urlSlug) {
+        try { localStorage.setItem("tu_taller_ultimo_slug", urlSlug); } catch (_) {}
+        return urlSlug;
+    }
+    try { return localStorage.getItem("tu_taller_ultimo_slug"); } catch (_) { return null; }
+}
+
+function mostrarErrorSlug(mensaje) {
+    const el = document.getElementById("slugError");
+    if (el) {
+        el.querySelector("p").innerText = mensaje;
+        el.style.display = "flex";
+    }
+}
+
+function obtenerFirebaseApp(nombre, config) {
+    try { return firebase.app(nombre); }
+    catch (_) { return firebase.initializeApp(config, nombre); }
+}
+
+function crearFirestore(app) {
+    const firestore = firebase.firestore(app);
+    const ua = navigator.userAgent || "";
+    const esOpera = /OPR\//i.test(ua) || /Opera/i.test(ua);
+    if (esOpera) {
+        try { firestore.settings({ experimentalForceLongPolling: true }); }
+        catch (e) { console.warn("No se pudo activar Firestore long-polling:", e); }
+    }
+    return firestore;
+}
+
+async function esperarFirebase(maxIntentos = 20) {
+    for (let i = 0; i < maxIntentos; i++) {
+        if (typeof firebase !== "undefined" && typeof firebase.initializeApp === "function" && typeof MASTER_FIREBASE_CONFIG !== "undefined") return true;
+        await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    return false;
+}
+
+async function bootstrap() {
+    const slug = leerSlug();
+    if (!slug) return mostrarErrorSlug("Falta indicar el negocio en el link (falta ?slug=... en la URL).");
+    if (!(await esperarFirebase())) return mostrarErrorSlug("No pudimos iniciar Firebase. Recargá la página y probá nuevamente.");
+
+    try {
+        masterApp = obtenerFirebaseApp("master", MASTER_FIREBASE_CONFIG);
+        const masterDb = crearFirestore(masterApp);
+        const clienteDoc = await masterDb.collection("clientes").doc(slug).get();
+
+        if (!clienteDoc.exists || clienteDoc.data().activo === false) {
+            return mostrarErrorSlug("No encontramos este negocio. Verificá el link.");
+        }
+        const { firebaseConfig, storeName } = clienteDoc.data();
+        if (!firebaseConfig || !firebaseConfig.projectId) {
+            return mostrarErrorSlug("Este negocio todavía no está configurado del todo.");
+        }
+
+        clienteApp = obtenerFirebaseApp("cliente", firebaseConfig);
+        db = crearFirestore(clienteApp);
+        auth = firebase.auth(clienteApp);
+
+        // Configuración propia de este negocio (rubro, nombre, tema, logo).
+        // Lectura pública a propósito (igual que config/tienda en la
+        // tienda): así la pantalla de login ya se ve con la marca correcta
+        // antes de que el dueño inicie sesión.
+        let datosTaller = {};
+        try {
+            const cfgDoc = await db.collection("config").doc("taller").get();
+            if (cfgDoc.exists) datosTaller = cfgDoc.data();
+        } catch (e) {
+            console.warn("No se pudo leer config/taller, se usan valores por defecto:", e);
+        }
+
+        const rubroLegacy = datosTaller.rubro || "general";
+        const seleccionados = Array.isArray(datosTaller.rubrosSeleccionados) && datosTaller.rubrosSeleccionados.length
+            ? datosTaller.rubrosSeleccionados
+            : [rubroLegacy];
+        TALLER_CONFIG = {
+            rubro: rubroLegacy,
+            rubrosSeleccionados: seleccionados,
+            rubrosPersonalizados: Array.isArray(datosTaller.rubrosPersonalizados) ? datosTaller.rubrosPersonalizados : [],
+            nombreNegocio: datosTaller.nombreNegocio || storeName || "Mi negocio",
+            logoUrl: datosTaller.logoUrl || "",
+            theme: { ...TEMA_DEFAULT, ...(datosTaller.theme || {}) }
+        };
+
+        const pasos = [
+            ["aplicarTemaTaller", aplicarTemaTaller],
+            ["aplicarTextosRubro", aplicarTextosRubro],
+            ["prepararManifestPWA", prepararManifestPWA],
+            ["registrarServiceWorker", registrarServiceWorker],
+            ["prepararInstalacionPWA", prepararInstalacionPWA],
+        ];
+        pasos.forEach(([nombre, fn]) => {
+            try { fn(); } catch (e) { console.error(`bootstrap(): falló ${nombre}()`, e); }
+        });
+
+        init();
+    } catch (e) {
+        console.error("Error al inicializar:", e);
+        mostrarErrorSlug("No pudimos cargar esta herramienta. Probá de nuevo en unos minutos.");
+    }
+}
+
+function aplicarTemaTaller() {
+    const root = document.documentElement;
+    Object.entries(TALLER_CONFIG.theme || {}).forEach(([k, v]) => root.style.setProperty(`--${k}`, v));
+}
+
+// Ajusta todos los textos/labels según el rubro elegido y muestra el
+// logo (o el ícono del rubro como respaldo si no hay logo cargado).
+function aplicarTextosRubro() {
+    const p = presetRubro();
+    document.title = TALLER_CONFIG.nombreNegocio + " — " + p.tituloApp;
+
+    conElRep("loginTitulo", el => el.innerText = `${p.icono} ${p.tituloApp}`);
+    const activos = rubrosActivos();
+    conElRep("tallerSubtitulo", el => el.innerText = activos.length > 1 ? `${p.tituloApp} · ${activos.length} rubros` : p.tituloApp);
+    conElRep("tallerNombre", el => el.innerText = TALLER_CONFIG.nombreNegocio);
+    conElRep("rubrosActivosTexto", el => el.innerText = activos.map(r => `${r.icono} ${r.nombre || r.tituloApp}`).join(" · "));
+
+    conElRep("lblCampoObjeto", el => el.innerText = p.campoObjeto);
+    conElRep("rEquipo", el => el.placeholder = p.placeholderObjeto);
+    conElRep("lblCampoTrabajo", el => el.innerText = p.campoTrabajo);
+    conElRep("btnNuevo", el => el.innerText = "+ " + p.accionNueva.toUpperCase());
+    conElRep("buscador", el => el.placeholder = `Buscar por cliente o ${p.campoObjeto.toLowerCase()}...`);
+
+    const tieneLogo = !!TALLER_CONFIG.logoUrl;
+    conElRep("tallerLogoImg", el => { el.style.display = tieneLogo ? "block" : "none"; if (tieneLogo) el.src = TALLER_CONFIG.logoUrl; });
+    conElRep("tallerIconoRubro", el => { el.style.display = tieneLogo ? "none" : "flex"; el.innerText = p.icono; });
+}
+
+// El manifest del taller es un archivo estático del mismo origen.
+// No se genera con Blob porque Chromium/Safari pueden no reconocerlo como
+// manifest instalable. El slug se conserva en localStorage para que la app
+// instalada vuelva al negocio que se estaba usando.
+function prepararManifestPWA() {
+    const link = document.querySelector('link[rel="manifest"]');
+    if (!link) return;
+    link.href = new URL("manifest-taller.json", location.href).href;
+}
+
+function registrarServiceWorker() {
+    if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("service-worker.js", { scope: "./" })
+            .then(reg => { if (reg.waiting) reg.waiting.postMessage({ type: "SKIP_WAITING" }); })
+            .catch(e => console.warn("Service worker no registrado:", e));
+    }
+}
+
+function esTallerInstalado() {
+    return !!((window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone === true);
+}
+
 function prepararInstalacionPWA() {
     const btn = document.getElementById("btnInstalarApp");
     if (!btn) return;
-    const standalone = (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone === true;
-    if (standalone) { btn.style.display = "none"; return; }
+    if (esTallerInstalado()) { btn.style.display = "none"; return; }
 
-    const mostrar = () => { btn.style.display = "inline-flex"; };
-    if (deferredInstallPrompt) mostrar();
+    deferredInstallPrompt = deferredInstallPrompt || window.__tuTallerInstallPrompt || null;
+    btn.style.display = "inline-flex";
 
     window.addEventListener("tu-taller-install-ready", () => {
         deferredInstallPrompt = window.__tuTallerInstallPrompt || deferredInstallPrompt;
-        if (deferredInstallPrompt) mostrar();
+        if (!esTallerInstalado()) btn.style.display = "inline-flex";
     });
-
-    window.addEventListener("beforeinstallprompt", event => {
-        event.preventDefault();
-        deferredInstallPrompt = event;
-        window.__tuTallerInstallPrompt = event;
-        mostrar();
-    });
-
     window.addEventListener("appinstalled", () => {
         deferredInstallPrompt = null;
         window.__tuTallerInstallPrompt = null;
         btn.style.display = "none";
-    });
+    }, { once: true });
 }
 
 async function instalarApp() {
-    try { localStorage.setItem("tu_taller_ultimo_slug", new URLSearchParams(location.search).get("slug") || localStorage.getItem("tu_taller_ultimo_slug") || ""); } catch (_) {}
+    try {
+        const slugActual = new URLSearchParams(location.search).get("slug");
+        localStorage.setItem("tu_taller_ultimo_slug", slugActual || localStorage.getItem("tu_taller_ultimo_slug") || "");
+    } catch (_) {}
 
+    deferredInstallPrompt = deferredInstallPrompt || window.__tuTallerInstallPrompt || null;
     if (deferredInstallPrompt) {
         try {
-            const promptEvent = deferredInstallPrompt;
-            deferredInstallPrompt = null;
-            window.__tuTallerInstallPrompt = null;
-            await promptEvent.prompt();
-            const btn = document.getElementById("btnInstalarApp");
-            if (btn) btn.style.display = "none";
-        } catch (e) { console.warn("No se pudo abrir el instalador PWA:", e); }
+            deferredInstallPrompt.prompt();
+            await deferredInstallPrompt.userChoice;
+        } catch (e) {
+            console.warn("No se pudo abrir el instalador PWA:", e);
+        }
+        deferredInstallPrompt = null;
+        window.__tuTallerInstallPrompt = null;
         return;
     }
 
     const ua = navigator.userAgent || "";
     if (/iphone|ipad|ipod/i.test(ua)) {
-        alert("En iPhone/iPad: tocá Compartir (□↑) y elegí «Agregar a pantalla de inicio».");
-        return;
+        alert("En iPhone/iPad, abrí esta herramienta en Safari → Compartir (□↑) → «Agregar a pantalla de inicio».");
+    } else if (/firefox\//i.test(ua)) {
+        alert("Firefox no ofrece el instalador PWA mediante este botón. Para instalarla como aplicación, usá Chrome, Edge u Opera.");
+    } else {
+        alert("El navegador todavía no habilitó el instalador automático para esta página. Abrí el menú y buscá «Instalar aplicación» o «Agregar a pantalla de inicio». Si no aparece, recargá la página una vez.");
     }
-    if (/firefox/i.test(ua)) {
-        alert("Firefox no permite abrir el instalador PWA desde este botón. En PC usá Chrome, Edge u Opera; en Android también podés usar Chrome/Edge/Opera.");
-        return;
-    }
-    alert("El navegador todavía no considera instalable esta página. Verificá que estés usando HTTPS y que no esté ya instalada. Si el icono de instalación no aparece en el menú del navegador, recargá una vez.");
 }
 
 function init() {
