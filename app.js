@@ -101,9 +101,15 @@ function obtenerFirebaseApp(nombre, config) {
 function crearFirestore(app) {
     const firestore = firebase.firestore(app);
     try {
-        firestore.settings({ experimentalForceLongPolling: true });
+        // Opera/Opera GX puede bloquear el WebChannel de Firestore. En esos
+        // navegadores usamos long-polling; en Chrome/Edge/Safari dejamos el
+        // transporte normal, que inicia más rápido.
+        const ua = navigator.userAgent || "";
+        if (/OPR\//i.test(ua) || /Opera/i.test(ua)) {
+            firestore.settings({ experimentalForceLongPolling: true });
+        }
     } catch (e) {
-        console.warn("No se pudo activar Firestore long-polling:", e);
+        console.warn("No se pudo configurar el transporte de Firestore:", e);
     }
     return firestore;
 }
@@ -534,6 +540,7 @@ function registrarServiceWorker() {
 }
 
 let deferredInstallPrompt = null;
+let pwaListenersPreparados = false;
 
 function prepararInstalacionPWA() {
     const btn = document.getElementById("btnInstalarApp");
@@ -545,6 +552,8 @@ function prepararInstalacionPWA() {
     }
     // En iOS no existe beforeinstallprompt, por eso el acceso se muestra igual.
     btn.style.display = "inline-flex";
+    if (pwaListenersPreparados) return;
+    pwaListenersPreparados = true;
 
     window.addEventListener("beforeinstallprompt", event => {
         event.preventDefault();
@@ -2251,6 +2260,13 @@ document.addEventListener("keydown", (e) => {
         if (modal && modal.style.display === "flex") closeProductDetail();
     }
 });
+
+// Preparar PWA lo antes posible. El navegador puede emitir
+// beforeinstallprompt antes de que termine Firebase; si esperamos al bootstrap
+// podemos perder el evento y el botón nunca ofrecer la instalación.
+try { aplicarManifestPWA(); } catch (_) {}
+try { registrarServiceWorker(); } catch (_) {}
+try { prepararInstalacionPWA(); } catch (_) {}
 
 if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", bootstrap); else bootstrap();
 
