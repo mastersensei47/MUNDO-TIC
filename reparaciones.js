@@ -187,14 +187,14 @@ function aplicarTextosRubro() {
     conElRep("tallerIconoRubro", el => { el.style.display = tieneLogo ? "none" : "flex"; el.innerText = p.icono; });
 }
 
-// Mismo patrón que la tienda: un manifest.json por negocio, generado al
-// vuelo (no puede ser un archivo estático distinto por cliente).
+// El manifest ya queda enlazado de forma estática en el <head> de
+// reparaciones.html (<link rel="manifest" href="manifest-taller.json">) y
+// NO se debe tocar por JS después de la carga inicial: reescribir el href
+// (aunque sea al mismo archivo) confunde la detección de instalabilidad de
+// Chrome/Edge/Opera y hace que el instalador automático nunca se dispare.
+// Por eso esta función ya no modifica el <link>.
 function prepararManifestPWA() {
-    const link = document.querySelector('link[rel="manifest"]');
-    if (!link) return;
-    // Manifest estático: evita que Chromium/Safari pierdan la detección PWA.
-    // El slug del negocio se conserva en localStorage para la apertura instalada.
-    link.href = new URL("manifest-taller.json", location.href).href;
+    // No-op intencional — ver comentario arriba.
 }
 
 function registrarServiceWorker() {
