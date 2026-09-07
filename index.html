@@ -26,18 +26,60 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 
-    <!-- PWA: capturar la oportunidad de instalación antes de que Firebase/JS termine de cargar. -->
+    <!-- PWA: instalación como app. Autocontenido a propósito — no depende de
+         app.js ni de que Firebase termine de cargar, y nunca toca el
+         <link rel="manifest"> de arriba (tocarlo por JS le rompe a Chrome/
+         Edge/Opera la detección de instalabilidad). -->
     <script>
     (() => {
-        window.__tuTiendaInstallPrompt = null;
+        let deferredPrompt = null;
+        const boton = () => document.getElementById("btnInstalarApp");
+
+        function appYaInstalada() {
+            return (window.matchMedia && matchMedia("(display-mode: standalone)").matches)
+                || window.navigator.standalone === true;
+        }
+
+        function actualizarBoton() {
+            const b = boton();
+            if (!b) return;
+            b.style.display = appYaInstalada() ? "none" : "inline-flex";
+        }
+
         window.addEventListener("beforeinstallprompt", (event) => {
             event.preventDefault();
-            window.__tuTiendaInstallPrompt = event;
-            window.dispatchEvent(new Event("tu-tienda-install-ready"));
+            deferredPrompt = event;
+            actualizarBoton();
         });
+
         window.addEventListener("appinstalled", () => {
-            window.__tuTiendaInstallPrompt = null;
+            deferredPrompt = null;
+            actualizarBoton();
         });
+
+        window.instalarApp = async function () {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                try { await deferredPrompt.userChoice; } catch (_) {}
+                deferredPrompt = null;
+                actualizarBoton();
+                return;
+            }
+            const ua = navigator.userAgent || "";
+            const esIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+            if (esIOS) {
+                alert("En iPhone/iPad: abrí esta tienda en Safari → Compartir (□↑) → «Agregar a pantalla de inicio».");
+            } else {
+                alert("Tu navegador todavía no ofreció el instalador automático para esta página. Abrí su menú (⋮) y buscá «Instalar aplicación» o «Agregar a pantalla de inicio». Si no aparece esa opción, probá abriendo el sitio con Google Chrome o Microsoft Edge actualizados.");
+            }
+        };
+
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", actualizarBoton);
+        } else {
+            actualizarBoton();
+        }
+
         if ("serviceWorker" in navigator) {
             navigator.serviceWorker.register("./service-worker.js", { scope: "./" })
                 .catch(err => console.warn("Service Worker no registrado:", err));
