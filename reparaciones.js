@@ -201,51 +201,76 @@ function aplicarTextosRubro() {
     conElRep("tallerIconoRubro", el => { el.style.display = tieneLogo ? "none" : "flex"; el.innerText = p.icono; });
 }
 
-// Mismo patrón que la tienda: un manifest.json por negocio, generado al
-// vuelo (no puede ser un archivo estático distinto por cliente).
+// PWA / instalación multiplataforma.
+// El manifest es estático y del mismo origen; el slug se conserva en localStorage.
 function prepararManifestPWA() {
     const link = document.querySelector('link[rel="manifest"]');
     if (!link) return;
-    // GitHub Pages no puede generar un manifest distinto por cada slug.
-    // Usamos el manifest estático del taller, del mismo origen. El slug se
-    // conserva en localStorage y se recupera al abrir la app instalada.
     link.href = new URL("manifest-taller.json", location.href).href;
 }
 
-
 function registrarServiceWorker() {
-    if ("serviceWorker" in navigator) {
-        navigator.serviceWorker.register("service-worker.js", { scope: "./" })
-            .then(reg => { if (reg.waiting) reg.waiting.postMessage({ type: "SKIP_WAITING" }); })
-            .catch(e => console.warn("Service worker no registrado:", e));
-    }
+    if (!("serviceWorker" in navigator)) return;
+    navigator.serviceWorker.register("service-worker.js", { scope: "./" })
+        .then(reg => { if (reg.waiting) reg.waiting.postMessage({ type: "SKIP_WAITING" }); })
+        .catch(e => console.warn("Service worker no registrado:", e));
+}
+
+function actualizarBotonInstalacion() {
+    const btn = document.getElementById("btnInstalarApp");
+    if (!btn) return;
+    const standalone = !!(window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone === true;
+    btn.style.display = standalone ? "none" : "inline-flex";
 }
 
 function prepararInstalacionPWA() {
-    const btn = document.getElementById("btnInstalarApp");
-    if (!btn) return;
-    const standalone = (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone === true;
-    if (standalone) { btn.style.display = "none"; return; }
-    btn.style.display = "inline-flex";
-    if (pwaListenersPreparados) return;
-    pwaListenersPreparados = true;
-    window.addEventListener("beforeinstallprompt", event => {
-        event.preventDefault(); deferredInstallPrompt = event; btn.style.display = "inline-flex";
-    });
-    window.addEventListener("appinstalled", () => { deferredInstallPrompt = null; btn.style.display = "none"; });
+    if (!pwaListenersPreparados) {
+        pwaListenersPreparados = true;
+        window.addEventListener("beforeinstallprompt", event => {
+            event.preventDefault();
+            deferredInstallPrompt = event;
+            actualizarBotonInstalacion();
+        });
+        window.addEventListener("appinstalled", () => {
+            deferredInstallPrompt = null;
+            const btn = document.getElementById("btnInstalarApp");
+            if (btn) btn.style.display = "none";
+        });
+    }
+    actualizarBotonInstalacion();
+}
+
+function detectarNavegadorTaller() {
+    const ua = navigator.userAgent || "";
+    if (/iPhone|iPad|iPod/i.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)) return "ios";
+    if (/Firefox\//i.test(ua)) return "firefox";
+    if (/Edg\//i.test(ua)) return "edge";
+    if (/OPR\//i.test(ua) || /Opera/i.test(ua)) return "opera";
+    if (/Chrome\//i.test(ua)) return "chrome";
+    if (/Safari\//i.test(ua)) return "safari";
+    return "otro";
 }
 
 async function instalarApp() {
-    try { localStorage.setItem("tu_taller_ultimo_slug", new URLSearchParams(location.search).get("slug") || localStorage.getItem("tu_taller_ultimo_slug") || ""); } catch (_) {}
+    try { localStorage.setItem("tu_taller_pwa_start", location.pathname + location.search); } catch (_) {}
     if (deferredInstallPrompt) {
-        deferredInstallPrompt.prompt();
-        try { await deferredInstallPrompt.userChoice; } catch (_) {}
+        try {
+            deferredInstallPrompt.prompt();
+            await deferredInstallPrompt.userChoice;
+        } catch (_) {}
         deferredInstallPrompt = null;
-        const btn = document.getElementById("btnInstalarApp"); if (btn) btn.style.display = "none";
         return;
     }
-    if (/iphone|ipad|ipod/i.test(navigator.userAgent)) return alert("En iPhone/iPad: tocá Compartir (□↑) en Safari y elegí 'Agregar a pantalla de inicio'.");
-    alert("Abrí el menú del navegador y buscá 'Instalar aplicación' o 'Agregar a pantalla principal'.");
+    const navegador = detectarNavegadorTaller();
+    if (navegador === "ios") {
+        alert("En iPhone/iPad: tocá Compartir (□↑) en Safari y elegí «Agregar a pantalla de inicio».");
+    } else if (navegador === "safari") {
+        alert("En Safari para Mac: usá Archivo > Agregar al Dock para instalar Control de Trabajos como aplicación web.");
+    } else if (navegador === "firefox") {
+        alert("Firefox no permite instalar esta PWA directamente desde un botón de la página. Para instalarla como aplicación, abrila con Chrome, Edge u Opera y elegí «Instalar aplicación».");
+    } else {
+        alert("Tu navegador todavía no habilitó la instalación automática. Abrí el menú del navegador y elegí «Instalar aplicación» o «Agregar a pantalla de inicio». Si no aparece, recargá la página una vez y volvé a intentarlo.");
+    }
 }
 
 function init() {
