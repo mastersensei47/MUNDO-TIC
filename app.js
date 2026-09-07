@@ -520,68 +520,95 @@ function aplicarLayout() {
 }
 
 // ==================== PWA / INSTALACIÓN ====================
+// Instalación multiplataforma:
+// - Chromium (Chrome/Edge/Opera y derivados): usa beforeinstallprompt.
+// - Safari/iOS: no expone beforeinstallprompt; se muestran instrucciones nativas.
+// - Firefox: no ofrece instalación PWA desde JavaScript; se informa claramente.
+// El listener se registra aunque el botón todavía no exista para no perder el evento.
+let deferredInstallPrompt = null;
+let pwaListenersPreparados = false;
+
 function aplicarManifestPWA() {
     const link = document.querySelector('link[rel="manifest"]');
-    if (!link || !STORE_CONFIG) return;
-
-    // El manifest estático sigue siendo el respaldo compatible con GitHub Pages.
-    // Para no romper la instalación de la tienda actual, no lo reemplazamos por
-    // un Blob URL: varios navegadores de escritorio no vuelven a evaluar ese
-    // manifest después de cargar la página.
+    if (!link) return;
     link.href = new URL("manifest-tienda.json", location.href).href;
 }
 
 function registrarServiceWorker() {
-    if ("serviceWorker" in navigator) {
-        navigator.serviceWorker.register("service-worker.js", { scope: "./" })
-            .then(reg => { if (reg.waiting) reg.waiting.postMessage({ type: "SKIP_WAITING" }); })
-            .catch(e => console.warn("Service worker no registrado:", e));
-    }
+    if (!("serviceWorker" in navigator)) return;
+    navigator.serviceWorker.register("service-worker.js", { scope: "./" })
+        .then(reg => {
+            if (reg.waiting) reg.waiting.postMessage({ type: "SKIP_WAITING" });
+        })
+        .catch(e => console.warn("Service worker no registrado:", e));
 }
 
-let deferredInstallPrompt = null;
-let pwaListenersPreparados = false;
-
-function prepararInstalacionPWA() {
+function actualizarBotonInstalacion() {
     const btn = document.getElementById("btnInstalarApp");
     if (!btn) return;
-    const standalone = window.matchMedia && window.matchMedia("(display-mode: standalone)").matches;
-    if (standalone) {
+    const standalone = !!(window.matchMedia && window.matchMedia("(display-mode: standalone)").matches);
+    const iosStandalone = window.navigator.standalone === true;
+    if (standalone || iosStandalone) {
         btn.style.display = "none";
         return;
     }
-    // En iOS no existe beforeinstallprompt, por eso el acceso se muestra igual.
+    // El botón queda disponible como acceso a la instalación/ayuda.
     btn.style.display = "inline-flex";
-    if (pwaListenersPreparados) return;
-    pwaListenersPreparados = true;
+}
 
-    window.addEventListener("beforeinstallprompt", event => {
-        event.preventDefault();
-        deferredInstallPrompt = event;
-        btn.style.display = "inline-flex";
-    });
-    window.addEventListener("appinstalled", () => {
-        deferredInstallPrompt = null;
-        btn.style.display = "none";
-    });
+function prepararInstalacionPWA() {
+    if (!pwaListenersPreparados) {
+        pwaListenersPreparados = true;
+        window.addEventListener("beforeinstallprompt", event => {
+            event.preventDefault();
+            deferredInstallPrompt = event;
+            actualizarBotonInstalacion();
+        });
+        window.addEventListener("appinstalled", () => {
+            deferredInstallPrompt = null;
+            const btn = document.getElementById("btnInstalarApp");
+            if (btn) btn.style.display = "none";
+        });
+    }
+    actualizarBotonInstalacion();
+}
+
+function detectarNavegador() {
+    const ua = navigator.userAgent || "";
+    if (/iPhone|iPad|iPod/i.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)) return "ios";
+    if (/Firefox\//i.test(ua)) return "firefox";
+    if (/Edg\//i.test(ua)) return "edge";
+    if (/OPR\//i.test(ua) || /Opera/i.test(ua)) return "opera";
+    if (/Chrome\//i.test(ua)) return "chrome";
+    if (/Safari\//i.test(ua)) return "safari";
+    return "otro";
 }
 
 async function instalarApp() {
-    try { localStorage.setItem("tu_tienda_pwa_start", location.pathname + location.search); } catch (_) {}
+    try {
+        localStorage.setItem("tu_tienda_pwa_start", location.pathname + location.search);
+    } catch (_) {}
+
     if (deferredInstallPrompt) {
-        deferredInstallPrompt.prompt();
-        await deferredInstallPrompt.userChoice;
+        try {
+            deferredInstallPrompt.prompt();
+            await deferredInstallPrompt.userChoice;
+        } catch (e) {
+            console.warn("No se pudo abrir el diálogo de instalación:", e);
+        }
         deferredInstallPrompt = null;
-        const btn = document.getElementById("btnInstalarApp");
-        if (btn) btn.style.display = "none";
         return;
     }
-    const ua = navigator.userAgent || "";
-    const esIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-    if (esIOS) {
-        alert("Para agregar la tienda a tu iPhone/iPad: tocá Compartir (□↑) y elegí «Agregar a pantalla de inicio».");
+
+    const navegador = detectarNavegador();
+    if (navegador === "ios") {
+        alert("Para instalar la tienda en iPhone/iPad: tocá Compartir (□↑) en Safari y elegí «Agregar a pantalla de inicio».");
+    } else if (navegador === "safari") {
+        alert("En Safari para Mac: usá Archivo > Agregar al Dock para instalar esta tienda como aplicación web.");
+    } else if (navegador === "firefox") {
+        alert("Firefox no permite instalar esta PWA directamente desde un botón de la página. Para instalarla como aplicación, abrila con Chrome, Edge u Opera y elegí «Instalar aplicación».");
     } else {
-        alert("Para instalar la tienda: abrí el menú del navegador (⋮ o ☰) y elegí «Instalar aplicación» o «Agregar a pantalla de inicio».");
+        alert("Tu navegador todavía no habilitó la instalación automática de esta PWA. Abrí el menú del navegador y elegí «Instalar aplicación» o «Agregar a pantalla de inicio». Si esa opción tampoco aparece, recargá la página una vez y volvé a intentarlo.");
     }
 }
 
