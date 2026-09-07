@@ -100,10 +100,14 @@ function obtenerFirebaseApp(nombre, config) {
 // la instancia para hacer lecturas/listeners.
 function crearFirestore(app) {
     const firestore = firebase.firestore(app);
-    try {
-        firestore.settings({ experimentalForceLongPolling: true });
-    } catch (e) {
-        console.warn("No se pudo activar Firestore long-polling:", e);
+    // Opera/Opera GX puede bloquear el canal WebChannel de Firestore con
+    // bloqueadores integrados/extensiones. En Chrome/Edge/Safari dejamos el
+    // transporte normal para no agregar latencia innecesaria.
+    const ua = navigator.userAgent || "";
+    const esOpera = /OPR\//i.test(ua) || /Opera/i.test(ua);
+    if (esOpera) {
+        try { firestore.settings({ experimentalForceLongPolling: true }); }
+        catch (e) { console.warn("No se pudo activar Firestore long-polling:", e); }
     }
     return firestore;
 }
@@ -516,12 +520,9 @@ function aplicarLayout() {
 // ==================== PWA / INSTALACIÓN ====================
 function aplicarManifestPWA() {
     const link = document.querySelector('link[rel="manifest"]');
-    if (!link || !STORE_CONFIG) return;
-
-    // El manifest estático sigue siendo el respaldo compatible con GitHub Pages.
-    // Para no romper la instalación de la tienda actual, no lo reemplazamos por
-    // un Blob URL: varios navegadores de escritorio no vuelven a evaluar ese
-    // manifest después de cargar la página.
+    if (!link) return;
+    // Siempre usamos el manifest real servido desde GitHub Pages. No se genera
+    // ningún Blob dinámico porque los navegadores pueden ignorarlo para PWA.
     link.href = new URL("manifest-tienda.json", location.href).href;
 }
 
@@ -533,58 +534,68 @@ function registrarServiceWorker() {
     }
 }
 
-// Registrar el Service Worker cuanto antes. En Android/Chrome esto evita que
-// la primera visita llegue al criterio de instalación sin SW registrado.
-registrarServiceWorker();
+let deferredInstallPrompt = window.__tuTiendaInstallPrompt || null;
 
-let deferredInstallPrompt = null;
-
-// IMPORTANTE: estos listeners se registran al ejecutar app.js, antes de
-// inicializar Firebase. Si se esperan las lecturas de Firestore, Chromium
-// puede emitir beforeinstallprompt antes de que la aplicación llegue a
-// preparar el botón y el evento se pierde.
-window.addEventListener("beforeinstallprompt", event => {
-    event.preventDefault();
-    deferredInstallPrompt = event;
-    const btn = document.getElementById("btnInstalarApp");
-    if (btn) btn.style.display = "inline-flex";
-});
-
-window.addEventListener("appinstalled", () => {
-    deferredInstallPrompt = null;
-    const btn = document.getElementById("btnInstalarApp");
-    if (btn) btn.style.display = "none";
-});
+function esTiendaInstalada() {
+    return !!((window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone === true);
+}
 
 function prepararInstalacionPWA() {
     const btn = document.getElementById("btnInstalarApp");
     if (!btn) return;
-    const standalone = window.matchMedia && window.matchMedia("(display-mode: standalone)").matches;
-    if (standalone) {
+
+    if (esTiendaInstalada()) {
         btn.style.display = "none";
         return;
     }
-    // En iOS no existe beforeinstallprompt. El menú de Safari se encarga
-    // de la instalación; mostramos el botón solo como ayuda.
-    btn.style.display = deferredInstallPrompt ? "inline-flex" : "inline-flex";
+
+    // El evento puede haber llegado ANTES de que Firebase terminara de iniciar.
+    // Recuperamos la copia capturada en el <head>.
+    deferredInstallPrompt = deferredInstallPrompt || window.__tuTiendaInstallPrompt || null;
+    btn.style.display = "inline-flex";
+
+    const recibirPrompt = () => {
+        deferredInstallPrompt = window.__tuTiendaInstallPrompt || deferredInstallPrompt;
+        if (!esTiendaInstalada()) btn.style.display = "inline-flex";
+    };
+    window.addEventListener("tu-tienda-install-ready", recibirPrompt);
+    window.addEventListener("appinstalled", () => {
+        deferredInstallPrompt = null;
+        window.__tuTiendaInstallPrompt = null;
+        btn.style.display = "none";
+    }, { once: true });
 }
 
 async function instalarApp() {
-    try { localStorage.setItem("tu_tienda_pwa_start", location.pathname + location.search); } catch (_) {}
+    try {
+        const slugActual = new URLSearchParams(location.search).get("slug");
+        localStorage.setItem("tu_tienda_ultimo_slug", slugActual || localStorage.getItem("tu_tienda_ultimo_slug") || "");
+        localStorage.setItem("tu_tienda_pwa_start", location.pathname + location.search);
+    } catch (_) {}
+
+    deferredInstallPrompt = deferredInstallPrompt || window.__tuTiendaInstallPrompt || null;
     if (deferredInstallPrompt) {
-        deferredInstallPrompt.prompt();
-        await deferredInstallPrompt.userChoice;
+        try {
+            deferredInstallPrompt.prompt();
+            await deferredInstallPrompt.userChoice;
+        } catch (e) {
+            console.warn("No se pudo abrir el instalador PWA:", e);
+        }
         deferredInstallPrompt = null;
-        const btn = document.getElementById("btnInstalarApp");
-        if (btn) btn.style.display = "none";
+        window.__tuTiendaInstallPrompt = null;
         return;
     }
+
     const ua = navigator.userAgent || "";
     const esIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    const esFirefox = /Firefox\//i.test(ua);
+
     if (esIOS) {
-        alert("Para agregar la tienda a tu iPhone/iPad: tocá Compartir (□↑) y elegí «Agregar a pantalla de inicio».");
+        alert("En iPhone/iPad, abrí esta tienda en Safari → Compartir (□↑) → «Agregar a pantalla de inicio».");
+    } else if (esFirefox) {
+        alert("Firefox no ofrece el instalador PWA mediante este botón. Para instalar la tienda como aplicación, abrila con Chrome, Edge u Opera y usá «Instalar aplicación».");
     } else {
-        alert("Para instalar la tienda: abrí el menú del navegador (⋮ o ☰) y elegí «Instalar aplicación» o «Agregar a pantalla de inicio».");
+        alert("El navegador todavía no habilitó el instalador automático para esta página. Abrí el menú del navegador y buscá «Instalar aplicación» o «Agregar a pantalla de inicio». Si no aparece, recargá la página una vez.");
     }
 }
 
