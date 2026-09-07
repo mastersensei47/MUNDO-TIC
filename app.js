@@ -533,77 +533,59 @@ function registrarServiceWorker() {
     }
 }
 
-let deferredInstallPrompt = window.__tuTiendaInstallPrompt || null;
+// Registrar el Service Worker cuanto antes. En Android/Chrome esto evita que
+// la primera visita llegue al criterio de instalación sin SW registrado.
+registrarServiceWorker();
+
+let deferredInstallPrompt = null;
+
+// IMPORTANTE: estos listeners se registran al ejecutar app.js, antes de
+// inicializar Firebase. Si se esperan las lecturas de Firestore, Chromium
+// puede emitir beforeinstallprompt antes de que la aplicación llegue a
+// preparar el botón y el evento se pierde.
+window.addEventListener("beforeinstallprompt", event => {
+    event.preventDefault();
+    deferredInstallPrompt = event;
+    const btn = document.getElementById("btnInstalarApp");
+    if (btn) btn.style.display = "inline-flex";
+});
+
+window.addEventListener("appinstalled", () => {
+    deferredInstallPrompt = null;
+    const btn = document.getElementById("btnInstalarApp");
+    if (btn) btn.style.display = "none";
+});
 
 function prepararInstalacionPWA() {
     const btn = document.getElementById("btnInstalarApp");
     if (!btn) return;
-
-    const standalone = (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) ||
-        window.navigator.standalone === true;
+    const standalone = window.matchMedia && window.matchMedia("(display-mode: standalone)").matches;
     if (standalone) {
         btn.style.display = "none";
         return;
     }
-
-    const mostrarBoton = () => {
-        btn.style.display = "inline-flex";
-    };
-
-    if (deferredInstallPrompt) mostrarBoton();
-
-    window.addEventListener("tu-tienda-install-ready", () => {
-        deferredInstallPrompt = window.__tuTiendaInstallPrompt || deferredInstallPrompt;
-        if (deferredInstallPrompt) mostrarBoton();
-    });
-
-    // Respaldo por si el navegador dispara el evento después de que app.js cargó.
-    window.addEventListener("beforeinstallprompt", event => {
-        event.preventDefault();
-        deferredInstallPrompt = event;
-        window.__tuTiendaInstallPrompt = event;
-        mostrarBoton();
-    });
-
-    window.addEventListener("appinstalled", () => {
-        deferredInstallPrompt = null;
-        window.__tuTiendaInstallPrompt = null;
-        btn.style.display = "none";
-    });
+    // En iOS no existe beforeinstallprompt. El menú de Safari se encarga
+    // de la instalación; mostramos el botón solo como ayuda.
+    btn.style.display = deferredInstallPrompt ? "inline-flex" : "inline-flex";
 }
 
 async function instalarApp() {
     try { localStorage.setItem("tu_tienda_pwa_start", location.pathname + location.search); } catch (_) {}
-
     if (deferredInstallPrompt) {
-        try {
-            const promptEvent = deferredInstallPrompt;
-            deferredInstallPrompt = null;
-            window.__tuTiendaInstallPrompt = null;
-            const result = await promptEvent.prompt();
-            if (result && result.outcome === "accepted") {
-                const btn = document.getElementById("btnInstalarApp");
-                if (btn) btn.style.display = "none";
-            }
-        } catch (e) {
-            console.warn("No se pudo abrir el instalador PWA:", e);
-        }
+        deferredInstallPrompt.prompt();
+        await deferredInstallPrompt.userChoice;
+        deferredInstallPrompt = null;
+        const btn = document.getElementById("btnInstalarApp");
+        if (btn) btn.style.display = "none";
         return;
     }
-
     const ua = navigator.userAgent || "";
     const esIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
     if (esIOS) {
-        alert("Para agregar la tienda: tocá Compartir (□↑) y elegí «Agregar a pantalla de inicio». En Safari también podés usar «Agregar al Dock» en Mac.");
-        return;
+        alert("Para agregar la tienda a tu iPhone/iPad: tocá Compartir (□↑) y elegí «Agregar a pantalla de inicio».");
+    } else {
+        alert("Para instalar la tienda: abrí el menú del navegador (⋮ o ☰) y elegí «Instalar aplicación» o «Agregar a pantalla de inicio».");
     }
-
-    if (/firefox/i.test(ua)) {
-        alert("Firefox no permite abrir el instalador PWA desde este botón. En PC usá Chrome, Edge u Opera; en Android también podés usar Chrome/Edge/Opera.");
-        return;
-    }
-
-    alert("El navegador todavía no considera instalable esta página. Verificá que estés usando HTTPS y que no esté ya instalada. Si el icono de instalación no aparece en el menú del navegador, recargá una vez.");
 }
 
 // ==================== EDITOR DE CATEGORÍAS (panel admin → CONFIGURACIÓN) ====================
