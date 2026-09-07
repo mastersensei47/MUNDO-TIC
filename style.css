@@ -577,6 +577,39 @@ body.cart-style-modal #cartDrawer.active {
 body.precio-mayorista-oculto .precio-mayorista-field { display: none; }
 
 /* ===== Mejoras panel admin / galería / PWA ===== */
+/* En PC el panel admin usa todo el ancho disponible y sus pestañas caben
+   sin quedar cortadas. En pantallas chicas vuelven a desplazarse en horizontal. */
+#adminModal {
+    align-items: flex-start !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding: 24px !important;
+}
+#adminModal > .modal-content {
+    width: min(1100px, 100%) !important;
+    max-width: 1100px !important;
+    margin: 20px auto 40px !important;
+    min-width: 0;
+}
+#adminModal .admin-tabs {
+    width: 100%;
+    overflow-x: visible;
+    flex-wrap: nowrap;
+}
+#adminModal .admin-tabs .tab-btn {
+    flex: 1 1 0;
+    min-width: 0;
+    white-space: nowrap;
+}
+#adminModal .admin-form-box,
+#adminModal .admin-collapsible-grid,
+#adminModal .form-group,
+#adminModal input,
+#adminModal select,
+#adminModal textarea {
+    min-width: 0;
+}
+
 .download-links-list { display:flex; flex-direction:column; gap:10px; }
 .download-link-row { display:grid; grid-template-columns:minmax(150px, .75fr) minmax(0, 1.4fr) 50px; gap:10px; align-items:center; }
 .download-link-row input { min-width:0; }
@@ -597,7 +630,10 @@ body.precio-mayorista-oculto .precio-mayorista-field { display: none; }
 .admin-tabs::-webkit-scrollbar { display:none; }
 .tab-btn { flex:0 0 auto; min-width:120px; }
 @media (max-width:600px) {
-    #adminModal { padding:8px; }
+    #adminModal { padding:8px !important; }
+    #adminModal > .modal-content { margin:10px auto 20px !important; }
+    #adminModal .admin-tabs { overflow-x:auto; flex-wrap:nowrap; }
+    #adminModal .admin-tabs .tab-btn { flex:0 0 auto; min-width:112px; }
     #adminModal .modal-content { margin:10px auto !important; max-width:none !important; padding:14px !important; border-radius:18px; }
     #adminModal .flex-between { margin-bottom:14px !important; }
     #adminModal .flex-between h2 { font-size:20px; }
