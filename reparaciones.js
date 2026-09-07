@@ -53,7 +53,6 @@ const TEMA_PRESETS = {
 
 let TALLER_CONFIG = { rubro: "general", rubrosSeleccionados: ["general"], rubrosPersonalizados: [], nombreNegocio: "", logoUrl: "", theme: { ...TEMA_DEFAULT } };
 let presetTemaTallerSeleccionado = null;
-let deferredInstallPrompt = window.__tuTallerInstallPrompt || null;
 
 function todosLosRubros() {
     return [...RUBRO_LISTA, ...(TALLER_CONFIG.rubrosPersonalizados || []).map(r => ({ ...r, personalizado: true }))];
@@ -144,9 +143,6 @@ async function bootstrap() {
         const pasos = [
             ["aplicarTemaTaller", aplicarTemaTaller],
             ["aplicarTextosRubro", aplicarTextosRubro],
-            ["prepararManifestPWA", prepararManifestPWA],
-            ["registrarServiceWorker", registrarServiceWorker],
-            ["prepararInstalacionPWA", prepararInstalacionPWA],
         ];
         pasos.forEach(([nombre, fn]) => {
             try { fn(); } catch (e) { console.error(`bootstrap(): falló ${nombre}()`, e); }
@@ -187,61 +183,10 @@ function aplicarTextosRubro() {
     conElRep("tallerIconoRubro", el => { el.style.display = tieneLogo ? "none" : "flex"; el.innerText = p.icono; });
 }
 
-// El manifest ya queda enlazado de forma estática en el <head> de
-// reparaciones.html (<link rel="manifest" href="manifest-taller.json">) y
-// NO se debe tocar por JS después de la carga inicial: reescribir el href
-// (aunque sea al mismo archivo) confunde la detección de instalabilidad de
-// Chrome/Edge/Opera y hace que el instalador automático nunca se dispare.
-// Por eso esta función ya no modifica el <link>.
-function prepararManifestPWA() {
-    // No-op intencional — ver comentario arriba.
-}
-
-function registrarServiceWorker() {
-    if ("serviceWorker" in navigator) {
-        navigator.serviceWorker.register("service-worker.js", { scope: "./" })
-            .then(reg => { if (reg.waiting) reg.waiting.postMessage({ type: "SKIP_WAITING" }); })
-            .catch(e => console.warn("Service worker no registrado:", e));
-    }
-}
-
-function prepararInstalacionPWA() {
-    const btn = document.getElementById("btnInstalarApp");
-    if (!btn) return;
-    const standalone = (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone === true;
-    if (standalone) { btn.style.display = "none"; return; }
-    deferredInstallPrompt = deferredInstallPrompt || window.__tuTallerInstallPrompt || null;
-    btn.style.display = "inline-flex";
-    window.addEventListener("tu-taller-install-ready", () => {
-        deferredInstallPrompt = window.__tuTallerInstallPrompt || deferredInstallPrompt;
-        if (!standalone) btn.style.display = "inline-flex";
-    });
-    window.addEventListener("appinstalled", () => {
-        deferredInstallPrompt = null;
-        window.__tuTallerInstallPrompt = null;
-        btn.style.display = "none";
-    }, { once: true });
-}
-
-async function instalarApp() {
-    try {
-        const slugActual = new URLSearchParams(location.search).get("slug");
-        localStorage.setItem("tu_taller_ultimo_slug", slugActual || localStorage.getItem("tu_taller_ultimo_slug") || "");
-    } catch (_) {}
-    deferredInstallPrompt = deferredInstallPrompt || window.__tuTallerInstallPrompt || null;
-    if (deferredInstallPrompt) {
-        try {
-            deferredInstallPrompt.prompt();
-            await deferredInstallPrompt.userChoice;
-        } catch (_) {}
-        deferredInstallPrompt = null;
-        window.__tuTallerInstallPrompt = null;
-        return;
-    }
-    if (/iphone|ipad|ipod/i.test(navigator.userAgent)) return alert("En iPhone/iPad: abrí Safari → Compartir (□↑) → «Agregar a pantalla de inicio».");
-    if (/firefox\//i.test(navigator.userAgent)) return alert("Firefox no ofrece este instalador PWA. Usá Chrome, Edge u Opera para instalarla como aplicación.");
-    alert("El navegador todavía no habilitó el instalador automático para esta página. Abrí su menú y buscá «Instalar aplicación» o «Agregar a pantalla de inicio».");
-}
+// Todo el manejo de instalación (botón, beforeinstallprompt, Service Worker)
+// vive en un script autocontenido dentro del <head> de reparaciones.html —
+// no depende de este archivo. Ver ahí `window.instalarApp()`, que es lo que
+// dispara el botón #btnInstalarApp.
 
 function init() {
     auth.onAuthStateChanged(async (user) => {
