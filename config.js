@@ -24,3 +24,10 @@ const MASTER_FIREBASE_CONFIG = {
   appId: "1:709484748527:web:64dbea8f89b02b830a851a",
   measurementId: "G-CCNPEMM8WG"
 };
+
+// Opciones de arranque de la tienda.
+// Si el link no trae ?slug= y no hay un slug guardado en este navegador,
+// la tienda intentará resolver automáticamente la única tienda activa del
+// directorio Master. Si hay varias, se informa claramente y se pide el link.
+const DEFAULT_STORE_SLUG = "";
+const AUTO_DISCOVER_SINGLE_STORE = true;
