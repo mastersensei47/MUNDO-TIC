@@ -224,7 +224,6 @@ async function bootstrap() {
             renderCategoriasSelect();
             renderBanners();
             aplicarLayout();
-            aplicarManifestPWA();
             renderHeroSlider();
             cargarFormConfig();
         }).catch(e => console.warn("No se pudo actualizar config/tienda; se conserva la configuración inicial:", e));
@@ -305,9 +304,6 @@ function init() {
         ["renderMapa", renderMapa],
         ["renderBanners", renderBanners],
         ["aplicarLayout", aplicarLayout],
-        ["aplicarManifestPWA", aplicarManifestPWA],
-        ["registrarServiceWorker", registrarServiceWorker],
-        ["prepararInstalacionPWA", prepararInstalacionPWA],
         ["cargarFormConfig", cargarFormConfig],
     ];
     pasos.forEach(([nombre, fn]) => {
@@ -518,87 +514,10 @@ function aplicarLayout() {
 }
 
 // ==================== PWA / INSTALACIÓN ====================
-function aplicarManifestPWA() {
-    // El manifest ya queda enlazado de forma estática en el <head> de
-    // index.html (<link rel="manifest" href="manifest-tienda.json">) y NO
-    // se debe tocar por JS después de la carga inicial: reescribir el href
-    // (aunque sea al mismo archivo) confunde la detección de instalabilidad
-    // de Chrome/Edge/Opera y hace que el instalador automático nunca se
-    // dispare. Por eso esta función ya no modifica el <link>.
-}
-
-function registrarServiceWorker() {
-    if ("serviceWorker" in navigator) {
-        navigator.serviceWorker.register("service-worker.js", { scope: "./" })
-            .then(reg => { if (reg.waiting) reg.waiting.postMessage({ type: "SKIP_WAITING" }); })
-            .catch(e => console.warn("Service worker no registrado:", e));
-    }
-}
-
-let deferredInstallPrompt = window.__tuTiendaInstallPrompt || null;
-
-function esTiendaInstalada() {
-    return !!((window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone === true);
-}
-
-function prepararInstalacionPWA() {
-    const btn = document.getElementById("btnInstalarApp");
-    if (!btn) return;
-
-    if (esTiendaInstalada()) {
-        btn.style.display = "none";
-        return;
-    }
-
-    // El evento puede haber llegado ANTES de que Firebase terminara de iniciar.
-    // Recuperamos la copia capturada en el <head>.
-    deferredInstallPrompt = deferredInstallPrompt || window.__tuTiendaInstallPrompt || null;
-    btn.style.display = "inline-flex";
-
-    const recibirPrompt = () => {
-        deferredInstallPrompt = window.__tuTiendaInstallPrompt || deferredInstallPrompt;
-        if (!esTiendaInstalada()) btn.style.display = "inline-flex";
-    };
-    window.addEventListener("tu-tienda-install-ready", recibirPrompt);
-    window.addEventListener("appinstalled", () => {
-        deferredInstallPrompt = null;
-        window.__tuTiendaInstallPrompt = null;
-        btn.style.display = "none";
-    }, { once: true });
-}
-
-async function instalarApp() {
-    try {
-        const slugActual = new URLSearchParams(location.search).get("slug");
-        localStorage.setItem("tu_tienda_ultimo_slug", slugActual || localStorage.getItem("tu_tienda_ultimo_slug") || "");
-        localStorage.setItem("tu_tienda_pwa_start", location.pathname + location.search);
-    } catch (_) {}
-
-    deferredInstallPrompt = deferredInstallPrompt || window.__tuTiendaInstallPrompt || null;
-    if (deferredInstallPrompt) {
-        try {
-            deferredInstallPrompt.prompt();
-            await deferredInstallPrompt.userChoice;
-        } catch (e) {
-            console.warn("No se pudo abrir el instalador PWA:", e);
-        }
-        deferredInstallPrompt = null;
-        window.__tuTiendaInstallPrompt = null;
-        return;
-    }
-
-    const ua = navigator.userAgent || "";
-    const esIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-    const esFirefox = /Firefox\//i.test(ua);
-
-    if (esIOS) {
-        alert("En iPhone/iPad, abrí esta tienda en Safari → Compartir (□↑) → «Agregar a pantalla de inicio».");
-    } else if (esFirefox) {
-        alert("Firefox no ofrece el instalador PWA mediante este botón. Para instalar la tienda como aplicación, abrila con Chrome, Edge u Opera y usá «Instalar aplicación».");
-    } else {
-        alert("El navegador todavía no habilitó el instalador automático para esta página. Abrí el menú del navegador y buscá «Instalar aplicación» o «Agregar a pantalla de inicio». Si no aparece, recargá la página una vez.");
-    }
-}
+// Todo el manejo de instalación (botón, beforeinstallprompt, Service Worker)
+// vive ahora en un script autocontenido dentro del <head> de index.html —
+// no depende de este archivo ni de que Firebase termine de cargar. Ver ahí
+// `window.instalarApp()`, que es lo que dispara el botón #btnInstalarApp.
 
 // ==================== EDITOR DE CATEGORÍAS (panel admin → CONFIGURACIÓN) ====================
 // Trabaja sobre una copia local (categoriasEditando) y recién se guarda de
