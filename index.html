@@ -10,6 +10,16 @@
     <meta name="theme-color" content="#3b82f6">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <script>
+        // Capturamos el evento PWA antes de cargar Firebase/EmailJS.
+        // Algunos Chromium pueden emitir beforeinstallprompt muy temprano.
+        window.__tuTiendaInstallPrompt = null;
+        window.addEventListener("beforeinstallprompt", function (event) {
+            event.preventDefault();
+            window.__tuTiendaInstallPrompt = event;
+            window.dispatchEvent(new Event("tu-tienda-install-ready"));
+        });
+    </script>
     <link rel="apple-touch-icon" href="log.png">
 
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js" defer></script>
@@ -172,7 +182,7 @@
                     <button type="button" class="btn-add download-link-add-btn" onclick="agregarLinkProducto()">+ Agregar link</button>
                 </div>
                 <div class="admin-collapsible-grid">
-                    <details class="admin-section-details">
+                    <details class="admin-section-details>
                         <summary>Descripción</summary>
                         <div class="admin-section-body"><textarea id="fDesc" rows="5" placeholder="Descripción del producto..."></textarea></div>
                     </details>
