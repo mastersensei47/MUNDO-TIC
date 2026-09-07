@@ -86,23 +86,14 @@ function construirStoreConfig(slug, datosTienda) {
     };
 }
 
+
 function obtenerFirebaseApp(nombre, config) {
-    try {
-        return firebase.app(nombre);
-    } catch (_) {
-        return firebase.initializeApp(config, nombre);
-    }
+    try { return firebase.app(nombre); }
+    catch (_) { return firebase.initializeApp(config, nombre); }
 }
 
-// Opera/Opera GX y algunas extensiones pueden bloquear el WebChannel que
-// Firestore usa para Listen/channel. Forzamos long-polling para que Firestore
-// use HTTP normal y no dependa de ese canal. Debe configurarse antes de usar
-// la instancia para hacer lecturas/listeners.
 function crearFirestore(app) {
     const firestore = firebase.firestore(app);
-    // Opera/Opera GX puede bloquear el canal WebChannel de Firestore con
-    // bloqueadores integrados/extensiones. En Chrome/Edge/Safari dejamos el
-    // transporte normal para no agregar latencia innecesaria.
     const ua = navigator.userAgent || "";
     const esOpera = /OPR\//i.test(ua) || /Opera/i.test(ua);
     if (esOpera) {
@@ -112,37 +103,23 @@ function crearFirestore(app) {
     return firestore;
 }
 
+async function esperarFirebase(maxIntentos = 30) {
+    for (let i = 0; i < maxIntentos; i++) {
+        if (typeof firebase !== "undefined" && typeof firebase.initializeApp === "function" && typeof MASTER_FIREBASE_CONFIG !== "undefined") return true;
+        await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    return false;
+}
+
 function errorFirebaseDetalle(e) {
     const code = e && e.code ? String(e.code) : "";
     const msg = e && e.message ? String(e.message) : String(e || "Error desconocido");
     console.error("Detalle Firebase:", { code, message: msg, error: e });
-
-    if (code === "permission-denied") {
-        return "Firebase rechazó el acceso al directorio de tiendas (permission-denied).";
-    }
-    if (code === "failed-precondition") {
-        return "Firebase indicó que falta una configuración o índice (failed-precondition).";
-    }
-    if (code === "unavailable" || code === "deadline-exceeded") {
-        return "Firebase no está disponible en este momento. Probá nuevamente en unos segundos.";
-    }
-    if (code === "app/duplicate-app") {
-        return "La aplicación de Firebase ya estaba inicializada. Recargá la página para continuar.";
-    }
-    if (code === "invalid-argument" || code === "app/invalid-app-options") {
-        return "La configuración de Firebase de esta tienda no es válida.";
-    }
+    if (code === "permission-denied") return "Firebase rechazó el acceso al directorio de tiendas (permission-denied).";
+    if (code === "failed-precondition") return "Firebase indicó que falta una configuración o índice (failed-precondition).";
+    if (code === "unavailable" || code === "deadline-exceeded") return "Firebase no está disponible en este momento. Probá nuevamente en unos segundos.";
+    if (code === "invalid-argument" || code === "app/invalid-app-options") return "La configuración de Firebase de esta tienda no es válida.";
     return `No pudimos cargar esta tienda (${code || "error"}). Revisá la consola del navegador para ver el detalle.`;
-}
-
-async function esperarFirebase(maxIntentos = 20) {
-    for (let i = 0; i < maxIntentos; i++) {
-        if (typeof firebase !== "undefined" && typeof firebase.initializeApp === "function" && typeof MASTER_FIREBASE_CONFIG !== "undefined") {
-            return true;
-        }
-        await new Promise(resolve => setTimeout(resolve, 100));
-    }
-    return false;
 }
 
 async function bootstrap() {
@@ -150,59 +127,33 @@ async function bootstrap() {
     if (!slug) {
         return mostrarErrorSlug("Falta indicar la tienda en el link (falta ?slug=... en la URL). Pedile el link completo a quien te lo compartió.");
     }
-
     if (!(await esperarFirebase())) {
-        console.error("Firebase/config no estuvieron disponibles a tiempo.");
         return mostrarErrorSlug("No pudimos iniciar Firebase. Recargá la página y probá nuevamente.");
     }
 
     const cache = leerCacheTienda(slug);
-    const cacheConfig = cache && cache.firebaseConfig ? cache.firebaseConfig : null;
-    const cacheDatos = cache && cache.config ? cache.config : {};
-    let firebaseConfig = null;
-    let datosTienda = cacheDatos;
+    let firebaseConfig = cache && cache.firebaseConfig ? cache.firebaseConfig : null;
+    let datosTienda = cache && cache.config ? cache.config : {};
 
     try {
-        // El directorio Master es la fuente de verdad. La caché solo queda
-        // como respaldo si Firebase Master no responde temporalmente.
         masterApp = obtenerFirebaseApp("master", MASTER_FIREBASE_CONFIG);
         const masterDb = crearFirestore(masterApp);
 
         try {
             const clienteDoc = await masterDb.collection("clientes").doc(slug).get();
-
             if (!clienteDoc.exists || clienteDoc.data().activo === false) {
                 return mostrarErrorSlug("No encontramos esta tienda. Verificá el link, o consultá con el negocio.");
             }
-
-            const clienteData = clienteDoc.data() || {};
-            firebaseConfig = clienteData.firebaseConfig || null;
-
+            firebaseConfig = clienteDoc.data().firebaseConfig;
             if (!firebaseConfig || !firebaseConfig.projectId) {
                 return mostrarErrorSlug("Esta tienda todavía no está configurada del todo. Volvé a intentar más tarde.");
             }
-
-            // Guardamos la configuración nueva para poder abrir la tienda
-            // incluso si en una próxima visita hay un corte momentáneo.
-            guardarCacheTienda(slug, {
-                ...(cache || {}),
-                firebaseConfig,
-                config: cacheDatos
-            });
+            guardarCacheTienda(slug, { ...(cache || {}), firebaseConfig, config: datosTienda });
         } catch (masterError) {
             console.warn("No se pudo consultar el directorio Master; se intentará con caché.", masterError);
-            if (!cacheConfig || !cacheConfig.projectId) {
-                throw masterError;
-            }
-            firebaseConfig = cacheConfig;
+            if (!firebaseConfig || !firebaseConfig.projectId) throw masterError;
         }
 
-        if (!firebaseConfig || !firebaseConfig.projectId) {
-            throw new Error("La tienda no tiene una configuración Firebase válida.");
-        }
-
-        // Evita errores app/duplicate-app si el navegador restaura la página
-        // desde bfcache o si bootstrap termina ejecutándose más de una vez.
         clienteApp = obtenerFirebaseApp("cliente", firebaseConfig);
         db = crearFirestore(clienteApp);
         auth = firebase.auth(clienteApp);
@@ -210,20 +161,18 @@ async function bootstrap() {
         STORE_CONFIG = construirStoreConfig(slug, datosTienda);
         init();
 
-        // La configuración visual real de la tienda se actualiza aparte. Si
-        // falla, la tienda sigue funcionando con los valores ya disponibles.
         db.collection("config").doc("tienda").get().then(cfgDoc => {
             const fresh = cfgDoc.exists ? cfgDoc.data() : {};
             const current = leerCacheTienda(slug) || {};
             guardarCacheTienda(slug, { ...current, config: fresh, firebaseConfig });
             STORE_CONFIG = construirStoreConfig(slug, fresh);
-
             aplicarTema();
             aplicarBranding();
             renderCategorias();
             renderCategoriasSelect();
             renderBanners();
             aplicarLayout();
+            aplicarManifestPWA();
             renderHeroSlider();
             cargarFormConfig();
         }).catch(e => console.warn("No se pudo actualizar config/tienda; se conserva la configuración inicial:", e));
@@ -231,6 +180,7 @@ async function bootstrap() {
         mostrarErrorSlug(errorFirebaseDetalle(e));
     }
 }
+
 
 let prods = [];
 let cart = [];
@@ -304,6 +254,9 @@ function init() {
         ["renderMapa", renderMapa],
         ["renderBanners", renderBanners],
         ["aplicarLayout", aplicarLayout],
+        ["aplicarManifestPWA", aplicarManifestPWA],
+        ["registrarServiceWorker", registrarServiceWorker],
+        ["prepararInstalacionPWA", prepararInstalacionPWA],
         ["cargarFormConfig", cargarFormConfig],
     ];
     pasos.forEach(([nombre, fn]) => {
@@ -514,10 +467,86 @@ function aplicarLayout() {
 }
 
 // ==================== PWA / INSTALACIÓN ====================
-// Todo el manejo de instalación (botón, beforeinstallprompt, Service Worker)
-// vive ahora en un script autocontenido dentro del <head> de index.html —
-// no depende de este archivo ni de que Firebase termine de cargar. Ver ahí
-// `window.instalarApp()`, que es lo que dispara el botón #btnInstalarApp.
+function aplicarManifestPWA() {
+    const link = document.querySelector('link[rel="manifest"]');
+    if (!link) return;
+    // Siempre usamos el manifest real servido desde GitHub Pages. No se genera
+    // ningún Blob dinámico porque los navegadores pueden ignorarlo para PWA.
+    link.href = new URL("manifest-tienda.json", location.href).href;
+}
+
+function registrarServiceWorker() {
+    if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("service-worker.js", { scope: "./" })
+            .then(reg => { if (reg.waiting) reg.waiting.postMessage({ type: "SKIP_WAITING" }); })
+            .catch(e => console.warn("Service worker no registrado:", e));
+    }
+}
+
+let deferredInstallPrompt = window.__tuTiendaInstallPrompt || null;
+
+function esTiendaInstalada() {
+    return !!((window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone === true);
+}
+
+function prepararInstalacionPWA() {
+    const btn = document.getElementById("btnInstalarApp");
+    if (!btn) return;
+
+    if (esTiendaInstalada()) {
+        btn.style.display = "none";
+        return;
+    }
+
+    // El evento puede haber llegado ANTES de que Firebase terminara de iniciar.
+    // Recuperamos la copia capturada en el <head>.
+    deferredInstallPrompt = deferredInstallPrompt || window.__tuTiendaInstallPrompt || null;
+    btn.style.display = "inline-flex";
+
+    const recibirPrompt = () => {
+        deferredInstallPrompt = window.__tuTiendaInstallPrompt || deferredInstallPrompt;
+        if (!esTiendaInstalada()) btn.style.display = "inline-flex";
+    };
+    window.addEventListener("tu-tienda-install-ready", recibirPrompt);
+    window.addEventListener("appinstalled", () => {
+        deferredInstallPrompt = null;
+        window.__tuTiendaInstallPrompt = null;
+        btn.style.display = "none";
+    }, { once: true });
+}
+
+async function instalarApp() {
+    try {
+        const slugActual = new URLSearchParams(location.search).get("slug");
+        localStorage.setItem("tu_tienda_ultimo_slug", slugActual || localStorage.getItem("tu_tienda_ultimo_slug") || "");
+        localStorage.setItem("tu_tienda_pwa_start", location.pathname + location.search);
+    } catch (_) {}
+
+    deferredInstallPrompt = deferredInstallPrompt || window.__tuTiendaInstallPrompt || null;
+    if (deferredInstallPrompt) {
+        try {
+            deferredInstallPrompt.prompt();
+            await deferredInstallPrompt.userChoice;
+        } catch (e) {
+            console.warn("No se pudo abrir el instalador PWA:", e);
+        }
+        deferredInstallPrompt = null;
+        window.__tuTiendaInstallPrompt = null;
+        return;
+    }
+
+    const ua = navigator.userAgent || "";
+    const esIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    const esFirefox = /Firefox\//i.test(ua);
+
+    if (esIOS) {
+        alert("En iPhone/iPad, abrí esta tienda en Safari → Compartir (□↑) → «Agregar a pantalla de inicio».");
+    } else if (esFirefox) {
+        alert("Firefox no ofrece el instalador PWA mediante este botón. Para instalar la tienda como aplicación, abrila con Chrome, Edge u Opera y usá «Instalar aplicación».");
+    } else {
+        alert("El navegador todavía no habilitó el instalador automático para esta página. Abrí el menú del navegador y buscá «Instalar aplicación» o «Agregar a pantalla de inicio». Si no aparece, recargá la página una vez.");
+    }
+}
 
 // ==================== EDITOR DE CATEGORÍAS (panel admin → CONFIGURACIÓN) ====================
 // Trabaja sobre una copia local (categoriasEditando) y recién se guarda de
@@ -677,81 +706,6 @@ function startProductImageRotators() {
         }, 4500);
         rotators.push(interval);
     });
-}
-
-
-// ==================== CATEGORÍAS ====================
-// Estas funciones son usadas por init() y por el catálogo.
-// Se mantienen defensivas para que una configuración sin categorías
-// nunca impida que la tienda cargue.
-
-function obtenerCategorias() {
-    const cats = STORE_CONFIG && Array.isArray(STORE_CONFIG.categories)
-        ? STORE_CONFIG.categories
-        : [];
-    return cats.filter(c => c && (c.id || c.label)).map(c => ({
-        id: String(c.id || slugCategoria(c.label || "categoria")),
-        icon: c.icon || "📦",
-        label: c.label || c.id || "Categoría"
-    }));
-}
-
-function renderCategorias() {
-    const cont = document.getElementById("catBar");
-    if (!cont) return;
-
-    const categorias = obtenerCategorias();
-
-    // Siempre existe la opción "Todos".
-    cont.innerHTML = `
-        <button type="button" class="cat-item active" onclick="setCat(this, '')">
-            <span>🛍️</span><span>Todos</span>
-        </button>
-        ${categorias.map(c => `
-            <button type="button" class="cat-item"
-                    data-cat="${String(c.id).replace(/"/g, '&quot;')}"
-                    onclick="setCat(this, '${String(c.id).replace(/\\/g, '\\\\').replace(/'/g, "\\'")}')">
-                <span>${c.icon}</span><span>${c.label}</span>
-            </button>
-        `).join("")}
-    `;
-
-    // Si la categoría filtrada ya no existe, volvemos a "Todos".
-    if (filterCat && !categorias.some(c => c.id === filterCat)) {
-        filterCat = "";
-    }
-
-    const active = cont.querySelector(
-        `.cat-item[data-cat="${CSS.escape ? CSS.escape(filterCat) : filterCat}"]`
-    );
-    cont.querySelectorAll(".cat-item").forEach(b => b.classList.remove("active"));
-    if (active) active.classList.add("active");
-    else {
-        const todos = cont.querySelector(".cat-item");
-        if (todos) todos.classList.add("active");
-    }
-}
-
-function renderCategoriasSelect() {
-    const select = document.getElementById("fCat");
-    if (!select) return;
-
-    const categorias = obtenerCategorias();
-    const valorAnterior = select.value || "";
-
-    select.innerHTML = `
-        <option value="">Sin categoría</option>
-        ${categorias.map(c => `
-            <option value="${String(c.id).replace(/"/g, '&quot;')}">
-                ${c.icon} ${c.label}
-            </option>
-        `).join("")}
-    `;
-
-    // Conservamos la categoría seleccionada si sigue existiendo.
-    if (categorias.some(c => c.id === valorAnterior)) {
-        select.value = valorAnterior;
-    }
 }
 
 // ==================== CATÁLOGO ====================
