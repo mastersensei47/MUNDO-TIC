@@ -53,6 +53,7 @@ const TEMA_PRESETS = {
 
 let TALLER_CONFIG = { rubro: "general", rubrosSeleccionados: ["general"], rubrosPersonalizados: [], nombreNegocio: "", logoUrl: "", theme: { ...TEMA_DEFAULT } };
 let presetTemaTallerSeleccionado = null;
+let deferredInstallPrompt = window.__tuTallerInstallPrompt || null;
 
 function todosLosRubros() {
     return [...RUBRO_LISTA, ...(TALLER_CONFIG.rubrosPersonalizados || []).map(r => ({ ...r, personalizado: true }))];
@@ -94,43 +95,94 @@ function mostrarErrorSlug(mensaje) {
     }
 }
 
+
+function obtenerFirebaseAppTaller(nombre, config) {
+    try { return firebase.app(nombre); }
+    catch (_) { return firebase.initializeApp(config, nombre); }
+}
+
+function crearFirestoreTaller(app) {
+    const firestore = firebase.firestore(app);
+    const ua = navigator.userAgent || "";
+    const esOpera = /OPR\//i.test(ua) || /Opera/i.test(ua);
+    if (esOpera) {
+        try { firestore.settings({ experimentalForceLongPolling: true }); }
+        catch (e) { console.warn("No se pudo activar Firestore long-polling en taller:", e); }
+    }
+    return firestore;
+}
+
+async function esperarFirebaseTaller(maxIntentos = 30) {
+    for (let i = 0; i < maxIntentos; i++) {
+        if (typeof firebase !== "undefined" && typeof firebase.initializeApp === "function" && typeof MASTER_FIREBASE_CONFIG !== "undefined") return true;
+        await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    return false;
+}
+
+function errorFirebaseTaller(e) {
+    const code = e && e.code ? String(e.code) : "";
+    const msg = e && e.message ? String(e.message) : String(e || "Error desconocido");
+    console.error("Detalle Firebase taller:", { code, message: msg, error: e });
+    if (code === "permission-denied") return "Firebase rechazó el acceso a este negocio (permission-denied).";
+    if (code === "unavailable" || code === "deadline-exceeded") return "Firebase no está disponible en este momento. Probá nuevamente en unos segundos.";
+    if (code === "invalid-argument" || code === "app/invalid-app-options") return "La configuración de Firebase de este negocio no es válida.";
+    return `No pudimos cargar Control de Trabajos (${code || "error"}). Revisá la consola del navegador para ver el detalle.`;
+}
+
+function leerCacheTaller(slug) {
+    try {
+        const raw = localStorage.getItem("tu_taller_cache_" + slug);
+        return raw ? JSON.parse(raw) : null;
+    } catch (_) { return null; }
+}
+
+function guardarCacheTaller(slug, data) {
+    try { localStorage.setItem("tu_taller_cache_" + slug, JSON.stringify(data)); } catch (_) {}
+}
+
 async function bootstrap() {
     const slug = leerSlug();
     if (!slug) return mostrarErrorSlug("Falta indicar el negocio en el link (falta ?slug=... en la URL).");
+    if (!(await esperarFirebaseTaller())) {
+        return mostrarErrorSlug("No pudimos iniciar Firebase. Recargá la página y probá nuevamente.");
+    }
+
+    const cache = leerCacheTaller(slug);
+    let firebaseConfig = cache && cache.firebaseConfig ? cache.firebaseConfig : null;
+    let datosTaller = cache && cache.config ? cache.config : {};
+    let storeName = cache && cache.storeName ? cache.storeName : "Mi negocio";
 
     try {
-        masterApp = firebase.initializeApp(MASTER_FIREBASE_CONFIG, "master");
-        const masterDb = firebase.firestore(masterApp);
-        const clienteDoc = await masterDb.collection("clientes").doc(slug).get();
+        masterApp = obtenerFirebaseAppTaller("master", MASTER_FIREBASE_CONFIG);
+        const masterDb = crearFirestoreTaller(masterApp);
 
-        if (!clienteDoc.exists || clienteDoc.data().activo === false) {
-            return mostrarErrorSlug("No encontramos este negocio. Verificá el link.");
-        }
-        const { firebaseConfig, storeName } = clienteDoc.data();
-        if (!firebaseConfig || !firebaseConfig.projectId) {
-            return mostrarErrorSlug("Este negocio todavía no está configurado del todo.");
+        try {
+            const clienteDoc = await masterDb.collection("clientes").doc(slug).get();
+            if (!clienteDoc.exists || clienteDoc.data().activo === false) {
+                return mostrarErrorSlug("No encontramos este negocio. Verificá el link.");
+            }
+            const clienteData = clienteDoc.data() || {};
+            firebaseConfig = clienteData.firebaseConfig || null;
+            storeName = clienteData.storeName || storeName;
+            if (!firebaseConfig || !firebaseConfig.projectId) {
+                return mostrarErrorSlug("Este negocio todavía no está configurado del todo.");
+            }
+            guardarCacheTaller(slug, { ...(cache || {}), firebaseConfig, storeName, config: datosTaller });
+        } catch (masterError) {
+            console.warn("No se pudo consultar el directorio Master; se intentará con caché.", masterError);
+            if (!firebaseConfig || !firebaseConfig.projectId) throw masterError;
         }
 
-        clienteApp = firebase.initializeApp(firebaseConfig, "cliente");
-        db = firebase.firestore(clienteApp);
+        clienteApp = obtenerFirebaseAppTaller("cliente", firebaseConfig);
+        db = crearFirestoreTaller(clienteApp);
         auth = firebase.auth(clienteApp);
 
-        // Configuración propia de este negocio (rubro, nombre, tema, logo).
-        // Lectura pública a propósito (igual que config/tienda en la
-        // tienda): así la pantalla de login ya se ve con la marca correcta
-        // antes de que el dueño inicie sesión.
-        let datosTaller = {};
-        try {
-            const cfgDoc = await db.collection("config").doc("taller").get();
-            if (cfgDoc.exists) datosTaller = cfgDoc.data();
-        } catch (e) {
-            console.warn("No se pudo leer config/taller, se usan valores por defecto:", e);
-        }
-
+        // Arranque inmediato con la configuración guardada; después se actualiza
+        // en segundo plano desde config/taller.
         const rubroLegacy = datosTaller.rubro || "general";
         const seleccionados = Array.isArray(datosTaller.rubrosSeleccionados) && datosTaller.rubrosSeleccionados.length
-            ? datosTaller.rubrosSeleccionados
-            : [rubroLegacy];
+            ? datosTaller.rubrosSeleccionados : [rubroLegacy];
         TALLER_CONFIG = {
             rubro: rubroLegacy,
             rubrosSeleccionados: seleccionados,
@@ -143,17 +195,41 @@ async function bootstrap() {
         const pasos = [
             ["aplicarTemaTaller", aplicarTemaTaller],
             ["aplicarTextosRubro", aplicarTextosRubro],
+            ["prepararManifestPWA", prepararManifestPWA],
+            ["registrarServiceWorker", registrarServiceWorker],
+            ["prepararInstalacionPWA", prepararInstalacionPWA],
         ];
         pasos.forEach(([nombre, fn]) => {
             try { fn(); } catch (e) { console.error(`bootstrap(): falló ${nombre}()`, e); }
         });
 
         init();
+
+        // Actualización silenciosa de la configuración del taller.
+        db.collection("config").doc("taller").get().then(cfgDoc => {
+            const fresh = cfgDoc.exists ? cfgDoc.data() : {};
+            const current = leerCacheTaller(slug) || {};
+            guardarCacheTaller(slug, { ...current, config: fresh, firebaseConfig, storeName });
+            const rubro = fresh.rubro || "general";
+            const activos = Array.isArray(fresh.rubrosSeleccionados) && fresh.rubrosSeleccionados.length ? fresh.rubrosSeleccionados : [rubro];
+            TALLER_CONFIG = {
+                rubro,
+                rubrosSeleccionados: activos,
+                rubrosPersonalizados: Array.isArray(fresh.rubrosPersonalizados) ? fresh.rubrosPersonalizados : [],
+                nombreNegocio: fresh.nombreNegocio || storeName || "Mi negocio",
+                logoUrl: fresh.logoUrl || "",
+                theme: { ...TEMA_DEFAULT, ...(fresh.theme || {}) }
+            };
+            aplicarTemaTaller();
+            aplicarTextosRubro();
+            prepararManifestPWA();
+        }).catch(e => console.warn("No se pudo actualizar config/taller; se conserva la configuración inicial:", e));
     } catch (e) {
-        console.error("Error al inicializar:", e);
-        mostrarErrorSlug("No pudimos cargar esta herramienta. Probá de nuevo en unos minutos.");
+        console.error("Error al inicializar Control de Trabajos:", e);
+        mostrarErrorSlug(errorFirebaseTaller(e));
     }
 }
+
 
 function aplicarTemaTaller() {
     const root = document.documentElement;
@@ -183,10 +259,61 @@ function aplicarTextosRubro() {
     conElRep("tallerIconoRubro", el => { el.style.display = tieneLogo ? "none" : "flex"; el.innerText = p.icono; });
 }
 
-// Todo el manejo de instalación (botón, beforeinstallprompt, Service Worker)
-// vive en un script autocontenido dentro del <head> de reparaciones.html —
-// no depende de este archivo. Ver ahí `window.instalarApp()`, que es lo que
-// dispara el botón #btnInstalarApp.
+// Mismo patrón que la tienda: un manifest.json por negocio, generado al
+// vuelo (no puede ser un archivo estático distinto por cliente).
+function prepararManifestPWA() {
+    const link = document.querySelector('link[rel="manifest"]');
+    if (!link) return;
+    // Manifest estático: evita que Chromium/Safari pierdan la detección PWA.
+    // El slug del negocio se conserva en localStorage para la apertura instalada.
+    link.href = new URL("manifest-taller.json", location.href).href;
+}
+
+function registrarServiceWorker() {
+    if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("service-worker.js", { scope: "./" })
+            .then(reg => { if (reg.waiting) reg.waiting.postMessage({ type: "SKIP_WAITING" }); })
+            .catch(e => console.warn("Service worker no registrado:", e));
+    }
+}
+
+function prepararInstalacionPWA() {
+    const btn = document.getElementById("btnInstalarApp");
+    if (!btn) return;
+    const standalone = (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone === true;
+    if (standalone) { btn.style.display = "none"; return; }
+    deferredInstallPrompt = deferredInstallPrompt || window.__tuTallerInstallPrompt || null;
+    btn.style.display = "inline-flex";
+    window.addEventListener("tu-taller-install-ready", () => {
+        deferredInstallPrompt = window.__tuTallerInstallPrompt || deferredInstallPrompt;
+        if (!standalone) btn.style.display = "inline-flex";
+    });
+    window.addEventListener("appinstalled", () => {
+        deferredInstallPrompt = null;
+        window.__tuTallerInstallPrompt = null;
+        btn.style.display = "none";
+    }, { once: true });
+}
+
+async function instalarApp() {
+    try {
+        const slugActual = new URLSearchParams(location.search).get("slug");
+        localStorage.setItem("tu_taller_ultimo_slug", slugActual || localStorage.getItem("tu_taller_ultimo_slug") || "");
+    } catch (_) {}
+    deferredInstallPrompt = deferredInstallPrompt || window.__tuTallerInstallPrompt || null;
+    if (deferredInstallPrompt) {
+        try {
+            deferredInstallPrompt.prompt();
+            await deferredInstallPrompt.userChoice;
+        } catch (_) {}
+        deferredInstallPrompt = null;
+        window.__tuTallerInstallPrompt = null;
+        return;
+    }
+    if (/iphone|ipad|ipod/i.test(navigator.userAgent)) return alert("En iPhone/iPad: abrí Safari → Compartir (□↑) → «Agregar a pantalla de inicio».");
+    if (/firefox\//i.test(navigator.userAgent)) return alert("Firefox no ofrece este instalador PWA. Usá Chrome, Edge u Opera para instalarla como aplicación.");
+    alert("El navegador todavía no habilitó el instalador automático para esta página. Abrí su menú y buscá «Instalar aplicación» o «Agregar a pantalla de inicio».");
+}
 
 function init() {
     auth.onAuthStateChanged(async (user) => {
