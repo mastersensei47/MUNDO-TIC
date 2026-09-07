@@ -20,16 +20,12 @@ let db, auth, STORE_CONFIG;
 let clienteApp, masterApp;
 
 function leerSlug() {
-    // En el sistema multi-tienda, la URL es la única fuente de verdad.
-    // Nunca reutilizamos un slug guardado en localStorage: una PWA o un
-    // navegador compartido no debe poder abrir accidentalmente otra tienda.
-    const raw = new URLSearchParams(location.search).get("slug");
-    const slug = String(raw || "").trim().toLowerCase();
-
-    // Slugs generados por el panel: letras, números y guiones.
-    if (!slug) return null;
-    if (!/^[a-z0-9-]+$/.test(slug)) return null;
-    return slug;
+    const urlSlug = new URLSearchParams(location.search).get("slug");
+    if (urlSlug) {
+        try { localStorage.setItem("tu_tienda_ultimo_slug", urlSlug); } catch (_) {}
+        return urlSlug;
+    }
+    try { return localStorage.getItem("tu_tienda_ultimo_slug"); } catch (_) { return null; }
 }
 
 function mostrarErrorSlug(mensaje) {
@@ -67,20 +63,13 @@ const CONFIG_DEFAULTS = {
 };
 
 function leerCacheTienda(slug) {
-    // Se conserva solamente como respaldo visual de config/tienda.
-    // IMPORTANTE: jamás contiene ni decide el firebaseConfig de la tienda.
     try {
         const raw = localStorage.getItem("tu_tienda_cache_" + slug);
         return raw ? JSON.parse(raw) : null;
     } catch (_) { return null; }
 }
 function guardarCacheTienda(slug, data) {
-    try {
-        // Nunca persistimos credenciales/configuración de conexión provenientes
-        // de una tienda para reutilizarlas como fuente de verdad.
-        const seguro = { config: data && data.config ? data.config : {} };
-        localStorage.setItem("tu_tienda_cache_" + slug, JSON.stringify(seguro));
-    } catch (_) {}
+    try { localStorage.setItem("tu_tienda_cache_" + slug, JSON.stringify(data)); } catch (_) {}
 }
 
 function construirStoreConfig(slug, datosTienda) {
@@ -99,28 +88,16 @@ function construirStoreConfig(slug, datosTienda) {
 
 
 function obtenerFirebaseApp(nombre, config) {
-    try {
-        const existente = firebase.app(nombre);
-        const actual = existente.options || {};
-        if (config && config.projectId && actual.projectId !== config.projectId) {
-            // Nunca mezclamos dos tiendas en la misma instancia nombrada.
-            return existente.delete().then(() => firebase.initializeApp(config, nombre));
-        }
-        return existente;
-    } catch (_) {
-        return firebase.initializeApp(config, nombre);
-    }
+    try { return firebase.app(nombre); }
+    catch (_) { return firebase.initializeApp(config, nombre); }
 }
 
 function crearFirestore(app) {
-    const firestore = firebase.firestore(app);
-    const ua = navigator.userAgent || "";
-    const esOpera = /OPR\//i.test(ua) || /Opera/i.test(ua);
-    if (esOpera) {
-        try { firestore.settings({ experimentalForceLongPolling: true }); }
-        catch (e) { console.warn("No se pudo activar Firestore long-polling:", e); }
-    }
-    return firestore;
+    // No forzamos long-polling en Opera. Firebase Firestore 9.x puede emitir
+    // "You are overriding the original host" y, según el navegador/red,
+    // terminar provocando fallos de conexión. Dejamos que Firestore negocie
+    // automáticamente el transporte.
+    return firebase.firestore(app);
 }
 
 async function esperarFirebase(maxIntentos = 30) {
@@ -131,15 +108,24 @@ async function esperarFirebase(maxIntentos = 30) {
     return false;
 }
 
-function errorFirebaseDetalle(e) {
+function describirErrorFirebase(e) {
     const code = e && e.code ? String(e.code) : "";
-    const msg = e && e.message ? String(e.message) : String(e || "Error desconocido");
-    console.error("Detalle Firebase:", { code, message: msg, error: e });
-    if (code === "permission-denied") return "Firebase rechazó el acceso al directorio de tiendas (permission-denied).";
-    if (code === "failed-precondition") return "Firebase indicó que falta una configuración o índice (failed-precondition).";
-    if (code === "unavailable" || code === "deadline-exceeded") return "Firebase no está disponible en este momento. Probá nuevamente en unos segundos.";
-    if (code === "invalid-argument" || code === "app/invalid-app-options") return "La configuración de Firebase de esta tienda no es válida.";
-    return `No pudimos cargar esta tienda (${code || "error"}). Revisá la consola del navegador para ver el detalle.`;
+    const message = e && e.message ? String(e.message) : String(e || "Error desconocido");
+    return { code, message };
+}
+
+function errorFirebaseDetalle(e, etapa = "Firebase") {
+    const { code, message } = describirErrorFirebase(e);
+    console.error(`Detalle Firebase [${etapa}]`, { code, message, error: e });
+
+    let ayuda = "";
+    if (code === "permission-denied") ayuda = " Revisá las reglas de Firestore del proyecto indicado.";
+    else if (code === "failed-precondition") ayuda = " Verificá que Cloud Firestore esté habilitado en ese proyecto.";
+    else if (code === "unavailable" || code === "deadline-exceeded") ayuda = " Verificá la conexión y que el proyecto Firebase esté disponible.";
+    else if (code === "not-found") ayuda = " Verificá que exista la base de datos Firestore (default) en ese proyecto.";
+    else if (code === "app/invalid-app-options" || code === "invalid-argument") ayuda = " Revisá el firebaseConfig guardado en MASTER.";
+
+    return `${etapa}: ${message}${code ? ` [${code}]` : ""}.${ayuda}`;
 }
 
 async function bootstrap() {
@@ -152,109 +138,84 @@ async function bootstrap() {
     }
 
     if (!(await esperarFirebase())) {
-        return mostrarErrorSlug(
-            "No pudimos iniciar Firebase. Recargá la página y probá nuevamente."
-        );
+        return mostrarErrorSlug("No pudimos iniciar Firebase. Recargá la página y probá nuevamente.");
     }
 
+    // IMPORTANTE: el slug de la URL es la única fuente de verdad.
+    // Nunca usamos localStorage para decidir qué tienda abrir.
     try {
-        // 1) MASTER: SIEMPRE se consulta primero. No usamos localStorage
-        // para decidir qué Firebase corresponde al slug.
-        masterApp = obtenerFirebaseApp("master", MASTER_FIREBASE_CONFIG);
-        if (masterApp && typeof masterApp.then === "function") {
-            masterApp = await masterApp;
+        // ---------------- MASTER ----------------
+        try {
+            masterApp = obtenerFirebaseApp("master", MASTER_FIREBASE_CONFIG);
+            if (masterApp && typeof masterApp.then === "function") masterApp = await masterApp;
+        } catch (e) {
+            return mostrarErrorSlug(errorFirebaseDetalle(e, "MASTER / inicialización"));
         }
 
-        const masterDb = crearFirestore(masterApp);
+        let masterDb;
+        try {
+            masterDb = crearFirestore(masterApp);
+        } catch (e) {
+            return mostrarErrorSlug(errorFirebaseDetalle(e, "MASTER / Firestore"));
+        }
 
-        // source:"server" evita que una entrada vieja de IndexedDB/Firestore
-        // haga que un slug apunte temporalmente a una configuración antigua.
-        const clienteDoc = await masterDb
-            .collection("clientes")
-            .doc(slug)
-            .get({ source: "server" });
+        let clienteDoc;
+        try {
+            // La regla del MASTER permite get público sobre clientes/{slug}.
+            clienteDoc = await masterDb.collection("clientes").doc(slug).get();
+        } catch (e) {
+            return mostrarErrorSlug(errorFirebaseDetalle(e, `MASTER / clientes/${slug}`));
+        }
 
         if (!clienteDoc.exists) {
-            return mostrarErrorSlug(
-                `El slug "${slug}" no existe en el Firebase MASTER. Revisá el documento clientes/${slug}.`
-            );
+            return mostrarErrorSlug(`El slug "${slug}" no existe en Firebase MASTER. Revisá clientes/${slug}.`);
         }
 
         const datosMaster = clienteDoc.data() || {};
-
         if (datosMaster.activo === false) {
-            return mostrarErrorSlug(
-                `La tienda "${slug}" está marcada como INACTIVA en el Firebase MASTER.`
-            );
+            return mostrarErrorSlug(`La tienda "${slug}" está marcada como INACTIVA en Firebase MASTER.`);
         }
 
-        // Este documento es el único lugar desde donde se obtiene la conexión
-        // al Firebase de la tienda.
         const firebaseConfig = datosMaster.firebaseConfig;
-
         if (!firebaseConfig || typeof firebaseConfig !== "object") {
-            return mostrarErrorSlug(
-                `clientes/${slug} existe, pero no contiene un campo firebaseConfig válido.`
-            );
+            return mostrarErrorSlug(`clientes/${slug} existe, pero no contiene firebaseConfig.`);
         }
 
-        const requeridos = [
-            "apiKey",
-            "authDomain",
-            "projectId",
-            "storageBucket",
-            "messagingSenderId",
-            "appId"
-        ];
-
-        const faltantes = requeridos.filter(
-            campo => !String(firebaseConfig[campo] || "").trim()
-        );
-
+        const requeridos = ["apiKey", "authDomain", "projectId", "storageBucket", "messagingSenderId", "appId"];
+        const faltantes = requeridos.filter(c => !String(firebaseConfig[c] || "").trim());
         if (faltantes.length) {
-            return mostrarErrorSlug(
-                `clientes/${slug} tiene firebaseConfig incompleto. Falta: ${faltantes.join(", ")}.`
-            );
+            return mostrarErrorSlug(`clientes/${slug} tiene firebaseConfig incompleto. Falta: ${faltantes.join(", ")}.`);
         }
 
-        // 2) CLIENTE: se conecta exclusivamente al projectId que devolvió
-        // MASTER para ESTE slug.
-        clienteApp = await obtenerFirebaseApp("cliente", firebaseConfig);
-        db = crearFirestore(clienteApp);
-        auth = firebase.auth(clienteApp);
+        if (firebaseConfig.projectId === MASTER_FIREBASE_CONFIG.projectId) {
+            return mostrarErrorSlug(`clientes/${slug} apunta al mismo proyecto Firebase que MASTER. Cada tienda debe tener su propio projectId.`);
+        }
 
-        // La configuración visual inicial sale del Firebase de la tienda.
-        const cache = leerCacheTienda(slug);
-        let datosTienda = cache && cache.config ? cache.config : {};
-
-        // 3) CLIENTE/config/tienda: obligatoriamente desde el Firebase
-        // del cliente, nunca desde MASTER.
+        // ---------------- CLIENTE ----------------
         try {
-            const cfgDoc = await db
-                .collection("config")
-                .doc("tienda")
-                .get({ source: "server" });
+            clienteApp = await obtenerFirebaseApp("cliente", firebaseConfig);
+            db = crearFirestore(clienteApp);
+            auth = firebase.auth(clienteApp);
+        } catch (e) {
+            return mostrarErrorSlug(errorFirebaseDetalle(e, `CLIENTE / ${firebaseConfig.projectId}`));
+        }
 
-            datosTienda = cfgDoc.exists ? (cfgDoc.data() || {}) : {};
-            guardarCacheTienda(slug, { config: datosTienda });
-        } catch (configError) {
-            // Si Firestore del cliente está momentáneamente offline pero
-            // tenemos una config visual previa, podemos mostrar la tienda;
-            // la conexión del cliente ya fue validada desde MASTER.
-            if (!datosTienda || !Object.keys(datosTienda).length) {
-                throw configError;
-            }
-            console.warn("No se pudo leer config/tienda del cliente; se usa la última config visual:", configError);
+        // ---------------- CONFIG DE LA TIENDA ----------------
+        let datosTienda = {};
+        try {
+            const cfgDoc = await db.collection("config").doc("tienda").get();
+            if (cfgDoc.exists) datosTienda = cfgDoc.data() || {};
+            else console.warn(`CLIENTE / ${firebaseConfig.projectId}: no existe config/tienda; se usarán valores por defecto.`);
+        } catch (e) {
+            return mostrarErrorSlug(errorFirebaseDetalle(e, `CLIENTE / ${firebaseConfig.projectId} / config/tienda`));
         }
 
         STORE_CONFIG = construirStoreConfig(slug, datosTienda);
         init();
 
-        // Si config/tienda cambia mientras la tienda está abierta, actualizamos
-        // la interfaz en tiempo real desde el Firebase del cliente.
+        // Mantener actualizada la configuración visual desde el Firebase de la tienda.
         db.collection("config").doc("tienda").onSnapshot(cfgDoc => {
             const fresh = cfgDoc.exists ? (cfgDoc.data() || {}) : {};
-            guardarCacheTienda(slug, { config: fresh });
             STORE_CONFIG = construirStoreConfig(slug, fresh);
             try { aplicarTema(); } catch (e) { console.warn("aplicarTema:", e); }
             try { aplicarBranding(); } catch (e) { console.warn("aplicarBranding:", e); }
@@ -265,9 +226,10 @@ async function bootstrap() {
             try { aplicarManifestPWA(); } catch (e) { console.warn("aplicarManifestPWA:", e); }
             try { renderHeroSlider(); } catch (e) { console.warn("renderHeroSlider:", e); }
             try { cargarFormConfig(); } catch (e) { console.warn("cargarFormConfig:", e); }
-        }, e => console.warn("config/tienda:", e));
+        }, e => console.warn(`CLIENTE / ${firebaseConfig.projectId} / config/tienda:`, e));
+
     } catch (e) {
-        mostrarErrorSlug(errorFirebaseDetalle(e));
+        mostrarErrorSlug(errorFirebaseDetalle(e, "RESOLUCIÓN DE TIENDA"));
     }
 }
 
@@ -567,7 +529,7 @@ function aplicarManifestPWA() {
 
 function registrarServiceWorker() {
     if ("serviceWorker" in navigator) {
-        navigator.serviceWorker.register("service-worker.js", { scope: "./" })
+        navigator.serviceWorker.register("service-worker.js", { scope: "./", updateViaCache: "none" })
             .then(reg => { if (reg.waiting) reg.waiting.postMessage({ type: "SKIP_WAITING" }); })
             .catch(e => console.warn("Service worker no registrado:", e));
     }
@@ -607,7 +569,8 @@ function prepararInstalacionPWA() {
 
 async function instalarApp() {
     try {
-        // La PWA debe conservar la URL completa de esta tienda.
+        const slugActual = new URLSearchParams(location.search).get("slug");
+        localStorage.setItem("tu_tienda_ultimo_slug", slugActual || localStorage.getItem("tu_tienda_ultimo_slug") || "");
         localStorage.setItem("tu_tienda_pwa_start", location.pathname + location.search);
     } catch (_) {}
 
