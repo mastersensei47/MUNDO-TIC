@@ -95,38 +95,13 @@ function mostrarErrorSlug(mensaje) {
     }
 }
 
-function obtenerFirebaseApp(nombre, config) {
-    try { return firebase.app(nombre); }
-    catch (_) { return firebase.initializeApp(config, nombre); }
-}
-
-function crearFirestore(app) {
-    const firestore = firebase.firestore(app);
-    const ua = navigator.userAgent || "";
-    const esOpera = /OPR\//i.test(ua) || /Opera/i.test(ua);
-    if (esOpera) {
-        try { firestore.settings({ experimentalForceLongPolling: true }); }
-        catch (e) { console.warn("No se pudo activar Firestore long-polling:", e); }
-    }
-    return firestore;
-}
-
-async function esperarFirebase(maxIntentos = 20) {
-    for (let i = 0; i < maxIntentos; i++) {
-        if (typeof firebase !== "undefined" && typeof firebase.initializeApp === "function" && typeof MASTER_FIREBASE_CONFIG !== "undefined") return true;
-        await new Promise(resolve => setTimeout(resolve, 100));
-    }
-    return false;
-}
-
 async function bootstrap() {
     const slug = leerSlug();
     if (!slug) return mostrarErrorSlug("Falta indicar el negocio en el link (falta ?slug=... en la URL).");
-    if (!(await esperarFirebase())) return mostrarErrorSlug("No pudimos iniciar Firebase. Recargá la página y probá nuevamente.");
 
     try {
-        masterApp = obtenerFirebaseApp("master", MASTER_FIREBASE_CONFIG);
-        const masterDb = crearFirestore(masterApp);
+        masterApp = firebase.initializeApp(MASTER_FIREBASE_CONFIG, "master");
+        const masterDb = firebase.firestore(masterApp);
         const clienteDoc = await masterDb.collection("clientes").doc(slug).get();
 
         if (!clienteDoc.exists || clienteDoc.data().activo === false) {
@@ -137,8 +112,8 @@ async function bootstrap() {
             return mostrarErrorSlug("Este negocio todavía no está configurado del todo.");
         }
 
-        clienteApp = obtenerFirebaseApp("cliente", firebaseConfig);
-        db = crearFirestore(clienteApp);
+        clienteApp = firebase.initializeApp(firebaseConfig, "cliente");
+        db = firebase.firestore(clienteApp);
         auth = firebase.auth(clienteApp);
 
         // Configuración propia de este negocio (rubro, nombre, tema, logo).
@@ -212,13 +187,13 @@ function aplicarTextosRubro() {
     conElRep("tallerIconoRubro", el => { el.style.display = tieneLogo ? "none" : "flex"; el.innerText = p.icono; });
 }
 
-// El manifest del taller es un archivo estático del mismo origen.
-// No se genera con Blob porque Chromium/Safari pueden no reconocerlo como
-// manifest instalable. El slug se conserva en localStorage para que la app
-// instalada vuelva al negocio que se estaba usando.
+// Mismo patrón que la tienda: un manifest.json por negocio, generado al
+// vuelo (no puede ser un archivo estático distinto por cliente).
 function prepararManifestPWA() {
     const link = document.querySelector('link[rel="manifest"]');
     if (!link) return;
+    // Manifest estático: evita que Chromium/Safari pierdan la detección PWA.
+    // El slug del negocio se conserva en localStorage para la apertura instalada.
     link.href = new URL("manifest-taller.json", location.href).href;
 }
 
@@ -230,21 +205,16 @@ function registrarServiceWorker() {
     }
 }
 
-function esTallerInstalado() {
-    return !!((window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone === true);
-}
-
 function prepararInstalacionPWA() {
     const btn = document.getElementById("btnInstalarApp");
     if (!btn) return;
-    if (esTallerInstalado()) { btn.style.display = "none"; return; }
-
+    const standalone = (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone === true;
+    if (standalone) { btn.style.display = "none"; return; }
     deferredInstallPrompt = deferredInstallPrompt || window.__tuTallerInstallPrompt || null;
     btn.style.display = "inline-flex";
-
     window.addEventListener("tu-taller-install-ready", () => {
         deferredInstallPrompt = window.__tuTallerInstallPrompt || deferredInstallPrompt;
-        if (!esTallerInstalado()) btn.style.display = "inline-flex";
+        if (!standalone) btn.style.display = "inline-flex";
     });
     window.addEventListener("appinstalled", () => {
         deferredInstallPrompt = null;
@@ -258,28 +228,19 @@ async function instalarApp() {
         const slugActual = new URLSearchParams(location.search).get("slug");
         localStorage.setItem("tu_taller_ultimo_slug", slugActual || localStorage.getItem("tu_taller_ultimo_slug") || "");
     } catch (_) {}
-
     deferredInstallPrompt = deferredInstallPrompt || window.__tuTallerInstallPrompt || null;
     if (deferredInstallPrompt) {
         try {
             deferredInstallPrompt.prompt();
             await deferredInstallPrompt.userChoice;
-        } catch (e) {
-            console.warn("No se pudo abrir el instalador PWA:", e);
-        }
+        } catch (_) {}
         deferredInstallPrompt = null;
         window.__tuTallerInstallPrompt = null;
         return;
     }
-
-    const ua = navigator.userAgent || "";
-    if (/iphone|ipad|ipod/i.test(ua)) {
-        alert("En iPhone/iPad, abrí esta herramienta en Safari → Compartir (□↑) → «Agregar a pantalla de inicio».");
-    } else if (/firefox\//i.test(ua)) {
-        alert("Firefox no ofrece el instalador PWA mediante este botón. Para instalarla como aplicación, usá Chrome, Edge u Opera.");
-    } else {
-        alert("El navegador todavía no habilitó el instalador automático para esta página. Abrí el menú y buscá «Instalar aplicación» o «Agregar a pantalla de inicio». Si no aparece, recargá la página una vez.");
-    }
+    if (/iphone|ipad|ipod/i.test(navigator.userAgent)) return alert("En iPhone/iPad: abrí Safari → Compartir (□↑) → «Agregar a pantalla de inicio».");
+    if (/firefox\//i.test(navigator.userAgent)) return alert("Firefox no ofrece este instalador PWA. Usá Chrome, Edge u Opera para instalarla como aplicación.");
+    alert("El navegador todavía no habilitó el instalador automático para esta página. Abrí su menú y buscá «Instalar aplicación» o «Agregar a pantalla de inicio».");
 }
 
 function init() {
