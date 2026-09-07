@@ -1,28 +1,507 @@
-{
-  "name": "Control de Trabajos",
-  "short_name": "Taller",
-  "id": "./reparaciones.html",
-  "start_url": "./reparaciones.html",
-  "scope": "./",
-  "display": "standalone",
-  "orientation": "portrait-primary",
-  "background_color": "#0f172a",
-  "theme_color": "#3b82f6",
-  "icons": [
-    {
-      "src": "icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
-    }
-  ],
-  "display_override": [
-    "standalone"
-  ]
-}
+<!DOCTYPE html>
+<html lang="es" translate="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="google" content="notranslate">
+    <title>Tienda</title>
+
+    <link rel="manifest" href="manifest-tienda.json">
+    <meta name="theme-color" content="#3b82f6">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="log.png">
+
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js" defer></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js" defer></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js" defer></script>
+
+    <link rel="preconnect" href="https://www.gstatic.com">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="dark">
+
+<div id="slugError" style="display:none; position:fixed; inset:0; background:var(--bg); z-index:99999; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:30px;">
+    <div style="font-size:50px; margin-bottom:20px;">🏬</div>
+    <h2 style="margin-bottom:10px;">No pudimos abrir esta tienda</h2>
+    <p style="opacity:0.6; max-width:400px;"></p>
+</div>
+
+<div id="bannerPausa" style="display:none; background:var(--danger); color:white; text-align:center; padding:12px 20px; font-weight:700; font-size:14px;">
+    ⚠️ Atención: La tienda no está recibiendo pedidos en este momento.
+</div>
+<div id="bannerPromo" style="display:none; background:var(--promo); color:#000; text-align:center; padding:12px 20px; font-weight:700; font-size:14px;"></div>
+
+<header>
+    <div class="header-left">
+        <button class="icon-btn" onclick="toggleInfo()">☰</button>
+        <img src="log.png" class="main-logo" onclick="location.reload()" alt="Logo">
+        <span class="main-logo-text" onclick="location.reload()" style="display:none; font-weight:800; font-size:20px; cursor:pointer;"></span>
+    </div>
+    <div class="header-icons">
+        <button class="icon-btn" onclick="toggleTheme()">🌓</button>
+        <button class="icon-btn" onclick="openModal('loginModal')">👤</button>
+        <button class="icon-btn" onclick="verificarAdmin()">⚙️</button>
+        <button id="btnInstalarApp" class="icon-btn pwa-install-btn" onclick="instalarApp()" title="Instalar como aplicación" style="display:none;">📲</button>
+        <div id="cartIconBtn" class="icon-btn" onclick="toggleCart()" style="cursor:pointer; position:relative;">
+            🛒 <b id="cartCount" style="background:var(--danger); font-size:10px; padding:2px 7px; border-radius:12px; position:absolute; top:2px; right:2px;">0</b>
+        </div>
+    </div>
+</header>
+
+<div class="hero" id="heroSlider">
+    <div class="hero-content">
+        <h1></h1>
+        <p></p>
+    </div>
+</div>
+
+<div class="cat-scroll" id="catBar"></div>
+
+<div class="search-container">
+    <input type="text" id="searchInput" class="search-bar" placeholder="Busca marcas o productos..." autocomplete="off" name="busqueda-productos" readonly
+        onmousedown="this.removeAttribute('readonly')" ontouchstart="this.removeAttribute('readonly')"
+        onkeyup="render()" oninput="actualizarSugerencias()" onfocus="this.removeAttribute('readonly'); actualizarSugerencias();"
+        onblur="setTimeout(()=>{const b=document.getElementById('searchSuggestions'); if(b) b.style.display='none';}, 150)">
+    <div id="searchSuggestions" class="search-suggestions"></div>
+</div>
+
+<div class="products-grid" id="productsCont"></div>
+
+<div id="toast">✅ Producto agregado al carrito</div>
+<div id="imageModal" style="position:fixed;inset:0;background:rgba(0,0,0,0.95);display:none;align-items:center;justify-content:center;z-index:9000;" onclick="if(event.target.id==='imageModal')this.style.display='none';">
+    <img id="modalImg" style="max-width:92%;max-height:92%;object-fit:contain;" src="">
+</div>
+
+<div class="modal-overlay" id="productDetailModal" onclick="if(event.target.id==='productDetailModal')closeProductDetail()">
+    <div class="modal-contenido">
+        <button class="modal-close" onclick="closeProductDetail()">✕</button>
+
+        <div class="detalle-imagenes">
+            <img id="detailImg" class="detail-main-img" alt="">
+            <div id="thumbnails" class="thumbnails"></div>
+        </div>
+
+        <div class="detalle-info">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <div>
+                    <h1 id="detailTitle" class="detail-title"></h1>
+                </div>
+            </div>
+            <div id="detailPrice" class="detail-price"></div>
+            <div id="detailStock" class="detail-stock"></div>
+            <div id="detailVarianteSection" style="display:none; margin: 15px 0;">
+                <label style="font-weight:700; font-size:14px; display:block; margin-bottom:8px;">Elegí una opción:</label>
+                <select id="detailVarianteSelect" style="width:100%; padding:14px; border-radius:12px; background:var(--card); color:var(--text); border:1px solid rgba(255,255,255,0.1); font-size:15px;"></select>
+            </div>
+            <div class="detail-qty">
+                <span style="font-weight:700; font-size:16px;">Cantidad:</span>
+                <button onclick="changeDetailQty(-1)" class="qty-btn">−</button>
+                <input id="detailQtyInput" type="number" value="1" min="1" style="width:80px;text-align:center;font-size:22px;font-weight:700;border:none;background:transparent;">
+                <button onclick="changeDetailQty(1)" class="qty-btn">+</button>
+            </div>
+            <button onclick="addCurrentToCart()" class="btn-add detail-btn">🛒 Agregar al carrito</button>
+            <div class="detail-sections">
+                <details open>
+                    <summary>Descripción</summary>
+                    <div id="detailDesc" class="detail-content"></div>
+                </details>
+                <details>
+                    <summary>Características</summary>
+                    <div id="detailCaract" class="detail-content"></div>
+                </details>
+                <details>
+                    <summary>Ficha del producto</summary>
+                    <div id="detailFicha" class="detail-content"></div>
+                </details>
+                <details id="detailLinksSection" style="display:none;">
+                    <summary>Links de descarga</summary>
+                    <div id="detailLinks" class="detail-content download-links-detail"></div>
+                </details>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="adminModal" style="align-items: flex-start; overflow-y: auto;">
+    <div class="modal-content" style="margin: 40px auto; width: 100%; max-width: 900px; padding: 30px; overflow: visible;">
+        <div class="flex-between" style="margin-bottom:30px;">
+            <h2 style="margin:0;">Gestión Maestra</h2>
+            <button onclick="closeAll()" style="background:none; border:none; color:white; font-size:30px; cursor:pointer;">✕</button>
+        </div>
+        <div class="admin-tabs">
+            <button class="tab-btn active" onclick="tab('t-prod', event)">PRODUCTOS</button>
+            <button class="tab-btn" onclick="tab('t-user', event)">CLIENTES</button>
+            <button class="tab-btn" onclick="tab('t-order', event)">HISTORIAL</button>
+            <button class="tab-btn" onclick="tab('t-stats', event)">ESTADÍSTICAS</button>
+            <button class="tab-btn" onclick="tab('t-slider', event)">SLIDER HERO</button>
+            <button class="tab-btn" onclick="tab('t-config', event)">CONFIGURACIÓN</button>
+            <button class="tab-btn" onclick="tab('t-layout', event)">DISEÑO</button>
+        </div>
+
+        <div id="t-prod">
+            <div class="admin-form-box">
+                <input id="fId" type="hidden">
+                <div class="form-group"><label>Nombre del Producto</label><input id="fNom"></div>
+                <div class="form-group"><label>Precio Normal ($)</label><input id="fPre" type="number"></div>
+                <div class="form-group precio-mayorista-field"><label>Precio Mayorista ($)</label><input id="fPreMay" type="number"></div>
+                <div class="form-group"><label>Stock disponible</label><input id="fStock" type="number" min="0" value="10"></div>
+                <div class="form-group"><label>Oferta Especial</label><input id="fPro"></div>
+                <div class="form-group"><label>Categoría</label><select id="fCat"></select></div>
+                <div class="form-group variantes-field">
+                    <label>Variantes (opcional) — una por línea: Nombre | Stock</label>
+                    <textarea id="fVariantes" rows="4" placeholder="S | 5&#10;M | 8&#10;L | 0"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Galería de imágenes</label>
+                    <p class="admin-help">Agregá una URL por fila. Podés eliminar, reordenar y sumar imágenes sin tener que editar todo el bloque.</p>
+                    <div id="imagenesProducto" class="image-url-list"></div>
+                    <button type="button" class="btn-add image-add-btn" onclick="agregarImagenProducto()">+ AGREGAR IMAGEN</button>
+                    <a href="https://postimg.cc/" target="_blank" rel="noopener" class="image-host-btn">📤 SUBIR IMAGEN</a>
+                    <p class="admin-help">En Postimages copiá el <b>Direct link</b>. No copies el enlace de la página o de la galería.</p>
+                </div>
+                <div class="form-group download-links-group">
+                    <label>Links de descarga</label>
+                    <p class="admin-help">Agregá cada enlace en su propia fila: nombre + URL.</p>
+                    <div id="linksDescargaProducto" class="download-links-list"></div>
+                    <button type="button" class="btn-add download-link-add-btn" onclick="agregarLinkProducto()">+ Agregar link</button>
+                </div>
+                <div class="admin-collapsible-grid">
+                    <details class="admin-section-details">
+                        <summary>Descripción</summary>
+                        <div class="admin-section-body"><textarea id="fDesc" rows="5" placeholder="Descripción del producto..."></textarea></div>
+                    </details>
+                    <details class="admin-section-details">
+                        <summary>Características</summary>
+                        <div class="admin-section-body"><textarea id="fCaract" rows="5" placeholder="Características principales..."></textarea></div>
+                    </details>
+                    <details class="admin-section-details">
+                        <summary>Ficha técnica</summary>
+                        <div class="admin-section-body"><textarea id="fFicha" rows="5" placeholder="Especificaciones técnicas..."></textarea></div>
+                    </details>
+                </div>
+                <button class="btn-add" style="background:var(--success)" onclick="saveP()">GUARDAR PRODUCTO</button>
+                <button class="btn-add" style="background:none; color:white; margin-top:10px; border:1px solid rgba(255,255,255,0.1);" onclick="limpiarP()">Limpiar</button>
+            </div>
+            <div class="admin-product-search">
+                <input id="adminProductSearch" type="search" placeholder="🔎 Buscar un producto por nombre o categoría..." autocomplete="off" oninput="renderAdmP()">
+                <span id="adminProductCount" class="admin-search-count"></span>
+            </div>
+            <div id="admListP"></div>
+        </div>
+
+        <div id="t-user" style="display:none;"><div id="admListU"></div></div>
+
+        <div id="t-order" style="display:none;">
+            <div style="display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap;">
+                <button class="btn-add" style="background:var(--danger); flex:1; min-width:160px; margin-top:0;" onclick="vaciarHistorial()">BORRAR HISTORIAL</button>
+                <button class="btn-add" style="background:var(--accent); flex:1; min-width:160px; margin-top:0;" onclick="exportarPedidosCSV()">📊 EXPORTAR A EXCEL</button>
+            </div>
+            <div id="admListO"></div>
+        </div>
+
+        <div id="t-stats" style="display:none;">
+            <div id="admStats"></div>
+        </div>
+
+        <div id="t-slider" style="display:none;">
+            <div class="admin-form-box">
+                <div class="form-group">
+                    <label>URL de imagen del slider — cualquier formato sirve</label>
+                    <input id="sliderUrl" placeholder="https://...">
+                    <a href="https://postimg.cc/" target="_blank" style="display:inline-block; margin-top:8px; background:var(--accent); color:white; padding:8px 16px; border-radius:10px; text-decoration:none; font-size:13px; font-weight:700;">📤 Subir imagen aquí</a>
+                </div>
+                <button class="btn-add" style="background:var(--success)" onclick="addHeroImage()">AGREGAR AL SLIDER</button>
+            </div>
+            <div id="admListSlider"></div>
+        </div>
+
+        <div id="t-config" style="display:none;">
+            <div class="admin-form-box">
+                <h4 style="margin-top:0; opacity:0.7;">Datos generales y de contacto</h4>
+                <div class="form-group"><label>Nombre de la tienda</label><input id="cfgStoreName" placeholder="Ej: Mundo Tic"></div>
+                <div class="form-group">
+                    <label>¿A qué público apunta la tienda?</label>
+                    <select id="cfgBusinessMode">
+                        <option value="ambos">Mayorista y minorista</option>
+                        <option value="mayorista">Solo mayorista</option>
+                        <option value="minorista">Solo minorista</option>
+                    </select>
+                </div>
+                <p style="opacity:0.5; font-size:12px; margin-top:-10px;">"Solo minorista" oculta por completo el registro de clientes mayoristas y el precio mayorista, para que nadie vea nada relacionado.</p>
+                <div class="form-group"><label>WhatsApp para pedidos (con código de país)</label><input id="cfgWhatsapp" placeholder="5493424123456"></div>
+                <div class="form-group"><label>Dirección del local</label><input id="cfgAddress" placeholder="Av. Facundo Zuviría 4500"></div>
+                <div class="form-group"><label>Horarios de atención</label><input id="cfgHorarios" placeholder="Lun a Vie 8 a 18 hs"></div>
+                <div class="form-group"><label>Instagram (URL completa)</label><input id="cfgInstagram" placeholder="https://instagram.com/tuusuario"></div>
+                <div class="form-group"><label>Facebook (URL completa)</label><input id="cfgFacebook" placeholder="https://facebook.com/tupagina"></div>
+                <div class="form-group"><label>TikTok (URL completa)</label><input id="cfgTiktok" placeholder="https://tiktok.com/@tuusuario"></div>
+
+                <h4 style="margin-top:30px; opacity:0.7;">Estado de la tienda</h4>
+                <label style="display:flex; align-items:center; gap:10px; margin-bottom:15px; cursor:pointer;">
+                    <input type="checkbox" id="cfgPausada" style="width:20px; height:20px;"> Pausar tienda (vacaciones / mantenimiento)
+                </label>
+                <label style="display:flex; align-items:center; gap:10px; margin-bottom:10px; cursor:pointer;">
+                    <input type="checkbox" id="cfgBannerActivo" style="width:20px; height:20px;"> Mostrar banner de aviso arriba de todo
+                </label>
+                <div class="form-group"><input id="cfgBannerTexto" placeholder="Ej: ¡ENVÍOS GRATIS comprando más de $20.000!"></div>
+                <div class="form-group"><label>Color de fondo del banner</label><input id="cfgBannerBg" type="color" style="height:50px; padding:5px; cursor:pointer;"></div>
+                <div class="form-group"><label>Color del texto del banner</label><input id="cfgBannerColor" type="color" style="height:50px; padding:5px; cursor:pointer;"></div>
+
+                <h4 style="margin-top:30px; opacity:0.7;">Medios de pago aceptados</h4>
+                <label style="display:flex; align-items:center; gap:10px; margin-bottom:12px; cursor:pointer;">
+                    <input type="checkbox" id="cfgPagoEfectivo" style="width:20px; height:20px;"> Efectivo / Contra entrega
+                </label>
+                <label style="display:flex; align-items:center; gap:10px; margin-bottom:12px; cursor:pointer;">
+                    <input type="checkbox" id="cfgPagoTransferencia" style="width:20px; height:20px;"> Transferencia bancaria
+                </label>
+                <div class="form-group"><label>Datos para transferir (CBU / Alias / Titular)</label><textarea id="cfgDatosTransferencia" rows="3" placeholder="CBU: ...&#10;Alias: ...&#10;Titular: ..."></textarea></div>
+                <label style="display:flex; align-items:center; gap:10px; margin-bottom:15px; cursor:pointer;">
+                    <input type="checkbox" id="cfgPagoMercadoPago" style="width:20px; height:20px;"> Mercado Pago
+                </label>
+
+                <h4 style="margin-top:30px; opacity:0.7;">Experiencia visual</h4>
+                <div class="form-group"><label>URL del logo (vacío = se muestra el nombre en texto)</label><input id="cfgLogoUrl" placeholder="https://..."></div>
+                <div class="form-group">
+                    <label>Tema rápido (opcional — pisa los colores de abajo, con vista previa al instante)</label>
+                    <select id="cfgThemePreset" onchange="aplicarPresetTema()">
+                        <option value="">— Elegir un tema... —</option>
+                        <option value="oscuro">Tema Oscuro</option>
+                        <option value="claro">Tema Claro</option>
+                        <option value="neon">Gaming / Neón</option>
+                        <option value="elegante">Elegante / Minimalista</option>
+                        <option value="cyberpunk">Cyberpunk</option>
+                        <option value="deportivo">Rojiblanco / Deportivo</option>
+                    </select>
+                </div>
+                <div class="form-group"><label>Color principal (accent)</label><input id="cfgAccent" type="color" style="height:50px; padding:5px; cursor:pointer;" oninput="previsualizarColor('--accent', this.value)"></div>
+                <div class="form-group"><label>Color de fondo</label><input id="cfgBg" type="color" style="height:50px; padding:5px; cursor:pointer;" oninput="previsualizarColor('--bg', this.value)"></div>
+                <div class="form-group">
+                    <label>Bordes de las tarjetas de producto</label>
+                    <select id="cfgRadius" onchange="previsualizarColor('--radius', this.value)">
+                        <option value="0px">Rectos</option>
+                        <option value="8px">Redondeados</option>
+                        <option value="20px">Muy redondeados (pill)</option>
+                    </select>
+                </div>
+                <p style="opacity:0.5; font-size:12px; margin-top:-10px;">Los colores y bordes se ven al instante como vista previa — recién quedan guardados de verdad al tocar "GUARDAR CONFIGURACIÓN" más abajo.</p>
+
+                <h4 style="margin-top:30px; opacity:0.7;">Secciones</h4>
+                <label style="display:flex; align-items:center; gap:10px; margin-bottom:15px; cursor:pointer;">
+                    <input type="checkbox" id="cfgMostrarHero" style="width:20px; height:20px;"> Mostrar carrusel de imágenes (Hero)
+                </label>
+                <label style="display:flex; align-items:center; gap:10px; margin-bottom:15px; cursor:pointer;">
+                    <input type="checkbox" id="cfgMostrarMapa" style="width:20px; height:20px;"> Mostrar mapa de ubicación
+                </label>
+
+                <div class="form-group">
+                    <label>Código del mapa (Google Maps → Compartir → Insertar un mapa → Copiar HTML)</label>
+                    <textarea id="cfgMapaIframe" rows="4" placeholder='&lt;iframe src="https://www.google.com/maps/embed?pb=..." width="600" height="450"&gt;&lt;/iframe&gt;'></textarea>
+                </div>
+
+                <h4 style="margin-top:30px; opacity:0.7;">Categorías</h4>
+                <div id="categoriasEditor"></div>
+                <div style="display:flex; gap:8px; margin-top:12px; margin-bottom:20px;">
+                    <input id="catNuevoIcono" placeholder="🔧" style="width:60px; flex:none;">
+                    <input id="catNuevoLabel" placeholder="Nombre de la categoría nueva" style="flex:1;">
+                    <button onclick="agregarCategoriaEditor()" style="background:var(--accent); color:white; border:none; padding:0 18px; border-radius:12px; font-weight:700; cursor:pointer;">+ Agregar</button>
+                </div>
+
+                <button class="btn-add" style="background:var(--success)" onclick="guardarConfigTienda()">GUARDAR CONFIGURACIÓN</button>
+            </div>
+        </div>
+
+        <div id="t-layout" style="display:none;">
+            <div class="admin-form-box">
+                <h4 style="margin-top:0; opacity:0.7;">Catálogo</h4>
+                <div class="form-group">
+                    <label>Vista del catálogo (en celulares)</label>
+                    <select id="cfgCatalogView">
+                        <option value="grid2">Grilla de 2 columnas</option>
+                        <option value="grid1">Columna única (tarjetas grandes)</option>
+                        <option value="list">Lista compacta (modo mayorista)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Efecto en las fotos del catálogo</label>
+                    <select id="cfgImageEffect">
+                        <option value="none">Sin filtro</option>
+                        <option value="zoom">Zoom al pasar el mouse</option>
+                        <option value="gradient">Degradé en las esquinas</option>
+                    </select>
+                </div>
+                <label style="display:flex; align-items:center; gap:10px; margin-bottom:15px; cursor:pointer;">
+                    <input type="checkbox" id="cfgGlowEffect" style="width:20px; height:20px;"> Efecto de brillo/glow tipo neón en las tarjetas
+                </label>
+
+                <h4 style="margin-top:30px; opacity:0.7;">Menú superior</h4>
+                <label style="display:flex; align-items:center; gap:10px; margin-bottom:15px; cursor:pointer;">
+                    <input type="checkbox" id="cfgHeaderSticky" style="width:20px; height:20px;"> Header fijo al hacer scroll (sticky)
+                </label>
+                <div class="form-group">
+                    <label>Estilo del menú</label>
+                    <select id="cfgHeaderStyle">
+                        <option value="floating">Flotante moderno (bordes redondeados)</option>
+                        <option value="bar">Barra completa tradicional</option>
+                    </select>
+                </div>
+
+                <h4 style="margin-top:30px; opacity:0.7;">Carrito</h4>
+                <div class="form-group">
+                    <label>Animación al agregar al carrito</label>
+                    <select id="cfgAddToCartAnim">
+                        <option value="banner">Cartel emergente (clásico)</option>
+                        <option value="shake">Sacudida del ícono del carrito</option>
+                        <option value="fly">Volar la imagen hasta el carrito</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Cómo se abre el carrito</label>
+                    <select id="cfgCartStyle">
+                        <option value="drawer">Panel lateral (drawer)</option>
+                        <option value="modal">Ventana emergente centrada (modal)</option>
+                    </select>
+                </div>
+                <p style="opacity:0.5; font-size:12px;">¿Página de checkout dedicada en vez de carrito? Es un cambio más grande — avisame si te interesa y lo armamos aparte.</p>
+
+                <button class="btn-add" style="background:var(--success)" onclick="guardarConfigTienda()">GUARDAR CONFIGURACIÓN</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="loginModal">
+    <div class="modal-content" style="max-width:420px; text-align:center; padding: 30px; margin: auto;">
+        <h2 style="margin-bottom:10px;">¡Bienvenido de nuevo!</h2>
+        <p id="loginSubtitulo" style="opacity:0.6; font-size:14px; margin-bottom:30px;">Accedé a tu cuenta</p>
+        <div class="form-group"><input id="uInp" placeholder="Usuario (o email de administrador)"></div>
+        <div class="form-group"><input id="pInp" type="password" placeholder="Contraseña"></div>
+        <button class="btn-add" onclick="doLogin()">INICIAR SESIÓN</button>
+        <p style="margin-top:15px; font-size:13px;"><span onclick="recuperarClave()" style="color:var(--accent); cursor:pointer; opacity:0.8;">¿Olvidaste tu contraseña?</span></p>
+        <p style="margin-top:8px; font-size:13px;"><span onclick="openModal('setupModal')" style="color:var(--accent); cursor:pointer; opacity:0.7;">¿Sos el administrador y todavía no tenés cuenta?</span></p>
+        <button onclick="closeAll()" style="background:none; border:2px solid rgba(255,255,255,0.3); color:white; padding:16px; border-radius:16px; font-weight:700; width:100%; margin-top:15px;">← Volver atrás</button>
+        <p id="regPrompt" style="margin-top:30px; font-size:14px;">¿No tenés cuenta? <span onclick="openModal('regModal')" style="color:var(--accent); cursor:pointer; font-weight:800;">Solicitá una acá</span></p>
+    </div>
+</div>
+
+<div class="modal" id="regModal" style="align-items: flex-start; overflow-y: auto;">
+    <div class="modal-content" style="max-width:480px; margin: 40px auto; padding: 30px;">
+        <h2 style="text-align:center; margin-bottom:5px;">Nueva Solicitud</h2>
+        <p style="text-align:center; opacity:0.5; font-size:13px; margin-bottom:25px;">Completá los datos de tu comercio</p>
+        <div class="form-group"><label>Nombre de Usuario</label><input id="rU" placeholder="Ej: Kiosco_SantaFe (sin espacios)"></div>
+        <div class="form-group"><label>Contraseña Deseada</label><input id="rP" type="password" placeholder="Mínimo 6 caracteres"></div>
+        <div class="form-group"><label>WhatsApp de Contacto</label><input id="rT" placeholder="Ej: 3424123456"></div>
+        <div class="form-group"><label>Información del Local</label><textarea id="rD" placeholder="Nombre del negocio, calle y altura..."></textarea></div>
+        <button class="btn-add" style="background:var(--success); margin-top:10px; padding:20px;" onclick="registrarUsuario()">ENVIAR PARA REVISIÓN</button>
+        <button class="btn-add" style="background:none; color:white; margin-top:10px; opacity:0.6;" onclick="closeAll()">Volver atrás</button>
+    </div>
+</div>
+
+<div class="modal" id="setupModal">
+    <div class="modal-content" style="max-width:420px; text-align:center; padding: 30px; margin: auto;">
+        <h2 style="margin-bottom:10px;">Configurar administrador</h2>
+        <div id="setupPaso1">
+            <p style="opacity:0.6; font-size:14px; margin-bottom:20px;">Solo funciona con el email que se autorizó como administrador al configurar esta tienda en Firebase (config/setup → allowedAdminEmail).</p>
+            <div class="form-group"><input id="setupEmail" placeholder="Tu email"></div>
+            <div class="form-group"><input id="setupPass" type="password" placeholder="Elegí una contraseña (mín. 6 caracteres)"></div>
+            <button class="btn-add" style="background:var(--success);" onclick="crearCuentaAdmin()">CREAR CUENTA</button>
+        </div>
+        <div id="setupPaso2" style="display:none;">
+            <p style="opacity:0.8; font-size:14px; margin-bottom:20px;">Te enviamos un email de verificación. Abrilo, hacé clic en el link, y después tocá el botón de abajo.</p>
+            <button class="btn-add" style="background:var(--success);" onclick="confirmarAdminVerificado()">YA VERIFIQUÉ MI EMAIL</button>
+        </div>
+        <button onclick="closeAll()" style="background:none; border:2px solid rgba(255,255,255,0.3); color:white; padding:16px; border-radius:16px; font-weight:700; width:100%; margin-top:15px;">← Volver atrás</button>
+    </div>
+</div>
+
+<div class="modal" id="bannerModal" style="align-items:flex-start; overflow-y:auto;">
+    <div class="modal-content" style="max-width:420px; margin:30px auto; padding:25px; text-align:center;">
+        <div class="flex-between" style="margin-bottom:15px;">
+            <h3 style="margin:0;">🎨 Banner para redes</h3>
+            <button onclick="cerrarBannerModal()" style="background:none; border:none; color:white; font-size:26px; cursor:pointer;">✕</button>
+        </div>
+        <canvas id="bannerCanvas" style="width:100%; max-width:340px; border-radius:12px; background:#000;"></canvas>
+        <p id="bannerError" style="display:none; color:var(--danger); font-size:13px; margin-top:15px; text-align:left;"></p>
+        <button id="bannerDescargarBtn" class="btn-add" style="display:none; background:var(--success); margin-top:20px;" onclick="descargarBanner()">⬇️ DESCARGAR PNG</button>
+        <p style="opacity:0.5; font-size:12px; margin-top:15px;">Ideal para Historias de Instagram o Estados de WhatsApp.</p>
+    </div>
+</div>
+
+<div class="overlay" id="ov" onclick="closeAll()"></div>
+
+<div id="infoDrawer" class="drawer">
+    <div class="drawer-header">
+        <div class="flex-between">
+            <h2 id="drawerBrand" style="margin:0; color:var(--accent); font-size:28px;"></h2>
+            <span onclick="closeAll()" style="cursor:pointer; font-size:28px; opacity:0.5;">✕</span>
+        </div>
+    </div>
+    <div style="padding:25px 25px 0 25px; flex-grow:1; display:flex; flex-direction:column;">
+        <div style="text-align:center; margin-bottom:30px; padding-bottom:25px; border-bottom:1px solid rgba(255,255,255,0.1);">
+            <img id="drawerLogo" src="log.png" style="height:120px; width:auto; margin-bottom:15px;" alt="Logo">
+            <div id="drawerLogoText" style="display:none; font-size:32px; font-weight:800; margin-bottom:15px;"></div>
+            <h2 id="drawerStoreName" style="margin:0 0 6px 0; font-size:26px;"></h2>
+            <p id="drawerTagline" style="margin:0; opacity:0.75; font-size:15px; line-height:1.4;"></p>
+            <p id="drawerDireccion" style="display:none; margin:10px 0 0 0; opacity:0.7; font-size:13px;"></p>
+            <p id="drawerHorarios" style="display:none; margin:4px 0 0 0; opacity:0.7; font-size:13px;"></p>
+        </div>
+
+        <div style="margin-bottom:30px; display:flex; flex-direction:column; gap:12px;">
+            <a id="waLink" href="#" target="_blank" style="display:flex; align-items:center; gap:12px; background:#25d366; color:white; padding:18px 20px; border-radius:16px; text-decoration:none; font-weight:700; justify-content:center; font-size:17px;">📲 CHATEAR POR WHATSAPP</a>
+            <a id="igLink" href="#" target="_blank" style="display:flex; align-items:center; gap:12px; background:#e1306c; color:white; padding:18px 20px; border-radius:16px; text-decoration:none; font-weight:700; justify-content:center; font-size:17px;">📷 INSTAGRAM</a>
+            <a id="fbLink" href="#" target="_blank" style="display:flex; align-items:center; gap:12px; background:#1877f2; color:white; padding:18px 20px; border-radius:16px; text-decoration:none; font-weight:700; justify-content:center; font-size:17px;">📘 FACEBOOK</a>
+            <a id="ttLink" href="#" target="_blank" style="display:flex; align-items:center; gap:12px; background:#000000; color:white; padding:18px 20px; border-radius:16px; text-decoration:none; font-weight:700; justify-content:center; font-size:17px;">🎵 TIKTOK</a>
+        </div>
+        <div id="mapaContainer" style="display:none; margin-bottom:30px;"></div>
+        <div id="perfilContenido" style="display:none;">
+            <div style="background:rgba(255,255,255,0.03); padding:25px; border-radius:25px; border:1px solid rgba(255,255,255,0.05); margin-bottom:25px;">
+                <div style="margin-bottom:20px;"><small style="opacity:0.4; text-transform:uppercase; font-size:10px; font-weight:800; letter-spacing:1px;">Usuario</small><div id="p-user" style="font-size:20px; font-weight:800; color:var(--accent);">--</div></div>
+                <div style="margin-bottom:20px;"><small style="opacity:0.4; text-transform:uppercase; font-size:10px; font-weight:800; letter-spacing:1px;">Teléfono</small><div id="p-tel" style="font-size:16px; font-weight:600;">--</div></div>
+                <div><small style="opacity:0.4; text-transform:uppercase; font-size:10px; font-weight:800; letter-spacing:1px;">Dirección / Comercio</small><div id="p-dir" style="font-size:14px; opacity:0.8; line-height:1.6;">--</div></div>
+            </div>
+            <div style="padding:15px; background:rgba(16,185,129,0.1); border-radius:16px; color:var(--success); font-weight:800; border:1px solid rgba(16,185,129,0.2); text-align:center; font-size:11px; margin-bottom:20px;">✓ ESTADO: CLIENTE MAYORISTA ACTIVO</div>
+            <button class="btn-add" style="background:var(--accent); margin-top:0;" onclick="verMisPedidos()">📦 VER MIS PEDIDOS</button>
+            <div id="misPedidosList" style="margin-top:15px; margin-bottom:20px;"></div>
+        </div>
+        <div id="perfilVacio" style="text-align:center; padding:60px 0; opacity:0.4;">
+            <div style="font-size:50px; margin-bottom:20px;">👤</div>
+            <p>Iniciá sesión para ver tu información y precios especiales.</p>
+        </div>
+        <div style="padding-top:20px; border-top:1px solid rgba(255,255,255,0.05); margin-top: auto;">
+            <button id="logoutBtn" onclick="logout()" style="display:none; width:100%; background:var(--danger); color:white; border:none; padding:18px; border-radius:18px; font-weight:800; cursor:pointer; margin-bottom:15px;">CERRAR SESIÓN</button>
+            <p id="footerVersion" style="font-size:10px; text-align:center; opacity:0.3; font-weight:700;"></p>
+        </div>
+    </div>
+</div>
+
+<div id="cartDrawer" class="drawer">
+    <div class="drawer-header">
+        <div class="flex-between">
+            <h2 style="margin:0;">Tu Carrito</h2>
+            <span onclick="closeAll()" style="cursor:pointer; font-size:28px; opacity:0.5;">✕</span>
+        </div>
+    </div>
+    <div style="padding:25px 25px 0 25px; flex-grow:1; display:flex; flex-direction:column;">
+        <div id="cartItems" style="flex-grow:1; overflow-y:auto; padding-right:5px;"></div>
+        <div style="padding-top:25px; border-top:1px solid rgba(255,255,255,0.1); margin-top:20px;">
+            <div class="flex-between" style="margin-bottom:25px;">
+                <span style="font-size:18px; opacity:0.7;">Total Estimado:</span>
+                <span id="cartTotal" style="font-size:32px; font-weight:800; color:var(--accent);">$0</span>
+            </div>
+            <div id="metodoPagoContainer" style="display:none; margin-bottom:20px;">
+                <label style="font-weight:700; font-size:14px; display:block; margin-bottom:8px;">Método de pago</label>
+                <select id="metodoPagoSelect" style="width:100%; padding:14px; border-radius:12px; background:var(--card); color:var(--text); border:1px solid rgba(255,255,255,0.1); font-size:15px;"></select>
+            </div>
+            <button class="btn-add" style="background:#25d366; padding:22px; font-size:16px;" onclick="finalizarYEnviar()">ENVIAR PEDIDO POR WHATSAPP 🚀</button>
+        </div>
+    </div>
+</div>
+
+<script src="config.js" defer></script>
+<script src="app.js" defer></script>
+</body>
+</html>
