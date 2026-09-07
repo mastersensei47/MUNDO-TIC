@@ -94,6 +94,20 @@ function obtenerFirebaseApp(nombre, config) {
     }
 }
 
+// Opera/Opera GX y algunas extensiones pueden bloquear el WebChannel que
+// Firestore usa para Listen/channel. Forzamos long-polling para que Firestore
+// use HTTP normal y no dependa de ese canal. Debe configurarse antes de usar
+// la instancia para hacer lecturas/listeners.
+function crearFirestore(app) {
+    const firestore = firebase.firestore(app);
+    try {
+        firestore.settings({ experimentalForceLongPolling: true });
+    } catch (e) {
+        console.warn("No se pudo activar Firestore long-polling:", e);
+    }
+    return firestore;
+}
+
 function errorFirebaseDetalle(e) {
     const code = e && e.code ? String(e.code) : "";
     const msg = e && e.message ? String(e.message) : String(e || "Error desconocido");
@@ -148,7 +162,7 @@ async function bootstrap() {
         // El directorio Master es la fuente de verdad. La caché solo queda
         // como respaldo si Firebase Master no responde temporalmente.
         masterApp = obtenerFirebaseApp("master", MASTER_FIREBASE_CONFIG);
-        const masterDb = firebase.firestore(masterApp);
+        const masterDb = crearFirestore(masterApp);
 
         try {
             const clienteDoc = await masterDb.collection("clientes").doc(slug).get();
@@ -186,7 +200,7 @@ async function bootstrap() {
         // Evita errores app/duplicate-app si el navegador restaura la página
         // desde bfcache o si bootstrap termina ejecutándose más de una vez.
         clienteApp = obtenerFirebaseApp("cliente", firebaseConfig);
-        db = firebase.firestore(clienteApp);
+        db = crearFirestore(clienteApp);
         auth = firebase.auth(clienteApp);
 
         STORE_CONFIG = construirStoreConfig(slug, datosTienda);
@@ -720,6 +734,81 @@ function startProductImageRotators() {
         }, 4500);
         rotators.push(interval);
     });
+}
+
+
+// ==================== CATEGORÍAS ====================
+// Estas funciones son usadas por init() y por el catálogo.
+// Se mantienen defensivas para que una configuración sin categorías
+// nunca impida que la tienda cargue.
+
+function obtenerCategorias() {
+    const cats = STORE_CONFIG && Array.isArray(STORE_CONFIG.categories)
+        ? STORE_CONFIG.categories
+        : [];
+    return cats.filter(c => c && (c.id || c.label)).map(c => ({
+        id: String(c.id || slugCategoria(c.label || "categoria")),
+        icon: c.icon || "📦",
+        label: c.label || c.id || "Categoría"
+    }));
+}
+
+function renderCategorias() {
+    const cont = document.getElementById("catBar");
+    if (!cont) return;
+
+    const categorias = obtenerCategorias();
+
+    // Siempre existe la opción "Todos".
+    cont.innerHTML = `
+        <button type="button" class="cat-item active" onclick="setCat(this, '')">
+            <span>🛍️</span><span>Todos</span>
+        </button>
+        ${categorias.map(c => `
+            <button type="button" class="cat-item"
+                    data-cat="${String(c.id).replace(/"/g, '&quot;')}"
+                    onclick="setCat(this, '${String(c.id).replace(/\\/g, '\\\\').replace(/'/g, "\\'")}')">
+                <span>${c.icon}</span><span>${c.label}</span>
+            </button>
+        `).join("")}
+    `;
+
+    // Si la categoría filtrada ya no existe, volvemos a "Todos".
+    if (filterCat && !categorias.some(c => c.id === filterCat)) {
+        filterCat = "";
+    }
+
+    const active = cont.querySelector(
+        `.cat-item[data-cat="${CSS.escape ? CSS.escape(filterCat) : filterCat}"]`
+    );
+    cont.querySelectorAll(".cat-item").forEach(b => b.classList.remove("active"));
+    if (active) active.classList.add("active");
+    else {
+        const todos = cont.querySelector(".cat-item");
+        if (todos) todos.classList.add("active");
+    }
+}
+
+function renderCategoriasSelect() {
+    const select = document.getElementById("fCat");
+    if (!select) return;
+
+    const categorias = obtenerCategorias();
+    const valorAnterior = select.value || "";
+
+    select.innerHTML = `
+        <option value="">Sin categoría</option>
+        ${categorias.map(c => `
+            <option value="${String(c.id).replace(/"/g, '&quot;')}">
+                ${c.icon} ${c.label}
+            </option>
+        `).join("")}
+    `;
+
+    // Conservamos la categoría seleccionada si sigue existiendo.
+    if (categorias.some(c => c.id === valorAnterior)) {
+        select.value = valorAnterior;
+    }
 }
 
 // ==================== CATÁLOGO ====================
