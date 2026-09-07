@@ -577,39 +577,6 @@ body.cart-style-modal #cartDrawer.active {
 body.precio-mayorista-oculto .precio-mayorista-field { display: none; }
 
 /* ===== Mejoras panel admin / galería / PWA ===== */
-/* En PC el panel admin usa todo el ancho disponible y sus pestañas caben
-   sin quedar cortadas. En pantallas chicas vuelven a desplazarse en horizontal. */
-#adminModal {
-    align-items: flex-start !important;
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
-    padding: 24px !important;
-}
-#adminModal > .modal-content {
-    width: min(1100px, 100%) !important;
-    max-width: 1100px !important;
-    margin: 20px auto 40px !important;
-    min-width: 0;
-}
-#adminModal .admin-tabs {
-    width: 100%;
-    overflow-x: visible;
-    flex-wrap: nowrap;
-}
-#adminModal .admin-tabs .tab-btn {
-    flex: 1 1 0;
-    min-width: 0;
-    white-space: nowrap;
-}
-#adminModal .admin-form-box,
-#adminModal .admin-collapsible-grid,
-#adminModal .form-group,
-#adminModal input,
-#adminModal select,
-#adminModal textarea {
-    min-width: 0;
-}
-
 .download-links-list { display:flex; flex-direction:column; gap:10px; }
 .download-link-row { display:grid; grid-template-columns:minmax(150px, .75fr) minmax(0, 1.4fr) 50px; gap:10px; align-items:center; }
 .download-link-row input { min-width:0; }
@@ -626,30 +593,56 @@ body.precio-mayorista-oculto .precio-mayorista-field { display: none; }
 .download-links-detail { display:flex; flex-direction:column; gap:10px; }
 .download-link-btn { display:flex; align-items:center; justify-content:center; width:100%; padding:13px 16px; border-radius:12px; background:var(--accent); color:#fff; text-decoration:none; font-weight:800; }
 .admin-form-box { padding:24px; }
-.admin-tabs { overflow-x:auto; flex-wrap:nowrap; scrollbar-width:none; }
-.admin-tabs::-webkit-scrollbar { display:none; }
-.tab-btn { flex:0 0 auto; min-width:120px; }
-@media (max-width:600px) {
-    #adminModal { padding:8px !important; }
-    #adminModal > .modal-content { margin:10px auto 20px !important; }
-    #adminModal .admin-tabs { overflow-x:auto; flex-wrap:nowrap; }
-    #adminModal .admin-tabs .tab-btn { flex:0 0 auto; min-width:112px; }
-    #adminModal .modal-content { margin:10px auto !important; max-width:none !important; padding:14px !important; border-radius:18px; }
-    #adminModal .flex-between { margin-bottom:14px !important; }
-    #adminModal .flex-between h2 { font-size:20px; }
-    #adminModal .admin-tabs { margin-bottom:14px; gap:6px; padding:5px; }
-    #adminModal .tab-btn { min-width:112px; padding:11px 10px; font-size:11px; }
-    #adminModal .admin-form-box { padding:14px; border-radius:18px; margin-bottom:14px; }
-    #adminModal .form-group { margin-bottom:14px; }
-    #adminModal input, #adminModal select, #adminModal textarea { padding:14px; border-radius:12px; font-size:15px; }
-    #adminModal .btn-add { padding:14px; border-radius:12px; }
-    .download-link-row { grid-template-columns:1fr 48px; gap:8px; }
-    .download-link-row .download-link-name { grid-column:1 / -1; }
-    .download-link-row .download-link-url { grid-column:1 / 2; }
-    .download-link-row button { grid-column:2; grid-row:2; width:48px; height:48px; }
-    .admin-section-details summary { padding:14px 15px; font-size:14px; }
-    .admin-section-body { padding:0 10px 10px; }
+
+/* ===== PANEL ADMIN: escritorio y móvil ===== */
+#adminModal {
+    padding: 16px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    align-items: flex-start;
 }
+#adminModal .modal-content {
+    width: min(1180px, 100%);
+    max-width: 1180px;
+    max-height: calc(100vh - 32px);
+    margin: 16px auto !important;
+    padding: 30px;
+    overflow: auto;
+    overscroll-behavior: contain;
+}
+#adminModal .admin-tabs {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    width: 100%;
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+}
+#adminModal .tab-btn {
+    flex: 1 1 0;
+    min-width: 0;
+    white-space: nowrap;
+}
+#adminModal input,
+#adminModal select,
+#adminModal textarea {
+    max-width: 100%;
+}
+@media (max-width: 900px) {
+    #adminModal .tab-btn { flex: 0 0 auto; min-width: 125px; }
+}
+@media (max-width: 600px) {
+    #adminModal { padding: 8px; }
+    #adminModal .modal-content {
+        width: 100%;
+        max-width: none;
+        max-height: calc(100vh - 16px);
+        margin: 8px auto !important;
+        padding: 14px !important;
+    }
+}
+
 .admin-product-search {
     display:flex; align-items:center; gap:10px; margin:0 0 15px;
 }
