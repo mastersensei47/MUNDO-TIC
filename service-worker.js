@@ -8,7 +8,7 @@
 // código desactualizado — exactamente el tipo de bug que ya tuvimos una vez.
 // ============================================================================
 
-const CACHE_VERSION = "v10-pwa-install-complete";
+const CACHE_VERSION = "v11-store-bootstrap-fix";
 const CACHE_NAME = `plataforma-cache-${CACHE_VERSION}`;
 
 self.addEventListener("install", () => {
