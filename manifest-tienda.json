@@ -1,10 +1,11 @@
 {
-  "name": "Control de Trabajos",
-  "short_name": "Taller",
-  "id": "./reparaciones.html",
-  "start_url": "./reparaciones.html",
+  "name": "Tienda Online",
+  "short_name": "Tienda",
+  "id": "./index.html",
+  "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
+  "orientation": "portrait-primary",
   "background_color": "#0f172a",
   "theme_color": "#3b82f6",
   "icons": [
