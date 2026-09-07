@@ -101,15 +101,9 @@ function obtenerFirebaseApp(nombre, config) {
 function crearFirestore(app) {
     const firestore = firebase.firestore(app);
     try {
-        // Opera/Opera GX puede bloquear el WebChannel de Firestore. En esos
-        // navegadores usamos long-polling; en Chrome/Edge/Safari dejamos el
-        // transporte normal, que inicia más rápido.
-        const ua = navigator.userAgent || "";
-        if (/OPR\//i.test(ua) || /Opera/i.test(ua)) {
-            firestore.settings({ experimentalForceLongPolling: true });
-        }
+        firestore.settings({ experimentalForceLongPolling: true });
     } catch (e) {
-        console.warn("No se pudo configurar el transporte de Firestore:", e);
+        console.warn("No se pudo activar Firestore long-polling:", e);
     }
     return firestore;
 }
@@ -520,96 +514,96 @@ function aplicarLayout() {
 }
 
 // ==================== PWA / INSTALACIÓN ====================
-// Instalación multiplataforma:
-// - Chromium (Chrome/Edge/Opera y derivados): usa beforeinstallprompt.
-// - Safari/iOS: no expone beforeinstallprompt; se muestran instrucciones nativas.
-// - Firefox: no ofrece instalación PWA desde JavaScript; se informa claramente.
-// El listener se registra aunque el botón todavía no exista para no perder el evento.
-let deferredInstallPrompt = null;
-let pwaListenersPreparados = false;
-
 function aplicarManifestPWA() {
     const link = document.querySelector('link[rel="manifest"]');
-    if (!link) return;
+    if (!link || !STORE_CONFIG) return;
+
+    // El manifest estático sigue siendo el respaldo compatible con GitHub Pages.
+    // Para no romper la instalación de la tienda actual, no lo reemplazamos por
+    // un Blob URL: varios navegadores de escritorio no vuelven a evaluar ese
+    // manifest después de cargar la página.
     link.href = new URL("manifest-tienda.json", location.href).href;
 }
 
 function registrarServiceWorker() {
-    if (!("serviceWorker" in navigator)) return;
-    navigator.serviceWorker.register("service-worker.js", { scope: "./" })
-        .then(reg => {
-            if (reg.waiting) reg.waiting.postMessage({ type: "SKIP_WAITING" });
-        })
-        .catch(e => console.warn("Service worker no registrado:", e));
+    if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("service-worker.js", { scope: "./" })
+            .then(reg => { if (reg.waiting) reg.waiting.postMessage({ type: "SKIP_WAITING" }); })
+            .catch(e => console.warn("Service worker no registrado:", e));
+    }
 }
 
-function actualizarBotonInstalacion() {
+let deferredInstallPrompt = window.__tuTiendaInstallPrompt || null;
+
+function prepararInstalacionPWA() {
     const btn = document.getElementById("btnInstalarApp");
     if (!btn) return;
-    const standalone = !!(window.matchMedia && window.matchMedia("(display-mode: standalone)").matches);
-    const iosStandalone = window.navigator.standalone === true;
-    if (standalone || iosStandalone) {
+
+    const standalone = (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) ||
+        window.navigator.standalone === true;
+    if (standalone) {
         btn.style.display = "none";
         return;
     }
-    // El botón queda disponible como acceso a la instalación/ayuda.
-    btn.style.display = "inline-flex";
-}
 
-function prepararInstalacionPWA() {
-    if (!pwaListenersPreparados) {
-        pwaListenersPreparados = true;
-        window.addEventListener("beforeinstallprompt", event => {
-            event.preventDefault();
-            deferredInstallPrompt = event;
-            actualizarBotonInstalacion();
-        });
-        window.addEventListener("appinstalled", () => {
-            deferredInstallPrompt = null;
-            const btn = document.getElementById("btnInstalarApp");
-            if (btn) btn.style.display = "none";
-        });
-    }
-    actualizarBotonInstalacion();
-}
+    const mostrarBoton = () => {
+        btn.style.display = "inline-flex";
+    };
 
-function detectarNavegador() {
-    const ua = navigator.userAgent || "";
-    if (/iPhone|iPad|iPod/i.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)) return "ios";
-    if (/Firefox\//i.test(ua)) return "firefox";
-    if (/Edg\//i.test(ua)) return "edge";
-    if (/OPR\//i.test(ua) || /Opera/i.test(ua)) return "opera";
-    if (/Chrome\//i.test(ua)) return "chrome";
-    if (/Safari\//i.test(ua)) return "safari";
-    return "otro";
+    if (deferredInstallPrompt) mostrarBoton();
+
+    window.addEventListener("tu-tienda-install-ready", () => {
+        deferredInstallPrompt = window.__tuTiendaInstallPrompt || deferredInstallPrompt;
+        if (deferredInstallPrompt) mostrarBoton();
+    });
+
+    // Respaldo por si el navegador dispara el evento después de que app.js cargó.
+    window.addEventListener("beforeinstallprompt", event => {
+        event.preventDefault();
+        deferredInstallPrompt = event;
+        window.__tuTiendaInstallPrompt = event;
+        mostrarBoton();
+    });
+
+    window.addEventListener("appinstalled", () => {
+        deferredInstallPrompt = null;
+        window.__tuTiendaInstallPrompt = null;
+        btn.style.display = "none";
+    });
 }
 
 async function instalarApp() {
-    try {
-        localStorage.setItem("tu_tienda_pwa_start", location.pathname + location.search);
-    } catch (_) {}
+    try { localStorage.setItem("tu_tienda_pwa_start", location.pathname + location.search); } catch (_) {}
 
     if (deferredInstallPrompt) {
         try {
-            deferredInstallPrompt.prompt();
-            await deferredInstallPrompt.userChoice;
+            const promptEvent = deferredInstallPrompt;
+            deferredInstallPrompt = null;
+            window.__tuTiendaInstallPrompt = null;
+            const result = await promptEvent.prompt();
+            if (result && result.outcome === "accepted") {
+                const btn = document.getElementById("btnInstalarApp");
+                if (btn) btn.style.display = "none";
+            }
         } catch (e) {
-            console.warn("No se pudo abrir el diálogo de instalación:", e);
+            console.warn("No se pudo abrir el instalador PWA:", e);
         }
-        deferredInstallPrompt = null;
         return;
     }
 
-    const navegador = detectarNavegador();
-    if (navegador === "ios") {
-        alert("Para instalar la tienda en iPhone/iPad: tocá Compartir (□↑) en Safari y elegí «Agregar a pantalla de inicio».");
-    } else if (navegador === "safari") {
-        alert("En Safari para Mac: usá Archivo > Agregar al Dock para instalar esta tienda como aplicación web.");
-    } else if (navegador === "firefox") {
-        alert("Firefox no permite instalar esta PWA directamente desde un botón de la página. Para instalarla como aplicación, abrila con Chrome, Edge u Opera y elegí «Instalar aplicación».");
-    } else {
-        alert("Tu navegador todavía no habilitó la instalación automática de esta PWA. Abrí el menú del navegador y elegí «Instalar aplicación» o «Agregar a pantalla de inicio». Si esa opción tampoco aparece, recargá la página una vez y volvé a intentarlo.");
+    const ua = navigator.userAgent || "";
+    const esIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    if (esIOS) {
+        alert("Para agregar la tienda: tocá Compartir (□↑) y elegí «Agregar a pantalla de inicio». En Safari también podés usar «Agregar al Dock» en Mac.");
+        return;
     }
+
+    if (/firefox/i.test(ua)) {
+        alert("Firefox no permite abrir el instalador PWA desde este botón. En PC usá Chrome, Edge u Opera; en Android también podés usar Chrome/Edge/Opera.");
+        return;
+    }
+
+    alert("El navegador todavía no considera instalable esta página. Verificá que estés usando HTTPS y que no esté ya instalada. Si el icono de instalación no aparece en el menú del navegador, recargá una vez.");
 }
 
 // ==================== EDITOR DE CATEGORÍAS (panel admin → CONFIGURACIÓN) ====================
@@ -2287,13 +2281,6 @@ document.addEventListener("keydown", (e) => {
         if (modal && modal.style.display === "flex") closeProductDetail();
     }
 });
-
-// Preparar PWA lo antes posible. El navegador puede emitir
-// beforeinstallprompt antes de que termine Firebase; si esperamos al bootstrap
-// podemos perder el evento y el botón nunca ofrecer la instalación.
-try { aplicarManifestPWA(); } catch (_) {}
-try { registrarServiceWorker(); } catch (_) {}
-try { prepararInstalacionPWA(); } catch (_) {}
 
 if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", bootstrap); else bootstrap();
 
