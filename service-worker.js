@@ -8,7 +8,7 @@
 // código desactualizado — exactamente el tipo de bug que ya tuvimos una vez.
 // ============================================================================
 
-const CACHE_VERSION = "v12-multitienda-slug";
+const CACHE_VERSION = "v13-multitienda-network-first";
 const CACHE_NAME = `plataforma-cache-${CACHE_VERSION}`;
 
 self.addEventListener("install", () => {
@@ -33,32 +33,16 @@ self.addEventListener("fetch", (event) => {
     const url = new URL(event.request.url);
     if (url.origin !== self.location.origin) return;
 
-    // Navegación: red primero para no servir HTML viejo.
-    if (event.request.mode === "navigate") {
-        event.respondWith(
-            fetch(event.request).then(response => {
-                if (response && response.ok) {
-                    const clone = response.clone();
-                    caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone)).catch(() => {});
-                }
-                return response;
-            }).catch(() => caches.match(event.request))
-        );
-        return;
-    }
-
-    // Recursos propios: caché primero + actualización en segundo plano.
-    // Las visitas posteriores no tienen que esperar la red para CSS/JS/imágenes.
+    // Red primero para HTML, JS y CSS. Esto evita que GitHub Pages/PWA sirva
+    // una app vieja después de publicar una corrección. Solo usamos caché
+    // cuando la red realmente falla.
     event.respondWith(
-        caches.match(event.request).then(cached => {
-            const network = fetch(event.request).then(response => {
-                if (response && response.ok) {
-                    const clone = response.clone();
-                    caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone)).catch(() => {});
-                }
-                return response;
-            }).catch(() => cached);
-            return cached || network;
-        })
+        fetch(event.request).then(response => {
+            if (response && response.ok) {
+                const clone = response.clone();
+                caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone)).catch(() => {});
+            }
+            return response;
+        }).catch(() => caches.match(event.request))
     );
 });
