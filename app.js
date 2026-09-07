@@ -92,21 +92,32 @@ async function bootstrap() {
         return mostrarErrorSlug("Falta indicar la tienda en el link (falta ?slug=... en la URL). Pedile el link completo a quien te lo compartió.");
     }
 
+    // Firebase puede tardar un instante en estar disponible porque sus scripts
+    // se cargan de forma diferida. En PC esto es más frecuente que en móvil.
+    if (typeof firebase === "undefined" || typeof MASTER_FIREBASE_CONFIG === "undefined") {
+        return setTimeout(bootstrap, 150);
+    }
+
     const cache = leerCacheTienda(slug);
     let firebaseConfig = cache && cache.firebaseConfig ? cache.firebaseConfig : null;
     let datosTienda = cache && cache.config ? cache.config : {};
 
     try {
-        // Si ya visitaste esta tienda, usamos la configuración guardada para
-        // arrancar inmediatamente. Luego validamos/actualizamos en segundo plano.
+        // Evita errores si la página vuelve desde bfcache o si Firebase ya fue
+        // inicializado por otra parte de la aplicación.
+        try { masterApp = firebase.app("master"); }
+        catch (_) { masterApp = firebase.initializeApp(MASTER_FIREBASE_CONFIG, "master"); }
+
+        const masterDb = firebase.firestore(masterApp);
+
+        // Primera visita: necesitamos resolver slug -> firebaseConfig.
         if (!firebaseConfig) {
-            masterApp = firebase.initializeApp(MASTER_FIREBASE_CONFIG, "master");
-            const masterDb = firebase.firestore(masterApp);
             const clienteDoc = await masterDb.collection("clientes").doc(slug).get();
 
             if (!clienteDoc.exists || clienteDoc.data().activo === false) {
                 return mostrarErrorSlug("No encontramos esta tienda. Verificá el link, o consultá con el negocio.");
             }
+
             firebaseConfig = clienteDoc.data().firebaseConfig;
             if (!firebaseConfig || !firebaseConfig.projectId) {
                 return mostrarErrorSlug("Esta tienda todavía no está configurada del todo. Volvé a intentar más tarde.");
@@ -114,28 +125,25 @@ async function bootstrap() {
             guardarCacheTienda(slug, { firebaseConfig, config: datosTienda });
         } else {
             // Actualización silenciosa del directorio.
-            try {
-                masterApp = firebase.initializeApp(MASTER_FIREBASE_CONFIG, "master");
-                const masterDb = firebase.firestore(masterApp);
-                masterDb.collection("clientes").doc(slug).get().then(doc => {
-                    if (doc.exists && doc.data().activo !== false && doc.data().firebaseConfig) {
-                        const freshConfig = doc.data().firebaseConfig;
-                        const current = leerCacheTienda(slug) || {};
-                        guardarCacheTienda(slug, { ...current, firebaseConfig: freshConfig });
-                    }
-                }).catch(() => {});
-            } catch (_) {}
+            masterDb.collection("clientes").doc(slug).get().then(doc => {
+                if (doc.exists && doc.data().activo !== false && doc.data().firebaseConfig) {
+                    const freshConfig = doc.data().firebaseConfig;
+                    const current = leerCacheTienda(slug) || {};
+                    guardarCacheTienda(slug, { ...current, firebaseConfig: freshConfig });
+                }
+            }).catch(e => console.warn("No se pudo actualizar el directorio master:", e));
         }
 
-        clienteApp = firebase.initializeApp(firebaseConfig, "cliente");
+        // Conecta al Firebase propio de la tienda.
+        try { clienteApp = firebase.app("cliente"); }
+        catch (_) { clienteApp = firebase.initializeApp(firebaseConfig, "cliente"); }
         db = firebase.firestore(clienteApp);
         auth = firebase.auth(clienteApp);
 
-        // Pintar sin esperar una segunda lectura de Firestore.
         STORE_CONFIG = construirStoreConfig(slug, datosTienda);
         init();
 
-        // La config real se actualiza en segundo plano.
+        // La configuración visual se actualiza en segundo plano.
         db.collection("config").doc("tienda").get().then(cfgDoc => {
             const fresh = cfgDoc.exists ? cfgDoc.data() : {};
             const current = leerCacheTienda(slug) || {};
@@ -154,7 +162,18 @@ async function bootstrap() {
         }).catch(e => console.warn("No se pudo actualizar config/tienda:", e));
     } catch (e) {
         console.error("Error al inicializar la tienda:", e);
-        mostrarErrorSlug("No pudimos cargar esta tienda. Probá de nuevo en unos minutos.");
+
+        let mensaje = "No pudimos cargar esta tienda. Probá de nuevo en unos minutos.";
+        if (e && (e.code === "permission-denied" || e.code === "PERMISSION_DENIED")) {
+            mensaje = "La tienda existe, pero el directorio de tiendas no permite el acceso público. Hay que publicar las reglas de Firestore del proyecto MASTER.";
+        } else if (e && e.code === "failed-precondition") {
+            mensaje = "Firebase necesita una configuración adicional para esta tienda. Revisá la configuración de Firestore del proyecto MASTER.";
+        } else if (e && e.code === "unavailable") {
+            mensaje = "No se pudo conectar con Firebase. Revisá tu conexión y probá nuevamente.";
+        } else if (e && e.message) {
+            mensaje += "\n\nDetalle: " + e.message;
+        }
+        mostrarErrorSlug(mensaje);
     }
 }
 
